@@ -470,8 +470,8 @@ def summarize(rows):
 
 
 # @tools.timeit
-def run(parameters, metro_stations, points):
-    stations = metro_stations_utm(metro_stations)
+def run(points, parameters):
+    stations = metro_stations_utm(parameters['subway_stations'])
     points = tools.process_utm(points)
     if not points:
         return None, None

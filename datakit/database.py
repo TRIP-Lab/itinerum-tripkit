@@ -2,15 +2,91 @@
 # Kyle Fitzsimmons, 2018
 from peewee import *
 
-from . import config
+from .models.Trip import Trip
+from .models.TripPoint import TripPoint
+from .models.User import User
 
 
-db = SqliteDatabase(config.DATABASE_FN)
+# globally create a single database connection for SQLite (must be connected via Itinerum __init__)
+deferred_db = SqliteDatabase(None)
+
+
+class Database(object):
+    def __init__(self):
+        self.db = deferred_db
+
+    def create(self):
+        self.db.create_tables([UserSurveyResponse, Coordinate, PromptResponse,
+                               CancelledPromptResponse, DetectedTripCoordinate,
+                               SubwayStationEntrance])
+
+
+    def drop(self):
+        self.db.drop_tables([UserSurveyResponse, Coordinate, PromptResponse,
+                             CancelledPromptResponse, DetectedTripCoordinate,
+                             SubwayStationEntrance])
+
+
+    def load_user(self, uuid, start=None, end=None):
+        db_user = UserSurveyResponse.get(uuid=uuid)
+        
+        user = User(uuid=uuid)
+        user.coordinates = db_user.coordinates
+        user.prompt_responses = db_user.prompts
+        user.cancelled_prompt_responses = db_user.cancelled_prompts
+
+        if start:
+            user.coordinates = user.coordinates.where(Coordinate.timestamp_UTC >= start)
+            user.prompt_responses = user.prompt_responses.where(PromptResponse.displayed_at_UTC >= start)
+            user.cancelled_prompt_responses = (user.cancelled_prompt_responses
+                                                   .where(CancelledPromptResponse.displayed_at_UTC >= start))
+        if end:
+            user.coordinates = user.coordinates.where(Coordinate.timestamp_UTC <= end)
+            user.prompt_responses = user.prompt_responses.where(PromptResponse.displayed_at_UTC <= end)
+            user.cancelled_prompt_responses = (user.cancelled_prompt_responses
+                                                   .where(CancelledPromptResponse.displayed_at_UTC <= end))
+
+        for c in db_user.detected_trip_coordinates:
+            if start and c.timestamp_UTC <= start:
+                continue
+            if end and c.timestamp_UTC >= end:
+                continue
+
+            point = TripPoint(latitude=c.latitude,
+                              longitude=c.longitude,
+                              h_accuracy=c.h_accuracy,
+                              timestamp_UTC=c.timestamp_UTC)
+
+            if not c.trip_num in user.trips:
+                user.trips[c.trip_num] = Trip(num=c.trip_num, trip_code=c.trip_code)
+            user.trips[c.trip_num].points.append(point)
+        return user
+
+
+    def load_subway_entrances(self):
+        return SubwayStationEntrance.select()
+
+
+    def save_trips(self, detected_trips):
+        DetectedTripCoordinate.drop_table()
+        DetectedTripCoordinate.create_table()
+        for c in detected_trips:
+            # TODO: this would be more consistent if trip coordinates
+            # were named tuples for dot attributes
+            DetectedTripCoordinate.create(user=c['uuid'],
+                                          trip_num=c['trip'],
+                                          trip_code=c['trip_code'],
+                                          latitude=c['latitude'],
+                                          longitude=c['longitude'],
+                                          h_accuracy=c['h_accuracy'],
+                                          timestamp_UTC=c['timestamp_UTC'])
+
+
 
 
 class BaseModel(Model):
     class Meta:
-        database = db
+        database = deferred_db
 
 
 class UserSurveyResponse(BaseModel):

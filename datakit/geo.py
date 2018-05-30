@@ -152,7 +152,7 @@ def write_mapmatched_geojson(fn_base, mapmatching_results):
     write_features_to_geojson_f(filename, mapmatched_features)
 
 
-def write_features_to_geojson_f(filename, features):
+def write_features_to_geojson_f(cfg, filename, features):
     collection = deepcopy(geojson_collection_template)
     collection['features'] = features
     geojson_fp = os.path.join(config.OUTPUT_DATA_DIR, filename)

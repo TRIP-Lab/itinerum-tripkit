@@ -15,8 +15,8 @@ logger = logging.getLogger(__name__)
 
 class CSVParser(object):
 
-    def __init__(self, db):
-        self.db = db
+    def __init__(self, database):
+        self.db = database.db
         self.cancelled_prompt_responses_csv = 'cancelled_prompts.csv'
         self.coordinates_csv = 'coordinates.csv'
         self.prompt_responses_csv = 'prompt_responses.csv'
@@ -31,7 +31,7 @@ class CSVParser(object):
             return value
 
 
-    def load_data(self, input_dir, **kwargs):
+    def load_exports(self, input_dir, **kwargs):
         logger.info('Loading survey responses .csv to db...')
         survey_responses_fp = os.path.join(input_dir, self.survey_responses_csv)
         with open(survey_responses_fp, 'r', encoding='utf-8-sig') as csv_f:
@@ -109,7 +109,7 @@ class CSVParser(object):
                                                is_travelling=self.get(row, 'is_travelling'))
 
 
-    def load_trips_data(self, trips_csv_fp):
+    def load_trips(self, trips_csv_fp):
         logger.info('Loading detected trips .csv to db...')
         with open(trips_csv_fp, 'r', encoding='utf-8-sig') as csv_f:
             reader = csv.DictReader(csv_f)

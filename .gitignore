@@ -1,3 +1,4 @@
 docs/_build
 input
 output
+__pycache__
