@@ -3,7 +3,7 @@
 from datetime import datetime
 import logging
 
-# from . import io
+from . import io
 from . import models
 from . import process
 from .csvparser import CSVParser
@@ -22,7 +22,10 @@ class Itinerum(object):
         self.database = Database()
         self.database.db.init(config.DATABASE_FN)
         self.csv = CSVParser(self.database)
-        self.process = process  # attach extensions as objects
+
+        # attach I/O functions and extensions as objects
+        self.io = io
+        self.process = process
 
     def setup(self, force=False):
         if force:

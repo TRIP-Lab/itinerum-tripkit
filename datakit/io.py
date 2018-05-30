@@ -5,7 +5,6 @@ import json
 import os
 import polyline
 
-from . import config
 from . import utils
 from .database import Coordinate, PromptResponse, CancelledPromptResponse
 
@@ -57,7 +56,7 @@ def points_to_geojson_linestring(coordinates, properties):
 
 
 # geojson file I/O
-def write_input_geojson(fn_base, coordinates, prompts, cancelled_prompts):
+def write_input_geojson(cfg, fn_base, coordinates, prompts, cancelled_prompts):
     ignore_keys = ('id', 'user', 'longitude', 'latitude')
 
     # coordinates point features
@@ -73,7 +72,7 @@ def write_input_geojson(fn_base, coordinates, prompts, cancelled_prompts):
         point = point_to_geojson_point(coordinates, properties)
         input_coordinates_features.append(point)
     coordinates_filename = fn_base + '_coordinates.geojson'
-    write_features_to_geojson_f(coordinates_filename, input_coordinates_features)
+    write_features_to_geojson_f(cfg, coordinates_filename, input_coordinates_features)
 
     # prompts point features
     input_prompts_features = []
@@ -87,7 +86,7 @@ def write_input_geojson(fn_base, coordinates, prompts, cancelled_prompts):
         point = point_to_geojson_point(coordinates, properties)
         input_prompts_features.append(point)
     prompts_filename = fn_base + '_prompts.geojson'
-    write_features_to_geojson_f(prompts_filename, input_prompts_features)
+    write_features_to_geojson_f(cfg, prompts_filename, input_prompts_features)
 
     # cancelled prompts point features
     input_cancelled_prompts_features = []
@@ -101,7 +100,7 @@ def write_input_geojson(fn_base, coordinates, prompts, cancelled_prompts):
         point = point_to_geojson_point(coordinates, properties)
         input_cancelled_prompts_features.append(point)
     cancelled_prompts_filename = fn_base + '_cancelled_prompts.geojson'
-    write_features_to_geojson_f(cancelled_prompts_filename, input_cancelled_prompts_features)
+    write_features_to_geojson_f(cfg, cancelled_prompts_filename, input_cancelled_prompts_features)
 
 
 def write_trips_geojson(fn_base, trips):
@@ -115,10 +114,10 @@ def write_trips_geojson(fn_base, trips):
         linestring = points_to_geojson_linestring(trip.geojson_coordinates, properties)
         detected_trips_features.append(linestring)
     filename = fn_base + '_trips.geojson'
-    write_features_to_geojson_f(filename, detected_trips_features)
+    write_features_to_geojson_f(cfg, filename, detected_trips_features)
 
 
-def write_mapmatched_geojson(fn_base, mapmatching_results):
+def write_mapmatched_geojson(cfg, fn_base, mapmatching_results):
     print('matchings:', len(mapmatching_results['matchings']))
     mapmatched_features = []
     # create points features with a confidence for each match (distance in meters)
@@ -149,13 +148,13 @@ def write_mapmatched_geojson(fn_base, mapmatching_results):
         mapmatched_features.append(linestring)
 
     filename = fn_base + '_matched.geojson'
-    write_features_to_geojson_f(filename, mapmatched_features)
+    write_features_to_geojson_f(cfg, filename, mapmatched_features)
 
 
 def write_features_to_geojson_f(cfg, filename, features):
     collection = deepcopy(geojson_collection_template)
     collection['features'] = features
-    geojson_fp = os.path.join(config.OUTPUT_DATA_DIR, filename)
+    geojson_fp = os.path.join(cfg.OUTPUT_DATA_DIR, filename)
     with open(geojson_fp, 'w') as geojson_f:
         geojson_f.write(json.dumps(collection, default=utils.json_serialize))
 
