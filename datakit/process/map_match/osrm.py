@@ -5,7 +5,7 @@ import requests
 
 
 
-class MapMatcherAPI:
+class MapMatcherAPI(object):
 
     def __init__(self, config):
         self.urls = {

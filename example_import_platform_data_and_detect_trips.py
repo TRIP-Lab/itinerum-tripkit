@@ -26,10 +26,10 @@ results = itinerum.run_process(itinerum.process.trip_detection.triplab.algorithm
 
 # -- Stage 3: save output in database as cache
 # format trips into a SQL-friendly flat list of labelled coordinates
-detected_trips = []
+detected_trip_points = []
 for user, (trips, summaries) in results.items():
     for trip_num, trip in trips.items():
         for c in trip:
             c['uuid'] = user.uuid
-            detected_trips.append(c)
+            detected_trip_points.append(c)
 itinerum.database.save_trips(detected_trips)
