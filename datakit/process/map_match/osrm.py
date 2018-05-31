@@ -3,19 +3,19 @@
 from datetime import datetime
 import requests
 
-from . import config
-
-
-API_URLS = {
-    'BIKING': config.MAP_MATCHING_BIKING_API_URL,
-    'DRIVING': config.MAP_MATCHING_DRIVING_API_URL,
-    'WALKING': config.MAP_MATCHING_BIKING_API_URL
-}
 
 
 class MapMatcherAPI:
-    @staticmethod
-    def match(coordinates, matcher='DRIVING'):
+
+    def __init__(self, config):
+        self.urls = {
+            'BIKING': config.MAP_MATCHING_BIKING_API_URL,
+            'DRIVING': config.MAP_MATCHING_DRIVING_API_URL,
+            'WALKING': config.MAP_MATCHING_BIKING_API_URL
+        }
+
+
+    def match(self, coordinates, matcher='DRIVING'):
         latlngs = []
         radiuses = []
         timestamps = []
@@ -38,7 +38,7 @@ class MapMatcherAPI:
             'gaps': 'ignore',
             'tidy': 'true'
         }
-        if not API_URLS[matcher].endswith('/'):
-            API_URLS[matcher] += '/'
-        r = requests.post(API_URLS[matcher] + latlngs_str, data=parameters)
+        if not self.urls[matcher].endswith('/'):
+            self.urls[matcher] += '/'
+        r = requests.post(self.urls[matcher] + latlngs_str, data=parameters)
         return r.json()

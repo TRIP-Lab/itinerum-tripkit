@@ -26,6 +26,7 @@ class Itinerum(object):
         # attach I/O functions and extensions as objects
         self.io = io
         self.process = process
+        self.process.map_match.osrm = process.map_match.osrm.MapMatcherAPI(self.config)
 
     def setup(self, force=False):
         if force:

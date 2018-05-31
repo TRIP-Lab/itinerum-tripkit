@@ -25,7 +25,6 @@ parameters = {
 results = itinerum.run_process(itinerum.process.trip_detection.triplab.algorithm, users, parameters)
 
 # -- Stage 3: save output in database as cache
-
 # format trips into a SQL-friendly flat list of labelled coordinates
 detected_trips = []
 for user, (trips, summaries) in results.items():

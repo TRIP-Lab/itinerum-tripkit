@@ -15,3 +15,8 @@ def json_serialize(obj):
         return str(obj)
 
     raise TypeError("Object of type %s is not JSON serializable" % type(obj))
+
+
+
+class UserNotFoundError(Exception):
+    pass

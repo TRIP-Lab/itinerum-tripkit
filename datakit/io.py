@@ -103,7 +103,7 @@ def write_input_geojson(cfg, fn_base, coordinates, prompts, cancelled_prompts):
     write_features_to_geojson_f(cfg, cancelled_prompts_filename, input_cancelled_prompts_features)
 
 
-def write_trips_geojson(fn_base, trips):
+def write_trips_geojson(cfg, fn_base, trips):
     detected_trips_features = []
     for trip_num, trip in trips.items():
         properties = {
@@ -117,11 +117,11 @@ def write_trips_geojson(fn_base, trips):
     write_features_to_geojson_f(cfg, filename, detected_trips_features)
 
 
-def write_mapmatched_geojson(cfg, fn_base, mapmatching_results):
-    print('matchings:', len(mapmatching_results['matchings']))
+def write_mapmatched_geojson(cfg, fn_base, results):
+    print('matchings:', len(results['matchings']))
     mapmatched_features = []
     # create points features with a confidence for each match (distance in meters)
-    for p in mapmatching_results['tracepoints']:
+    for p in results['tracepoints']:
         if not p:
             continue
         
@@ -135,13 +135,12 @@ def write_mapmatched_geojson(cfg, fn_base, mapmatching_results):
         if p['waypoint_index'] == 0:
             point['properties']['weight'] = 0  # first point does not have a weight
         else:
-            point['properties']['weight'] = mapmatching_results['matchings'][matchings_idx]['legs'][waypoint_idx]['weight']
+            point['properties']['weight'] = results['matchings'][matchings_idx]['legs'][waypoint_idx]['weight']
         mapmatched_features.append(point)    
 
     # create linestring features from the OSM input network returned as Google polyline
-    for m in mapmatching_results['matchings']:
+    for m in results['matchings']:
         properties = {}
-        properties.update(defaults)
         coordinates = [t[::-1] for t in polyline.decode(m['geometry'])]
         properties['confidence'] = m['confidence']
         linestring = points_to_geojson_linestring(coordinates, properties)

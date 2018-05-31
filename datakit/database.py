@@ -5,7 +5,7 @@ from peewee import *
 from .models.Trip import Trip
 from .models.TripPoint import TripPoint
 from .models.User import User
-
+from .utils import UserNotFoundError
 
 # globally create a single database connection for SQLite (must be connected via Itinerum __init__)
 deferred_db = SqliteDatabase(None)
@@ -28,7 +28,9 @@ class Database(object):
 
 
     def load_user(self, uuid, start=None, end=None):
-        db_user = UserSurveyResponse.get(uuid=uuid)
+        db_user = UserSurveyResponse.get_or_none(uuid=uuid)
+        if not db_user:
+            raise UserNotFoundError(uuid)
         
         user = User(uuid=uuid)
         user.coordinates = db_user.coordinates

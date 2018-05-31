@@ -121,6 +121,7 @@ class CSVParser(object):
                                               trip_num=int(row['trip']),
                                               latitude=float(row['latitude']),
                                               longitude=float(row['longitude']),
+                                              h_accuracy=float(row['h_accuracy']),
                                               timestamp_UTC=row['timestamp'],
                                               trip_code=int(row['trip_code']))
 

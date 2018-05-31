@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 # Kyle Fitzsimmons, 2018
+from datetime import datetime
+
 from datakit import Itinerum
 import datakit_config
 
@@ -9,20 +11,20 @@ itinerum = Itinerum(config=datakit_config)
 
 
 # -- Stage 1: load platform data to cache
-itinerum.setup(force=True)
+itinerum.setup(force=False)
 
-# manually load detected trips from platform to a database table
-itinerum.csv.load_trips('./input/trips_20171106.csv')
+# # manually load detected trips from platform to a database table
+# itinerum.csv.load_trips('./input/trips_20180430.csv')
 
 
 # -- Stage 2: select user data and process points
 ## a manually selected trip to perform test map matching on
-uuid = 'a9611f09-acbe-416f-9b2a-f5d760be29cd'
-user = itinerum.database.load_user(uuid, start=datetime(2018, 4, 11), end=datetime(2018, 4, 12))
+uuid = 'e82601c0-dbf5-4526-b4d5-56a10ea285df'
+user = itinerum.database.load_user(uuid, start=datetime(2018, 5, 26), end=datetime(2018, 5, 27))
 
 
 ## perform mapmatching using OSRM API
-mapmatched_results = itinerum.process.map_match.osrm.match(coordinates=user.coordinates, matcher='WALKING')
+mapmatched_results = itinerum.process.map_match.osrm.match(coordinates=user.coordinates, matcher='BIKING')
 
 
 # -- Stage 3: write input and output data to geojsons
