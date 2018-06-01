@@ -10,13 +10,16 @@ This repository should mirror the deployed version(s) of the Itinerum platform a
 
 ### Quickstart
 
- - Clone this repository and `pip install -r requirements.txt` (virtualenv is recommended)
+ - Clone this repository and `pip install -r requirements.txt` ([virtualenv](https://virtualenv.pypa.io/en/stable/) and [virtualenvwrapper](https://virtualenvwrapper.readthedocs.io/en/latest/) are recommended)
  - Place source data in the `./input` folder and edit `./datakit/config.py` with the appropriate filepaths.
 
-Either:
+Either
 
  - Start Jupyter in repository directy and get started by `from datakit import Itinerum`
- - Until more complete packaging is available, the included `datakit` directory can be copied to other projects as a library
+
+   *or*
+
+ - The included `datakit` directory can be copied to other projects as a library until more complete packaging is available
 
 ### Loading Platform Data
 
@@ -30,11 +33,14 @@ Subway station data for trip detection can be loaded similarly to the Itinerum p
 
 ### Example
 
+*View attributes on a User*
+
 ```python
-itinerum = Itinerum()
+import datakit_config
+itinerum = Itinerum(datakit_config)
 
 # create a new database and read in .csv data
-itinerum.setup(force=False)
+itinerum.setup()
 
 # load all users from database
 users = itinerum.load_all_users()
@@ -43,6 +49,28 @@ test_user = users[0]
 print(test_user.coordinates)
 print(test_user.prompt_responses)
 ```
+
+*Run trip detection on a User*
+
+```bash
+import datakit_config
+itinerum = Itinerum(datakit_config)
+
+# load user from database by uuid
+user = itinerum.database.load_user('00000000-0000-0000-0000-000000000000')
+
+# run a provided trip detection algorithm
+parameters = {
+'subway_stations': itinerum.database.load_subway_entrances(),
+    'break_interval_seconds': datakit_config.TRIP_DETECTION_BREAK_INTERVAL_SECONDS,
+    'subway_buffer_meters': datakit_config.TRIP_DETECTION_SUBWAY_BUFFER_METERS,
+    'cold_start_distance': datakit_config.TRIP_DETECTION_COLD_START_DISTANCE_METERS,
+    'accuracy_cutoff_meters': datakit_config.TRIP_DETECTION_ACCURACY_CUTOFF_METERS
+}
+trips = itinerum.process.trip_detection.triplab.algorithm.run(users, parameters)
+```
+
+
 
 ## Processing
 
@@ -64,7 +92,51 @@ The `coordinates`  values should be provided as list of dictionaries instead of 
 
 #### Map Matching
 
- TBA
+MLD algorithm?
+
+##### Installing the OSRM API with Docker containers
+
+1. Download an OSM extract for your region, such as for Québec
+
+   ```bash
+   $ mkdir osrm && cd osrm
+   $ wget http://download.geofabrik.de/north-america/canada/quebec-latest.osm.pbf
+   ```
+
+2. Process the OSM data using the default network profiles included with OSRM:
+
+   ```bash
+   # car
+   $ docker run -t -v $(pwd):/data osrm/osrm-backend osrm-extract -p /opt/car.lua /data/quebec-latest.osm.pbf
+   $ docker run -t -v $(pwd):/data osrm/osrm-backend osrm-partition /data/quebec-latest
+   $ docker run -t -v $(pwd):/data osrm/osrm-backend osrm-customize /data/quebec-latest
+   $ mkdir car
+   $ mv quebec-latest.orsm* car
+   
+   # bike
+   $ docker run -t -v $(pwd):/data osrm/osrm-backend osrm-extract -p /opt/bicycle.lua /data/quebec-latest.osm.pbf
+   $ docker run -t -v $(pwd):/data osrm/osrm-backend osrm-partition /data/quebec-latest
+   $ docker run -t -v $(pwd):/data osrm/osrm-backend osrm-customize /data/quebec-latest
+   $ mkdir bike
+   $ mv quebec-latest.orsm* bike
+   
+   # walking
+   $ docker run -t -v $(pwd):/data osrm/osrm-backend osrm-extract -p /opt/foot.lua /data/quebec-latest.osm.pbf
+   $ docker run -t -v $(pwd):/data osrm/osrm-backend osrm-partition /data/quebec-latest
+   $ docker run -t -v $(pwd):/data osrm/osrm-backend osrm-customize /data/quebec-latest
+   $ mkdir foot
+   $ mv quebec-latest.orsm* foot
+   ```
+
+3. Run the Docker OSRM routing API on points 5000-5002
+
+   ```bash
+   $ docker run -d --restart always -p 5000:5000 -v $(pwd)/car:/data osrm/osrm-backend osrm-routed --algorithm MLD --max-matching-size=5000 /data/quebec-latest.osrm
+   
+   $ docker run -d --restart always -p 5001:5000 -v $(pwd)/bicycle:/data osrm/osrm-backend osrm-routed --algorithm MLD --max-matching-size=5000 /data/quebec-latest.osrm
+   
+   $ docker run -d --restart always -p 5002:5000 -v $(pwd)/foot:/data osrm/osrm-backend osrm-routed --algorithm MLD --max-matching-size=5000 /data/quebec-latest.osrm
+   ```
 
 ## Outputs
 
@@ -73,16 +145,3 @@ The aim of this library is to provide easy visualization of Itinerum data to ass
 ## To Do
 
 Add Sphinx autodoc to generate automatic library documentation.
-
-## Miscellaneous Notes
-
-Running the OSRM Docker containers indefinitely on routing server--must be in appropriate data directory:
-
-```bash
-docker run -d --restart always -p 5000:5000 -v $(pwd)/car:/data osrm/osrm-backend osrm-routed --algorithm MLD --max-matching-size=5000 /data/quebec-latest.osrm
-
-docker run -d --restart always -p 5001:5000 -v $(pwd)/bicycle:/data osrm/osrm-backend osrm-routed --algorithm MLD --max-matching-size=5000 /data/quebec-latest.osrm
-
-docker run -d --restart always -p 5002:5000 -v $(pwd)/foot:/data osrm/osrm-backend osrm-routed --algorithm MLD --max-matching-size=5000 /data/quebec-latest.osrm
-```
-
