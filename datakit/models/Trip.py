@@ -38,5 +38,5 @@ class Trip(object):
         return [(p.longitude, p.latitude) for p in self.points]
 
     def __repr__(self):
-        return '<Trip num={}>'.format(self.num)
+        return '<Trip num={} code={}>'.format(self.num, self.trip_code)
 
