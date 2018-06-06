@@ -52,7 +52,7 @@ print(test_user.prompt_responses)
 
 *Run trip detection on a User*
 
-```bash
+```python
 import datakit_config
 itinerum = Itinerum(datakit_config)
 
@@ -92,7 +92,7 @@ The `coordinates`  values should be provided as list of dictionaries instead of 
 
 #### Map Matching
 
-MLD algorithm?
+The instructions that follow use the Mult-Level Djikstra processing pipelines recommended [here](https://github.com/Project-OSRM/osrm-backend/wiki/Running-OSRM) by Project OSRM.
 
 ##### Installing the OSRM API with Docker containers
 
@@ -117,8 +117,8 @@ MLD algorithm?
    $ docker run -t -v $(pwd):/data osrm/osrm-backend osrm-extract -p /opt/bicycle.lua /data/quebec-latest.osm.pbf
    $ docker run -t -v $(pwd):/data osrm/osrm-backend osrm-partition /data/quebec-latest
    $ docker run -t -v $(pwd):/data osrm/osrm-backend osrm-customize /data/quebec-latest
-   $ mkdir bike
-   $ mv quebec-latest.orsm* bike
+   $ mkdir bicycle
+   $ mv quebec-latest.orsm* bicycle
    
    # walking
    $ docker run -t -v $(pwd):/data osrm/osrm-backend osrm-extract -p /opt/foot.lua /data/quebec-latest.osm.pbf
@@ -128,7 +128,7 @@ MLD algorithm?
    $ mv quebec-latest.orsm* foot
    ```
 
-3. Run the Docker OSRM routing API on points 5000-5002
+3. Run the Docker OSRM routing API on ports 5000-5002
 
    ```bash
    $ docker run -d --restart always -p 5000:5000 -v $(pwd)/car:/data osrm/osrm-backend osrm-routed --algorithm MLD --max-matching-size=5000 /data/quebec-latest.osrm
