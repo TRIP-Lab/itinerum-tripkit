@@ -7,27 +7,48 @@ from .models.TripPoint import TripPoint
 from .models.User import User
 from .utils import UserNotFoundError
 
-# globally create a single database connection for SQLite (must be connected via Itinerum __init__)
+# globally create a single database connection for SQLite
 deferred_db = SqliteDatabase(None)
 
 
 class Database(object):
+    """
+    Handles itinerum-datakit interactions with the cached database using peewee. `Note: This 
+    may soon transition to SQLAlchemy to maintain direct compatibility with the Itinerum API 
+    code base.`
+    """
+
     def __init__(self):
         self.db = deferred_db
 
     def create(self):
+        """
+        Creates all the tables necessary for the itinerum-datakit cache database.
+        """
         self.db.create_tables([UserSurveyResponse, Coordinate, PromptResponse,
                                CancelledPromptResponse, DetectedTripCoordinate,
                                SubwayStationEntrance])
 
 
     def drop(self):
+        """
+        Drops all cache database tables.
+        """
         self.db.drop_tables([UserSurveyResponse, Coordinate, PromptResponse,
                              CancelledPromptResponse, DetectedTripCoordinate,
                              SubwayStationEntrance])
 
 
     def load_user(self, uuid, start=None, end=None):
+        """
+        Loads user by ``uuid`` to an itinerum-datakit :py:class:`User` object.
+
+        :param uuid:  A specific user's UUID from within an Itinerum survey.
+        :param start: `Optional.` Naive datetime object (set within UTC) for
+                      selecting a user's coordinates start period.
+        :param end:   `Optional.` Naive datetime object (set within UTC) for
+                      selecting a user's coordinates end period.
+        """
         db_user = UserSurveyResponse.get_or_none(uuid=uuid)
         if not db_user:
             raise UserNotFoundError(uuid)
@@ -66,10 +87,20 @@ class Database(object):
 
 
     def load_subway_entrances(self):
+        """
+        Queries cache database for all available subway entrances.
+        """
         return SubwayStationEntrance.select()
 
 
     def save_trips(self, detected_trips):
+        """
+        Saves detected trips from processing algorithms to cache database. This
+        table will be recreated on each save.
+        
+        :param detected_trips: List of labelled coordinates from a trip processing
+                               algorithm.
+        """
         DetectedTripCoordinate.drop_table()
         DetectedTripCoordinate.create_table()
         for c in detected_trips:

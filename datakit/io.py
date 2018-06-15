@@ -57,6 +57,20 @@ def points_to_geojson_linestring(coordinates, properties):
 
 # geojson file I/O
 def write_input_geojson(cfg, fn_base, coordinates, prompts, cancelled_prompts):
+    """
+    Writes input coordinates, prompts and cancelled prompts data selected from 
+    cache to individual geojson files.
+
+    :param cfg:               Global configuration object (eventually this should be
+                              supplied upon initialization like :py:class:`CSVParser`)
+    :param fn_base:           The base filename to prepend to each output geojson file.
+    :param coordinates:       Iterable of database coordinates to write to geojson
+                              file. Usually the result of a database query.
+    :param prompts:           Iterable of database prompts to write to geojson
+                              file. Usually the result of a database query.
+    :param cancelled_prompts: Iterable of database cancelled prompts to write to
+                              geojson file. Usually the result of a database query.
+    """
     ignore_keys = ('id', 'user', 'longitude', 'latitude')
 
     # coordinates point features
@@ -104,6 +118,14 @@ def write_input_geojson(cfg, fn_base, coordinates, prompts, cancelled_prompts):
 
 
 def write_trips_geojson(cfg, fn_base, trips):
+    """
+    Writes detected trips data selected from cache to geojson file.
+
+    :param cfg:     Global configuration object (eventually this should be
+                    supplied upon initialization like :py:class:`CSVParser`)
+    :param fn_base: The base filename to prepend to the output geojson file
+    :param trips:   Iterable of database trips to write to geojson file.
+    """
     detected_trips_features = []
     for trip_num, trip in trips.items():
         properties = {
@@ -118,6 +140,14 @@ def write_trips_geojson(cfg, fn_base, trips):
 
 
 def write_mapmatched_geojson(cfg, fn_base, results):
+    """
+    Writes map matching results from API query to geojson file.
+
+    :param cfg:     Global configuration object (eventually this should be
+                    supplied upon initialization like :py:class:`CSVParser`)
+    :param fn_base: The base filename to prepend to the output geojson file
+    :param results: JSON results from map matching API query
+    """
     print('matchings:', len(results['matchings']))
     mapmatched_features = []
     # create points features with a confidence for each match (distance in meters)

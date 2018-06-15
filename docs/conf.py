@@ -12,14 +12,14 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
+import os
+import sys
+sys.path.insert(0, os.path.abspath('..'))
 
 
 # -- Project information -----------------------------------------------------
 
-project = 'itinerum-library'
+project = 'itinerum-datakit'
 copyright = '2018, Kyle Fitzsimmons'
 author = 'Kyle Fitzsimmons'
 
@@ -81,7 +81,10 @@ html_theme = 'alabaster'
 # further.  For a list of options available for each theme, see the
 # documentation.
 #
-# html_theme_options = {}
+html_theme_options = {
+    'logo': 'itinerum-logo-gray1.png',
+    'description': 'A multi-purpose library for GPS trip processing'
+}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -96,13 +99,24 @@ html_static_path = ['_static']
 # default: ``['localtoc.html', 'relations.html', 'sourcelink.html',
 # 'searchbox.html']``.
 #
-# html_sidebars = {}
+html_sidebars = {
+    '**': [
+        'about.html',
+        'navigation.html',
+        # 'relations.html',
+        # 'searchbox.html',
+        # 'donate.html'
+    ]
+}
+
+
+html_css_files = ['custom.css']
 
 
 # -- Options for HTMLHelp output ---------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'itinerum-librarydoc'
+htmlhelp_basename = 'itinerum-datakitdoc'
 
 
 # -- Options for LaTeX output ------------------------------------------------
@@ -129,7 +143,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'itinerum-library.tex', 'itinerum-library Documentation',
+    (master_doc, 'itinerum-datakit.tex', 'itinerum-datakit Documentation',
      'Kyle Fitzsimmons', 'manual'),
 ]
 
@@ -139,7 +153,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'itinerum-library', 'itinerum-library Documentation',
+    (master_doc, 'itinerum-datakit', 'itinerum-datakit Documentation',
      [author], 1)
 ]
 
@@ -150,8 +164,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'itinerum-library', 'itinerum-library Documentation',
-     author, 'itinerum-library', 'One line description of project.',
+    (master_doc, 'itinerum-datakit', 'itinerum-datakit Documentation',
+     author, 'itinerum-datakit', 'One line description of project.',
      'Miscellaneous'),
 ]
 

@@ -4,10 +4,20 @@ from geopy import distance
 
 
 class Trip(object):
+    """
+    :param int num:       The integer index (starting at 1) of all the detected
+                          trip events (completer or incomplete) as user has made
+                          over the duration of their survey participation.
+    :param int trip_code: The integer code representing the detected trip type.
+
+    :ivar points:         The timestamp-ordered points comprising this ``Trip``.
+    :vartype points:      list of :py:class:`datakit.models.TripPoint`
+    """
+
     def __init__(self, num, trip_code):
         self.num = int(num)
         self.trip_code = int(trip_code)
-        self.points = []
+        self.points = []   
 
     @property
     def distance(self):

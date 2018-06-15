@@ -14,6 +14,11 @@ logger = logging.getLogger(__name__)
 
 
 class CSVParser(object):
+    """
+    Parses Itinerum platform csv files and loads to them to a cache database.
+
+    :param database: Open Peewee connection the cache database
+    """
 
     def __init__(self, database):
         self.db = database.db
@@ -32,6 +37,18 @@ class CSVParser(object):
 
 
     def load_exports(self, input_dir, **kwargs):
+        """
+        Loads raw Itinerum platform .csv data to the itinerum-datakit cache
+        database. For each .csv row, the data is fetched by column name if
+        it exists and cast to appropriate types as set in the database.
+
+        :param input_dir: The directory containing the expected .csv data
+                          files. Set as `survey_responses.csv`,
+                          `coordinates.csv`, `prompt_responses.csv` and
+                          `cancelled_prompts.csv` by default. These can
+                          attributes can be adjusted on the CSVParser class
+                          itself.
+        """
         logger.info('Loading survey responses .csv to db...')
         survey_responses_fp = os.path.join(input_dir, self.survey_responses_csv)
         with open(survey_responses_fp, 'r', encoding='utf-8-sig') as csv_f:
@@ -110,6 +127,14 @@ class CSVParser(object):
 
 
     def load_trips(self, trips_csv_fp):
+        """
+        Loads trips processed by the web platform itself. This is mostly useful
+        for comparing current alogorithm results against the deployed platform's
+        version.
+
+        :param trips_csv_fp: The full filepath of the downloaded trips `.csv` file
+                             for a survey.
+        """
         logger.info('Loading detected trips .csv to db...')
         with open(trips_csv_fp, 'r', encoding='utf-8-sig') as csv_f:
             reader = csv.DictReader(csv_f)
@@ -127,6 +152,14 @@ class CSVParser(object):
 
 
     def load_subway_stations(self, subway_stations_csv_fp):
+        """
+        Loads a subway station entraces .csv the database for use by trip
+        detection algorithms. Each .csv row should represent a station entrance
+        with the column names of 'x' (or 'longitude') and 'y' (or 'latitude').
+
+        :param subway_stations_csv_fp: The full filepath of subway station entrances
+                                       `.csv` for the survey study region.
+        """
         # change selected column keys to latitude and longitude
         def _rename_columns(location_columns, rows):
             lat_label, lng_label = location_columns
@@ -148,6 +181,7 @@ class CSVParser(object):
             location_columns = None
             location_columns_options = [('latitude', 'longitude'),
                                         ('lat', 'lng'),
+                                        ('lat', 'lon'),
                                         ('y', 'x')]
 
             for columns in location_columns_options:

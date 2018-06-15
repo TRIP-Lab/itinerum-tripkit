@@ -6,7 +6,7 @@
 DATABASE_FN = 'itinerum.sqlite'
 
 # path of raw data directory exported from Itinerum platform
-INPUT_DATA_DIR = './input/kyle-responses-1527691547'
+INPUT_DATA_DIR = './input/cuf10-responses-1528306905'
 
 # path of subway station entrances .csv for trip detection
 SUBWAY_STATIONS_FP = './input/subway_stations/stm.csv'
