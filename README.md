@@ -6,6 +6,8 @@ This library seeks to serve as a bootstrapping framework to processing data from
 
 This repository should mirror the deployed version(s) of the Itinerum platform algorithms.
 
+Documentation for library usage: https://itinerum-datakit.readthedocs.io/
+
 ## Setup
 
 ### Quickstart
