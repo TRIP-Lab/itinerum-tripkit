@@ -17,7 +17,7 @@ Documentation for library usage: https://itinerum-datakit.readthedocs.io/
 
 Then either:
 
- - Start Jupyter in repository directy and get started by `from datakit import Itinerum`
+ - Start Jupyter in repository directly and get started by `from datakit import Itinerum`
 
    *or*
 
@@ -98,7 +98,7 @@ All supplied values should be provided in their own light-weight class for bette
 
 #### Map Matching
 
-The instructions that follow use the Mult-Level Djikstra processing pipelines recommended [here](https://github.com/Project-OSRM/osrm-backend/wiki/Running-OSRM) by Project OSRM.
+The instructions that follow use the Multi-Level Djikstra processing pipelines recommended [here](https://github.com/Project-OSRM/osrm-backend/wiki/Running-OSRM) by Project OSRM.
 
 ##### Installing the OSRM API with Docker containers
 
