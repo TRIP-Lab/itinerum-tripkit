@@ -12,10 +12,10 @@ Documentation for library usage: https://itinerum-datakit.readthedocs.io/
 
 ### Quickstart
 
- - Clone this repository and `pip install -r requirements.txt` ([virtualenv](https://virtualenv.pypa.io/en/stable/) and [virtualenvwrapper](https://virtualenvwrapper.readthedocs.io/en/latest/) are recommended)
- - Place source data in the `./input` folder and edit `./datakit/config.py` with the appropriate filepaths.
+1. Clone this repository and `pip install -r requirements.txt` ([virtualenv](https://virtualenv.pypa.io/en/stable/) and [virtualenvwrapper](https://virtualenvwrapper.readthedocs.io/en/latest/) are recommended)
+2. Place source data in the `./input` folder and edit `./datakit/config.py` with the appropriate filepaths.
 
-Either
+Then either:
 
  - Start Jupyter in repository directy and get started by `from datakit import Itinerum`
 
@@ -23,17 +23,19 @@ Either
 
  - The included `datakit` directory can be copied to other projects as a library until more complete packaging is available
 
-### Loading Platform Data
+Refer to the [API documentation](https://itinerum-datakit.readthedocs.io/) for usage.
 
-Data exported from the Itinerum dashboard is read directly as .csv files. The source data folder should be placed within the `./input` directory and the `INPUT_DATA_DIR` config option edited to reflect the filepath.
+### Loading Data from Platform
+
+Data exported from the Itinerum dashboard is read directly as *.csv* files. The source data should be placed within the `./input` directory and the `INPUT_DATA_DIR` config parameter edited to reflect the filepath.
 
 *Note: On first run, .csv data will be imported if the table*  `user_survey_responses` *does not exist in the output database. It is safe to delete the output .sqlite file to reset the library's cache.*
 
 ### Loading Subway Stations
 
-Subway station data for trip detection can be loaded similarly to the Itinerum platform data. Place a .csv file of station entrances with the columns of `x` (or `longitude`) and `y` (or `latitude`). Locations are expected as lat/lon geographic coordinates only. Edit the `SUBWAY_STATIONS_FP` config option to reflect the subway stations .csv filepath.
+Subway station data for trip detection can be loaded similarly. Place a *.csv* file of station entrances with the columns of `x` (or `longitude`) and `y` (or `latitude`). Locations are expected as geographic coordinates only. Edit the `SUBWAY_STATIONS_FP` config parameter to reflect the subway stations *.csv* filepath.
 
-### Example
+#### Example
 
 *View attributes on a User*
 
@@ -76,11 +78,11 @@ trips = itinerum.process.trip_detection.triplab.algorithm.run(users, parameters)
 
 ## Processing
 
-The library is intended to work modularly with drop-in algorithm scripts for trip processing, map matching and mode inference. Therefore, the inputs to each stage should be standardized as described below.
+The library is intended to work modularly with drop-in algorithm scripts for trip processing, map matching and mode inference. Therefore, the inputs to each stage should be standardized (described below) and developed with this in mind.
 
 #### Trip Detection
 
-Trips can be detected using the library on a raw dataset or trips can be manually imported from the web platform by calling the `load_trips_data()` method with the trips .csv filepath. Any re-detection of trips or manual import will overwrite the existing trips table.
+Trips can be detected using the library on a raw dataset or trips can be manually imported from the web platform by calling the `load_trips_data()` method. Any re-detection of trips or manual import will overwrite the existing trips table.
 
 | Arguments         |                                                              |
 | ----------------- | ------------------------------------------------------------ |
@@ -90,7 +92,9 @@ Trips can be detected using the library on a raw dataset or trips can be manuall
 
 ##### Thoughts
 
-The `coordinates`  values should be provided as list of dictionaries instead of database models to provide better compatibility of the detection algorithms across applications. Since a variety of databases and ORMs could be used, it seems simpler to require input data is formatted as dict() than something like a NamedTuple to make the algorithm compatible across SQLAlchemy or Peewee.
+~~The `coordinates`  values should be provided as list of dictionaries instead of database models to provide better compatibility of the detection algorithms across applications. Since a variety of databases and ORMs could be used, it seems simpler to require input data is formatted as dict() than something like a NamedTuple to make the algorithm compatible across SQLAlchemy or Peewee.~~
+
+All supplied values should be provided in their own light-weight class for better object safety, clarity about each object's purpose and ownership, and providing some special helper methods such as trip properties (as seen with https://github.com/SAUSy-Lab/itinerum-trip-breaker). This does have the potential to be much slower than using dictionaries in simple profiling (although using the `__slots__` property may help to improve memory usage), so this may need to be amended in the future. NamedTuple seemed appropriate, however, it seems like performance in Python3 is significantly worse than in older versions and may not be optimized for dot-attributes over indexed lookups (double-check this). Using the class-based approach now, however, may allow for drop-in compatibility with either database ORM. 
 
 #### Map Matching
 
@@ -143,7 +147,3 @@ The instructions that follow use the Mult-Level Djikstra processing pipelines re
 ## Outputs
 
 The aim of this library is to provide easy visualization of Itinerum data to assist in writing trip processing algorthms. Therefore at a minimum, the library provides exporting processed coordinates and traces as .geojson files (TBA: GeoPackage format). With a PostgreSQL backend for caching, PostGIS can be enabled (unimplemented) and a `geom` column generated for directly connection QGIS to the output data. The library should also easily provide methods for easily plotting GPS within Jupyter notebooks.
-
-## To Do
-
-Add Sphinx autodoc to generate automatic library documentation.
