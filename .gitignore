@@ -3,3 +3,4 @@ input
 output
 __pycache__
 notebooks/.ipynb_checkpoints
+*.sqlite

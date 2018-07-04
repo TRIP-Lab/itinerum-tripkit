@@ -53,11 +53,7 @@ class Database(object):
         if not db_user:
             raise UserNotFoundError(uuid)
         
-        user = User(uuid=uuid)
-        user.coordinates = db_user.coordinates
-        user.prompt_responses = db_user.prompts
-        user.cancelled_prompt_responses = db_user.cancelled_prompts
-
+        user = User(db_user)
         if start:
             user.coordinates = user.coordinates.where(Coordinate.timestamp_UTC >= start)
             user.prompt_responses = user.prompt_responses.where(PromptResponse.displayed_at_UTC >= start)

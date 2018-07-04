@@ -56,7 +56,7 @@ class Itinerum(object):
         # attach I/O functions and extensions as objects
         self._io = io
         self._process = process
-        self._process.map_match.osrm = self.process.map_match.osrm(self.config)
+        self._process.map_match.osrm(self.config)
 
     @property
     def csv(self):

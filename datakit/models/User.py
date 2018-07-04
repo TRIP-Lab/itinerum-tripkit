@@ -4,30 +4,22 @@
 
 class User(object):
     """
-    :param uuid: The uuid for the given user.
+    :param db_user:     The ``peewee`` survey response for a given user.
+    :ivar dict trips:   A user's detected trips. This is only loaded 
+                        automatically on the ``User`` initialized
+                        by :py:meth:`datakit.database.Database.load_user`,
+                        this must be called again if trips are detected and
+                        saved to the cache.
 
-    :ivar iter coordinates:                User's coordinates as  a ``peewee`` foreign
-                                           key attribute.
-    :ivar iter cancelled_prompt_responses: User's cancelled prompts as a ``peewee`` foreign
-                                           key attribute.
-    :ivar iter prompt_responses:           User's prompt responses as a ``peewee`` foreign
-                                           key relation.
-    :ivar dict trips:                      A user's detected trips. This is only loaded 
-                                           automatically on the ``User`` initialized
-                                           by :py:meth:`datakit.database.Database.load_user`,
-                                           this must be called again if trips are detected and
-                                           saved to the cache.
-    :vartype coordinates: iter
-    :vartype cancelled_prompt_responses: iter
-    :vartype prompt_responses: iter
     :vartype trips: dict
     """
 
-    def __init__(self, uuid):
-        self.uuid = uuid
-        self.coordinates = []
-        self.cancelled_prompt_responses = []
-        self.prompt_responses = []
+    def __init__(self, db_user):
+        self.uuid = db_user.uuid
+        self.coordinates = db_user.coordinates
+        self.cancelled_prompt_responses = db_user.cancelled_prompts
+        self.prompt_responses = db_user.prompts
+        self.survey_response = {k: getattr(db_user, k) for k in db_user._meta.fields.keys()}
         self.trips = {}
 
     def __repr__(self):
