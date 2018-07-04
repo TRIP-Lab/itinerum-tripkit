@@ -70,7 +70,7 @@ class Itinerum(object):
         """
         Gives access to the cache :py:class:`datakit.database.Database` object initialized with Itinerum object.
         """
-        return self._database()
+        return self._database
 
     @property
     def io(self):
