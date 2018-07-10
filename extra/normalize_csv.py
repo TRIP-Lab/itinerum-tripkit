@@ -8,7 +8,7 @@ import pytz
 import time
 
 # config
-source_dir_name = 'mobility-responses-2017'
+source_dir_name = 'mobilité-responses-2017'
 output_dir = os.path.join('./cleaned', source_dir_name)
 
 # init--create the new output dir and setup logging
@@ -50,7 +50,7 @@ def csv_rows_to_UTC(filename, dt_columns, expected_columns, rename_columns):
             for col in dt_columns:
                 local_dt = row.pop(col)
                 col_utc = col + '_UTC'
-                row[col_utc] = ciso8601.parse_datetime(local_dt).astimezone(pytz.utc)
+                row[col_utc] = ciso8601.parse_datetime(local_dt).astimezone(pytz.utc).replace(tzinfo=None)
             for orig, rename in rename_columns:
                 row[rename] = row.pop(orig)
             normalized.append(row)
@@ -64,6 +64,8 @@ def csv_rows_to_UTC(filename, dt_columns, expected_columns, rename_columns):
 
 
 if __name__ == '__main__':
+    print('CHECK THAT SOURCE DATA CONTAINS TZ INFO FIRST!')
+
     start = time.time()
     logging.info('Updating records to UTC for: {dir}/{fn}'.format(dir=source_dir_name,
                                                                   fn='survey_responses.csv'))

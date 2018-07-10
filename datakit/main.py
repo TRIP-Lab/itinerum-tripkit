@@ -102,24 +102,27 @@ class Itinerum(object):
             self.csv.load_subway_stations(self.config.SUBWAY_STATIONS_FP)
             self.csv.load_exports(self.config.INPUT_DATA_DIR)
 
-    def load_all_users(self):
+    def load_users(self, limit=None):
         """
         Returns all available users as ``<User>`` objects from the database
         :rtype: list of ``<User>`` objects
         """
-        all_uuids = [u.uuid for u in UserSurveyResponse.select(UserSurveyResponse.uuid)]
+        uuids = [u.uuid for u in UserSurveyResponse.select(UserSurveyResponse.uuid)]
+        if limit:
+            uuids = uuids[:limit]
+
         users = []
-        for idx, uuid in enumerate(all_uuids, start=1):
-            logger.info('Loading user from database: {}/{}...'.format(idx, len(all_uuids)))
+        for idx, uuid in enumerate(uuids, start=1):
+            logger.info('Loading user from database: {}/{}...'.format(idx, len(uuids)))
             users.append(self.database.load_user(uuid))
         return users
 
     # Deprecated: we can just call the algorithms directly
-    def run_process(self, algorithm, users, parameters):
-        output = {}
-        for idx, user in enumerate(users, start=1):
-            logger.info('Processing user ({}) trips: {}/{}...'.format(user.uuid, idx, len(users)))
-            coordinates = user.coordinates.dicts()
-            results = algorithm.run(coordinates, parameters=parameters)
-            output[user] = results
-        return output 
+    # def run_process(self, algorithm, users, parameters):
+    #     output = {}
+    #     for idx, user in enumerate(users, start=1):
+    #         logger.info('Processing user ({}) trips: {}/{}...'.format(user.uuid, idx, len(users)))
+    #         coordinates = user.coordinates.dicts()
+    #         results = algorithm.run(coordinates, parameters=parameters)
+    #         output[user] = results
+    #     return output 

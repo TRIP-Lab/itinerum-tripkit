@@ -77,7 +77,7 @@ class CSVParser(object):
         coordinates_fp = os.path.join(input_dir, self.coordinates_csv)
         with open(coordinates_fp, 'r', encoding='utf-8-sig') as csv_f:
             reader = csv.DictReader(csv_f)
-            row_data = []
+            datasource = []
             for row in reader:
                 data = {
                     'user': row['uuid'],
@@ -93,12 +93,12 @@ class CSVParser(object):
                     'mode_detected': self.get(row, 'mode_detected', int),
                     'timestamp_UTC': row['timestamp_UTC']
                 }
-                row_data.append(data)
+                datasource.append(data)
 
             # wrap in single transaction for faster insert
             with self.db.atomic():
-                for idx in range(0, len(row_data), 80):
-                    Coordinate.insert_many(row_data[idx:idx+80]).execute()
+                for idx in range(0, len(datasource), 80):
+                    Coordinate.insert_many(datasource[idx:idx+80]).execute()
 
         logger.info('Loading prompt responses .csv to db...')
         prompt_responses_fp = os.path.join(input_dir, self.prompt_responses_csv)

@@ -20,7 +20,7 @@ class User(object):
         self.cancelled_prompt_responses = db_user.cancelled_prompts
         self.prompt_responses = db_user.prompts
         self.survey_response = {k: getattr(db_user, k) for k in db_user._meta.fields.keys()}
-        self.trips = {}
+        self.trips = []
 
     def __repr__(self):
         return '<User uuid={}>'.format(self.uuid)

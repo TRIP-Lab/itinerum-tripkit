@@ -65,6 +65,8 @@ class Database(object):
             user.cancelled_prompt_responses = (user.cancelled_prompt_responses
                                                    .where(CancelledPromptResponse.displayed_at_UTC <= end))
 
+        # sort trip coordinates into list of Trips
+        trips = {}
         for c in db_user.detected_trip_coordinates:
             if start and c.timestamp_UTC <= start:
                 continue
@@ -76,9 +78,11 @@ class Database(object):
                               h_accuracy=c.h_accuracy,
                               timestamp_UTC=c.timestamp_UTC)
 
-            if not c.trip_num in user.trips:
-                user.trips[c.trip_num] = Trip(num=c.trip_num, trip_code=c.trip_code)
-            user.trips[c.trip_num].points.append(point)
+            if not c.trip_num in trips:
+                trips[c.trip_num] = Trip(num=c.trip_num, trip_code=c.trip_code)
+            trips[c.trip_num].points.append(point)
+        user.trips = [value for key, value in sorted(trips.items())]
+        
         return user
 
 
@@ -99,17 +103,23 @@ class Database(object):
         """
         DetectedTripCoordinate.drop_table()
         DetectedTripCoordinate.create_table()
+        datasource = []
         for c in detected_trips:
             # TODO: this would be more consistent if trip coordinates
             # were named tuples for dot attributes
-            DetectedTripCoordinate.create(user=c['uuid'],
-                                          trip_num=c['trip'],
-                                          trip_code=c['trip_code'],
-                                          latitude=c['latitude'],
-                                          longitude=c['longitude'],
-                                          h_accuracy=c['h_accuracy'],
-                                          timestamp_UTC=c['timestamp_UTC'])
+            datasource.append({
+                'user': c['uuid'],
+                'trip_num': c['trip'],
+                'trip_code': c['trip_code'],
+                'latitude': c['latitude'],
+                'longitude': c['longitude'],
+                'h_accuracy': c['h_accuracy'],
+                'timestamp_UTC': c['timestamp_UTC']
+            })
 
+        with self.db.atomic():
+            for idx in range(0, len(datasource), 80):
+                DetectedTripCoordinate.insert_many(datasource[idx:idx+80]).execute()
 
 
 
@@ -141,12 +151,29 @@ class UserSurveyResponse(BaseModel):
     travel_mode_work_primary = CharField(null=True)
     travel_mode_work_secondary = CharField(null=True)
 
+    @property
+    def coordinates(self):
+        return self.coordinates_backref.order_by(Coordinate.timestamp_UTC)
+
+    @property
+    def prompts(self):
+        return self.prompts_backref
+    
+    @property
+    def cancelled_prompts(self):
+        return self.cancelled_prompts_backref
+
+    @property
+    def detected_trip_coordinates(self):
+        return self.detected_trip_coordinates_backref.order_by(DetectedTripCoordinate.timestamp_UTC)
+    
+
 
 class Coordinate(BaseModel):
     class Meta:
         table_name = 'coordinates'
 
-    user = ForeignKeyField(UserSurveyResponse, backref='coordinates')
+    user = ForeignKeyField(UserSurveyResponse, backref='coordinates_backref')
     latitude = FloatField()
     longitude = FloatField()
     altitude = FloatField(null=True)
@@ -164,7 +191,7 @@ class PromptResponse(BaseModel):
     class Meta:
         table_name = 'prompt_responses'
 
-    user = ForeignKeyField(UserSurveyResponse, backref='prompts')
+    user = ForeignKeyField(UserSurveyResponse, backref='prompts_backref')
     prompt_uuid = UUIDField()
     prompt_num = IntegerField()
     response = TextField()
@@ -179,7 +206,7 @@ class CancelledPromptResponse(BaseModel):
     class Meta:
         table_name = 'cancelled_prompt_responses'
 
-    user = ForeignKeyField(UserSurveyResponse, backref='cancelled_prompts')
+    user = ForeignKeyField(UserSurveyResponse, backref='cancelled_prompts_backref')
     prompt_uuid = UUIDField(unique=True)
     latitude = FloatField()
     longitude = FloatField()
@@ -192,7 +219,7 @@ class DetectedTripCoordinate(BaseModel):
     class Meta:
         table_name = 'detected_trip_coordinates'
 
-    user = ForeignKeyField(UserSurveyResponse, backref='detected_trip_coordinates')
+    user = ForeignKeyField(UserSurveyResponse, backref='detected_trip_coordinates_backref')
     trip_num = IntegerField()
     trip_code = IntegerField()
     latitude = FloatField()
