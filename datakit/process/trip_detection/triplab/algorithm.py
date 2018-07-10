@@ -419,7 +419,8 @@ def summarize(rows):
                 trips[last_trip_id] = distance_speed(group)
                 group = [row]
             last_trip_id = trip_id
-    trips[last_trip_id] = distance_speed(group)
+    if group:
+        trips[last_trip_id] = distance_speed(group)
 
     summaries = {}
     for num, trip in trips.items():

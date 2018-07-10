@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # Kyle Fitzsimmons, 2016
+import ciso8601
 import math
 import time
 import utm
@@ -37,6 +38,7 @@ def process_utm(points):
             p['speed'] = float(p['speed'])
             p['h_accuracy'] = float(p['h_accuracy'])
             p['v_accuracy'] = float(p['v_accuracy'])
+            p['timestamp_UTC'] = ciso8601.parse_datetime(p['timestamp_UTC'])
             out_points.append(p)
         except utm.error.OutOfRangeError:
             pass

@@ -153,9 +153,9 @@ class Coordinate(BaseModel):
     speed = FloatField()
     h_accuracy = FloatField()
     v_accuracy = FloatField()
-    acceleration_x = FloatField()
-    acceleration_y = FloatField()
-    acceleration_z = FloatField()
+    acceleration_x = FloatField(null=True)
+    acceleration_y = FloatField(null=True)
+    acceleration_z = FloatField(null=True)
     mode_detected = IntegerField(null=True)
     timestamp_UTC = DateTimeField()
 

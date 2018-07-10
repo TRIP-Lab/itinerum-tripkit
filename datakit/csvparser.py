@@ -29,7 +29,7 @@ class CSVParser(object):
 
 
     def get(self, row, key, cast_func=None):
-        value = row.get(key).strip()
+        value = row.get(key, '').strip()
         if value:
             if cast_func:
                 return cast_func(value)
@@ -77,23 +77,28 @@ class CSVParser(object):
         coordinates_fp = os.path.join(input_dir, self.coordinates_csv)
         with open(coordinates_fp, 'r', encoding='utf-8-sig') as csv_f:
             reader = csv.DictReader(csv_f)
-            
+            row_data = []
+            for row in reader:
+                data = {
+                    'user': row['uuid'],
+                    'latitude': float(row['latitude']),
+                    'longitude': float(row['longitude']),
+                    'altitude': self.get(row, 'altitude', float),
+                    'speed': self.get(row, 'speed', float),
+                    'h_accuracy': float(row['h_accuracy']),
+                    'v_accuracy': self.get(row, 'v_accuracy', float),
+                    'acceleration_x': self.get(row, 'acceleration_x', float),
+                    'acceleration_y': self.get(row, 'acceleration_y', float),
+                    'acceleration_z': self.get(row, 'acceleration_z', float),
+                    'mode_detected': self.get(row, 'mode_detected', int),
+                    'timestamp_UTC': row['timestamp_UTC']
+                }
+                row_data.append(data)
+
             # wrap in single transaction for faster insert
-            # (this can be made faster with a bulk insert: http://docs.peewee-orm.com/en/latest/peewee/querying.html#bulk-inserts)
             with self.db.atomic():
-                for row in reader:
-                    Coordinate.create(user=row['uuid'],
-                                      latitude=float(row['latitude']),
-                                      longitude=float(row['longitude']),
-                                      altitude=self.get(row, 'altitude', float),
-                                      speed=self.get(row, 'speed', float),
-                                      h_accuracy=float(row['h_accuracy']),
-                                      v_accuracy=self.get(row, 'v_accuracy', float),
-                                      acceleration_x=self.get(row, 'acceleration_x', float),
-                                      acceleration_y=self.get(row, 'acceleration_y', float),
-                                      acceleration_z=self.get(row, 'acceleration_z', float),
-                                      mode_detected=self.get(row, 'mode_detected', int),
-                                      timestamp_UTC=row['timestamp_UTC'])
+                for idx in range(0, len(row_data), 80):
+                    Coordinate.insert_many(row_data[idx:idx+80]).execute()
 
         logger.info('Loading prompt responses .csv to db...')
         prompt_responses_fp = os.path.join(input_dir, self.prompt_responses_csv)
@@ -113,17 +118,20 @@ class CSVParser(object):
 
         logger.info('Loading cancelled prompt responses .csv to db...')
         cancelled_prompt_responses_fp = os.path.join(input_dir, self.cancelled_prompt_responses_csv)
-        with open(cancelled_prompt_responses_fp, 'r', encoding='utf-8-sig') as csv_f:
-            reader = csv.DictReader(csv_f)
+        if os.path.exists(cancelled_prompt_responses_fp):
+            with open(cancelled_prompt_responses_fp, 'r', encoding='utf-8-sig') as csv_f:
+                reader = csv.DictReader(csv_f)
 
-            for row in reader:
-                CancelledPromptResponse.create(user=row['uuid'],
-                                               prompt_uuid=row['prompt_uuid'],
-                                               latitude=float(row['latitude']),
-                                               longitude=float(row['longitude']),
-                                               displayed_at_UTC=row['displayed_at_UTC'],
-                                               cancelled_at_UTC=self.get(row, 'cancelled_at_UTC'),
-                                               is_travelling=self.get(row, 'is_travelling'))
+                for row in reader:
+                    CancelledPromptResponse.create(user=row['uuid'],
+                                                   prompt_uuid=row['prompt_uuid'],
+                                                   latitude=float(row['latitude']),
+                                                   longitude=float(row['longitude']),
+                                                   displayed_at_UTC=row['displayed_at_UTC'],
+                                                   cancelled_at_UTC=self.get(row, 'cancelled_at_UTC'),
+                                                   is_travelling=self.get(row, 'is_travelling'))
+        else:
+            logger.info('{path} not found!'.format(path=cancelled_prompt_responses_fp))
 
 
     def load_trips(self, trips_csv_fp):

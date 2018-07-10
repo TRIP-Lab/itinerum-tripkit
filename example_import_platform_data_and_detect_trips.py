@@ -10,7 +10,7 @@ itinerum = Itinerum(config=datakit_config)
 
 
 # -- Stage 1: load platform data to cache if surveys responses table does not exist
-itinerum.setup(force=True)
+itinerum.setup(force=False)
 
 # -- Stage 2: perform trip detection via library algorithms
 users = itinerum.load_all_users()
@@ -28,8 +28,9 @@ results = itinerum.run_process(itinerum.process.trip_detection.triplab.algorithm
 # format trips into a SQL-friendly flat list of labelled coordinates
 detected_trip_points = []
 for user, (trips, summaries) in results.items():
-    for trip_num, trip in trips.items():
-        for c in trip:
-            c['uuid'] = user.uuid
-            detected_trip_points.append(c)
-itinerum.database.save_trips(detected_trips)
+    if trips:
+        for trip_num, trip in trips.items():
+            for c in trip:
+                c['uuid'] = user.uuid
+                detected_trip_points.append(c)
+itinerum.database.save_trips(detected_trip_points)
