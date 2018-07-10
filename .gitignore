@@ -6,3 +6,4 @@ notebooks/.ipynb_checkpoints
 *.sqlite
 extra/cleaned
 extra/uncleaned
+itinerum.sqlite-journal
