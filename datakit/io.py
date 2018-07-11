@@ -2,6 +2,8 @@
 # Kyle Fitzsimmons, 2018
 from copy import deepcopy
 import csv
+import fiona
+import fiona.crs
 import json
 import os
 import polyline
@@ -122,13 +124,12 @@ def write_trips_geojson(cfg, fn_base, trips):
     """
     Writes detected trips data selected from cache to geojson file.
 
-    :param cfg:     Global configuration object (eventually this should be
-                    supplied upon initialization like :py:class:`CSVParser`)
+    :param cfg:     Global configuration object
     :param fn_base: The base filename to prepend to the output geojson file
-    :param trips:   Iterable of database trips to write to geojson file.
+    :param trips:   Iterable of database trips to write to geojson file
     """
     detected_trips_features = []
-    for trip_num, trip in trips.items():
+    for trip in trips:
         properties = {
             'start_UTC': trip.start_UTC,
             'end_UTC': trip.end_UTC,
@@ -140,12 +141,42 @@ def write_trips_geojson(cfg, fn_base, trips):
     write_features_to_geojson_f(cfg, filename, detected_trips_features)
 
 
+def write_trips_geopackage(cfg, fn_base, trips):
+    """
+    Writes detected trips data selected from cache to geopackage file.
+
+    :param cfg:     Global configuration object
+    :param fn_base: The base filename to prepend to the output geopackage file
+    :param trips:   Iterable of database trips to write to geopackage file
+    """
+    geopackage_fp = os.path.join(cfg.OUTPUT_DATA_DIR, fn_base + '_trips.gpkg')
+    schema = {
+        'geometry': 'LineString',
+        'properties': [('start_UTC', 'datetime'),
+                       ('end_UTC', 'datetime'),
+                       ('trip_code', 'int')]
+    }
+    with fiona.open(geopackage_fp, 'w',
+                    driver='GPKG',
+                    schema=schema,
+                    crs=fiona.crs.from_epsg(4326)) as geopackage_f:
+        for trip in trips:
+            properties = {
+                'start_UTC': trip.start_UTC,
+                'end_UTC': trip.end_UTC,
+                'trip_code': trip.trip_code
+            }
+            feature = points_to_geojson_linestring(trip.geojson_coordinates, properties)
+            geopackage_f.write(feature)
+
+
+
+
 def write_mapmatched_geojson(cfg, fn_base, results):
     """
     Writes map matching results from API query to geojson file.
 
-    :param cfg:     Global configuration object (eventually this should be
-                    supplied upon initialization like :py:class:`CSVParser`)
+    :param cfg:     Global configuration object
     :param fn_base: The base filename to prepend to the output geojson file
     :param results: JSON results from map matching API query
     """

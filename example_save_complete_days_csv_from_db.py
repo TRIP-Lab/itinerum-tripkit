@@ -9,9 +9,10 @@ import datakit_config
 itinerum = Itinerum(config=datakit_config)
 
 # -- Stage 1: load trip detection results via library algorithms
-users = itinerum.load_users()
+users = itinerum.load_users(load_trips=False)
 
 # -- Stage 2: write complete day summaries to .csv
+print('Loading complete day summaries from cache...')
 trip_day_summaries = {}
 for user in users:
     trip_day_summaries[user.uuid] = itinerum.database.load_trip_day_summaries(user)

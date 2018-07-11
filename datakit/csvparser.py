@@ -3,12 +3,14 @@
 import csv
 import logging
 import os
+from playhouse.migrate import migrate, SqliteMigrator
 
 
 from .database import (UserSurveyResponse, Coordinate, PromptResponse, CancelledPromptResponse,
                        DetectedTripCoordinate, SubwayStationEntrance)
 
 
+SQLITE_MAX_STATEMENT_VARIABLES = 999
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -22,6 +24,7 @@ class CSVParser(object):
 
     def __init__(self, database):
         self.db = database.db
+        self._migrator = SqliteMigrator(self.db)
         self.cancelled_prompt_responses_csv = 'cancelled_prompts.csv'
         self.coordinates_csv = 'coordinates.csv'
         self.prompt_responses_csv = 'prompt_responses.csv'
@@ -73,7 +76,9 @@ class CSVParser(object):
                                           travel_mode_work_primary=self.get(row, 'travel_mode_work'),
                                           travel_mode_work_secondary=self.get(row, 'travel_mode_alt_work'))
 
+
         logger.info('Loading coordinates .csv to db...')
+        migrate(self._migrator.drop_index(Coordinate, 'coordinate_user_id'))
         coordinates_fp = os.path.join(input_dir, self.coordinates_csv)
         with open(coordinates_fp, 'r', encoding='utf-8-sig') as csv_f:
             reader = csv.DictReader(csv_f)
@@ -96,25 +101,45 @@ class CSVParser(object):
                 datasource.append(data)
 
             # wrap in single transaction for faster insert
+            slice_size = SQLITE_MAX_STATEMENT_VARIABLES // len(data)
             with self.db.atomic():
-                for idx in range(0, len(datasource), 80):
-                    Coordinate.insert_many(datasource[idx:idx+80]).execute()
+                for idx in range(0, len(datasource), slice_size):
+                    Coordinate.insert_many(datasource[idx:idx+slice_size]).execute()
+        migrate(self._migrator.add_index('coordinates', ('user_id',), False))
 
+        # profiled with mobilité
+        # 25.3s - single loop, created directly via model
+        # 23.4s - dropped index, single loop
+        #  7.1s - collect from csv to list and bulk write in 80 slice batches to db
+        #  6.72s - dropped index, collect from csv to list and bulk write in 80 slice batches to db (below)
+        #  7.15s - dropped index, single loop, bulk insert within loop determined by sqlite max slice size
         logger.info('Loading prompt responses .csv to db...')
+        migrate(self._migrator.drop_index(PromptResponse, 'promptresponse_user_id'))
         prompt_responses_fp = os.path.join(input_dir, self.prompt_responses_csv)
         with open(prompt_responses_fp, 'r', encoding='utf-8-sig') as csv_f:
             reader = csv.DictReader(csv_f)
-
+            datasource = []
             for row in reader:
-                PromptResponse.create(user=row['uuid'],
-                                      prompt_uuid=row['prompt_uuid'],
-                                      prompt_num=int(row['prompt_num']),
-                                      response=row['response'],
-                                      latitude=float(row['latitude']),
-                                      longitude=float(row['longitude']),
-                                      displayed_at_UTC=row['displayed_at_UTC'],
-                                      recorded_at_UTC=row['recorded_at_UTC'],
-                                      edited_at_UTC=row['edited_at_UTC'])
+                data = {
+                    'user': row['uuid'],
+                    'prompt_uuid': row['prompt_uuid'],
+                    'prompt_num': row['prompt_num'],
+                    'response': row['response'],
+                    'latitude': (row['latitude']),
+                    'longitude': float(row['longitude']),
+                    'displayed_at_UTC': row['displayed_at_UTC'],
+                    'recorded_at_UTC': row['recorded_at_UTC'],
+                    'edited_at_UTC': row['edited_at_UTC']
+                }
+                datasource.append(data)
+
+            # wrap in single transaction for faster insert
+            slice_size = SQLITE_MAX_STATEMENT_VARIABLES // len(data)
+            with self.db.atomic():
+                for idx in range(0, len(datasource), slice_size):
+                    PromptResponse.insert_many(datasource[idx:idx+slice_size]).execute()
+        migrate(self._migrator.add_index('prompt_responses', ('user_id',), False))
+
 
         logger.info('Loading cancelled prompt responses .csv to db...')
         cancelled_prompt_responses_fp = os.path.join(input_dir, self.cancelled_prompt_responses_csv)

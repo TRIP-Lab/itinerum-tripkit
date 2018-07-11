@@ -14,7 +14,7 @@ from .database import (Coordinate, PromptResponse, CancelledPromptResponse,
                        DetectedTripCoordinate, SubwayStationEntrance)
 
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
@@ -51,6 +51,7 @@ class Itinerum(object):
 
         self._database = Database()
         self._database.db.init(config.DATABASE_FN)
+
         self._csv = CSVParser(self._database)
 
         # attach I/O functions and extensions as objects
@@ -102,17 +103,25 @@ class Itinerum(object):
             self.csv.load_subway_stations(self.config.SUBWAY_STATIONS_FP)
             self.csv.load_exports(self.config.INPUT_DATA_DIR)
 
-    def load_users(self, limit=None):
+    def load_users(self, uuid=None, limit=None, load_trips=True):
         """
         Returns all available users as ``<User>`` objects from the database
         :rtype: list of ``<User>`` objects
         """
-        uuids = [u.uuid for u in UserSurveyResponse.select(UserSurveyResponse.uuid)]
-        if limit:
-            uuids = uuids[:limit]
+
+        if uuid:
+            uuids = [uuid]
+        else:
+            uuids = [u.uuid for u in UserSurveyResponse.select(UserSurveyResponse.uuid)]
+            if limit:
+                uuids = uuids[:limit]
 
         users = []
         for idx, uuid in enumerate(uuids, start=1):
             logger.info('Loading user from database: {}/{}...'.format(idx, len(uuids)))
-            users.append(self.database.load_user(uuid))
+
+            user = self.database.load_user(uuid)
+            if load_trips:
+                user.trips = self.load_trips(db_user, start, end)
+            users.append(user)
         return users

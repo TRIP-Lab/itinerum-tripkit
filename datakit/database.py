@@ -72,8 +72,6 @@ class Database(object):
                                                   .where(DetectedTripCoordinate.timestamp_UTC <= end))
             user.detected_trip_day_summaries = (user.detected_trip_day_summaries
                                                     .where(DetectedTripDaySummary.date_UTC <= end))
-
-        user.trips = self.load_trips(db_user, start, end)        
         return user
 
 
@@ -141,6 +139,7 @@ class Database(object):
         """
         DetectedTripCoordinate.drop_table()
         DetectedTripCoordinate.create_table()
+
         datasource = []
         for c in detected_trips:
             # TODO: this would be more consistent if trip coordinates
