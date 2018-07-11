@@ -44,12 +44,12 @@ class Trip(object):
             return self.points[-1].timestamp_UTC
 
     @property
-    def start_latlon(self):
-        return (self.points[0].latitude, self.points[0].longitude)
+    def start(self):
+        return self.points[0]
 
     @property
-    def end_latlon(self):
-        return (self.points[-1].latitude, self.points[-1].longitude)
+    def end(self):
+        return self.points[-1]
 
     @property
     def geojson_coordinates(self):

@@ -15,7 +15,7 @@ class TripPoint(object):
 
     """
 
-    def __init__(self, latitude, longitude, h_accuracy, timestamp_UTC):
+    def __init__(self, latitude, longitude, h_accuracy, timestamp_UTC, database_id):
         assert isinstance(timestamp_UTC, datetime)
 
         self.latitude = float(latitude)
@@ -23,3 +23,4 @@ class TripPoint(object):
         self.h_accuracy = float(h_accuracy)
         self.timestamp_UTC = timestamp_UTC
         self.timestamp_epoch = (timestamp_UTC - datetime(1970, 1, 1)).total_seconds()
+        self.database_id = database_id

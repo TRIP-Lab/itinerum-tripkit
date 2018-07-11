@@ -76,7 +76,8 @@ class Database(object):
             point = TripPoint(latitude=c.latitude,
                               longitude=c.longitude,
                               h_accuracy=c.h_accuracy,
-                              timestamp_UTC=c.timestamp_UTC)
+                              timestamp_UTC=c.timestamp_UTC,
+                              database_id=c.id)
 
             if not c.trip_num in trips:
                 trips[c.trip_num] = Trip(num=c.trip_num, trip_code=c.trip_code)
@@ -121,6 +122,27 @@ class Database(object):
             for idx in range(0, len(datasource), 80):
                 DetectedTripCoordinate.insert_many(datasource[idx:idx+80]).execute()
 
+    def save_trip_day_summaries(self, trip_day_summaries):
+        """
+        Saves the daily summaries for detected trip days to cache database. This
+        table with be recreated on each save.
+
+        :param trip_day_summaries: List of daily summaries from a daily trip counts algorithm.
+        """
+        DetectedTripDaySummary.drop_table()
+        DetectedTripDaySummary.create_table()
+
+        for s in trip_day_summaries:
+            start_point_id, end_point_id = None, None
+            if s['start_point']:
+                start_point_id = s['start_point'].database_id
+                end_point_id = s['end_point'].database_id
+            DetectedTripDaySummary.create(user=s['uuid'],
+                                          date_UTC=s['date_UTC'],
+                                          has_trips=s['has_trips'],
+                                          start_point=start_point_id,
+                                          end_point=end_point_id,
+                                          is_complete=s['is_complete'])
 
 
 class BaseModel(Model):
@@ -166,6 +188,10 @@ class UserSurveyResponse(BaseModel):
     @property
     def detected_trip_coordinates(self):
         return self.detected_trip_coordinates_backref.order_by(DetectedTripCoordinate.timestamp_UTC)
+
+    @property
+    def detected_trip_day_summaries(self):
+        return self.detected_trip_day_summaries_backref.order_by(DetectedTripDaySummary.trip_num)
     
 
 
@@ -226,6 +252,18 @@ class DetectedTripCoordinate(BaseModel):
     longitude = FloatField()
     h_accuracy = FloatField()
     timestamp_UTC = DateTimeField()
+
+
+class DetectedTripDaySummary(BaseModel):
+    class Meta:
+        table_name = 'detected_trip_day_summaries'
+
+    user = ForeignKeyField(UserSurveyResponse, backref='detected_trip_day_summaries_backref')
+    date_UTC = DateField()
+    has_trips = BooleanField()
+    start_point = ForeignKeyField(DetectedTripCoordinate, null=True)
+    end_point = ForeignKeyField(DetectedTripCoordinate, null=True)
+    is_complete = BooleanField()
 
 
 class SubwayStationEntrance(BaseModel):
