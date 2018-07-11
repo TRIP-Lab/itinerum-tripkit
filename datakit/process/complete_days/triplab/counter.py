@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # Kyle Fitzsimmons, 2018
 from datetime import datetime, timedelta
+from geopy import distance
 import pytz
 
 
@@ -86,14 +87,13 @@ def add_inactivity_periods(daily_summaries):
         summary['consecutive_inactive_days'] = inactive_days
         summary['first_inactive_day'] = first_inactive_day
 
-        if summary_before:
+        if summary_before is not None:
             summary['before_is_complete'] = summary_before['is_complete'] is True
         else:
             summary['before_is_complete'] = False
         summary_before = summary
 
-    # add the total consecutive inactive day streak tally to each
-    # day within the streak
+    # add the total inactive day tally to each day within the streak of inactive days
     summary_after = None
     latest_streak_max = None
     for date, summary in sorted(daily_summaries.items(), reverse=True):
@@ -106,7 +106,7 @@ def add_inactivity_periods(daily_summaries):
         if date == summary['first_inactive_day']:
             latest_streak_max = None
 
-        if summary_after:
+        if summary_after is not None:
             summary['after_is_complete'] = summary_after['is_complete'] is True
         else:
             summary['after_is_complete'] = False
@@ -115,19 +115,39 @@ def add_inactivity_periods(daily_summaries):
     return daily_summaries
 
 
-def find_explained_inactivity_periods(daily_summaries):
+def find_explained_inactivity_periods(daily_summaries, daily_trip_summaries):
     """Label completely inactive days (no trips) as complete days when
        there are complete days adjacent (up to 2 day maximum).
     """
     for date, summary in sorted(daily_summaries.items()):
-        print(date, summary)
+        summary['inactivity_distance'] = 0.
+
         no_trip_data = not any([summary['has_trips'], summary['is_complete']])
         if no_trip_data:
             # test whether day is included within a 1-2 missing data streak
             if summary['inactive_day_streak'] <= 2:
-                pass
+                prev_active_day = summary['first_inactive_day'] - timedelta(days=1)
+                next_active_day = summary['first_inactive_day'] + timedelta(days=summary['inactive_day_streak'])
+
+                prev_complete_day = None
+                if prev_active_day in daily_summaries and daily_summaries[prev_active_day]['is_complete']:
+                    prev_complete_day = prev_active_day
+
+                next_complete_day = None
+                if prev_active_day in daily_summaries and daily_summaries[prev_active_day]['is_complete']:
+                    next_complete_day = prev_active_day
+
+                if prev_complete_day and next_complete_day:
+                    last_end_coordinate = daily_trip_summaries[prev_active_day]['end_loc'][-1]
+                    next_start_coordinate = daily_trip_summaries[next_active_day]['start_loc'][0]
+                    inactivity_distance = distance.distance(last_end_coordinate, next_start_coordinate).meters
+
+                    if inactivity_distance < 750.:
+                        summary['is_complete'] = True
+                        summary['inactivity_distance'] = inactivity_distance
             else:
                 pass  # no change to original data
+    return daily_summaries
 
 
 
@@ -140,8 +160,11 @@ def run(trips):
     daily_summaries = find_complete_days(daily_trip_summaries)
     daily_summaries = add_inactivity_periods(daily_summaries)
     
+    complete_days = find_explained_inactivity_periods(daily_summaries, daily_trip_summaries)
     from pprint import pprint
-    pprint(find_explained_inactivity_periods(daily_summaries))
+    pprint(complete_days)
+
+    return complete_days
 
 
 

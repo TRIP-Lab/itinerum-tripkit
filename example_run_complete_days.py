@@ -9,7 +9,7 @@ import datakit_config
 itinerum = Itinerum(config=datakit_config)
 
 # -- Stage 1: load trip detection results via library algorithms
-users = itinerum.load_users(limit=5)
+users = itinerum.load_users(limit=15)
 
 for idx, user in enumerate(users, start=1):
     print('Processing user ({}) trips: {}/{}...'.format(user.uuid, idx, len(users)))
