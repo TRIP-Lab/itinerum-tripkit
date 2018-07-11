@@ -116,13 +116,3 @@ class Itinerum(object):
             logger.info('Loading user from database: {}/{}...'.format(idx, len(uuids)))
             users.append(self.database.load_user(uuid))
         return users
-
-    # Deprecated: we can just call the algorithms directly
-    # def run_process(self, algorithm, users, parameters):
-    #     output = {}
-    #     for idx, user in enumerate(users, start=1):
-    #         logger.info('Processing user ({}) trips: {}/{}...'.format(user.uuid, idx, len(users)))
-    #         coordinates = user.coordinates.dicts()
-    #         results = algorithm.run(coordinates, parameters=parameters)
-    #         output[user] = results
-    #     return output 

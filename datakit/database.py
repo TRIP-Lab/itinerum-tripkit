@@ -59,15 +59,33 @@ class Database(object):
             user.prompt_responses = user.prompt_responses.where(PromptResponse.displayed_at_UTC >= start)
             user.cancelled_prompt_responses = (user.cancelled_prompt_responses
                                                    .where(CancelledPromptResponse.displayed_at_UTC >= start))
+            user.detected_trip_coordinates = (user.detected_trip_coordinates
+                                                  .where(DetectedTripCoordinate.timestamp_UTC >= start))
+            user.detected_trip_day_summaries = (user.detected_trip_day_summaries
+                                                    .where(DetectedTripDaySummary.date_UTC >= start))
         if end:
             user.coordinates = user.coordinates.where(Coordinate.timestamp_UTC <= end)
             user.prompt_responses = user.prompt_responses.where(PromptResponse.displayed_at_UTC <= end)
             user.cancelled_prompt_responses = (user.cancelled_prompt_responses
                                                    .where(CancelledPromptResponse.displayed_at_UTC <= end))
+            user.detected_trip_coordinates = (user.detected_trip_coordinates
+                                                  .where(DetectedTripCoordinate.timestamp_UTC <= end))
+            user.detected_trip_day_summaries = (user.detected_trip_day_summaries
+                                                    .where(DetectedTripDaySummary.date_UTC <= end))
 
-        # sort trip coordinates into list of Trips
+        user.trips = self.load_trips(db_user, start, end)        
+        return user
+
+
+    def load_trips(self, user, start=None, end=None):
+        """
+        Load the sorted trips for a given user as list.
+
+        :param user: A database user response record with a populated
+                     `detected_trip_coordinates` relation.
+        """
         trips = {}
-        for c in db_user.detected_trip_coordinates:
+        for c in user.detected_trip_coordinates:
             if start and c.timestamp_UTC <= start:
                 continue
             if end and c.timestamp_UTC >= end:
@@ -82,10 +100,29 @@ class Database(object):
             if not c.trip_num in trips:
                 trips[c.trip_num] = Trip(num=c.trip_num, trip_code=c.trip_code)
             trips[c.trip_num].points.append(point)
-        user.trips = [value for key, value in sorted(trips.items())]
-        
-        return user
+        return [value for key, value in sorted(trips.items())]
 
+    def load_trip_day_summaries(self, user):
+        """
+        Load the daily trip summaries for a given user as dict.
+
+        :param user: A database user response record with a populated
+                     `detected_trip_day_summaries` relation.
+        """
+        day_summaries = {}
+        for s in user.detected_trip_day_summaries:
+            day_summaries[s.date_UTC] = {
+                'has_trips': s.has_trips,
+                'is_complete': s.is_complete,
+                'consecutive_inactive_days': s.consecutive_inactive_days,
+                'inactivity_streak': s.inactivity_streak,
+                'inactivity_distance': s.inactivity_distance,
+                'start_latitude': s.start_point.latitude if s.start_point else None,
+                'start_longitude': s.start_point.longitude if s.start_point else None,
+                'end_latitude': s.end_point.latitude if s.start_point else None,
+                'end_longitude': s.end_point.longitude if s.start_point else None
+            }
+        return day_summaries
 
     def load_subway_entrances(self):
         """
@@ -140,9 +177,12 @@ class Database(object):
             DetectedTripDaySummary.create(user=s['uuid'],
                                           date_UTC=s['date_UTC'],
                                           has_trips=s['has_trips'],
+                                          is_complete=s['is_complete'],
+                                          consecutive_inactive_days=s['consecutive_inactive_days'],
+                                          inactivity_streak=s.get('inactive_day_streak'),
+                                          inactivity_distance=s.get('inactivity_distance'),
                                           start_point=start_point_id,
-                                          end_point=end_point_id,
-                                          is_complete=s['is_complete'])
+                                          end_point=end_point_id)
 
 
 class BaseModel(Model):
@@ -191,7 +231,7 @@ class UserSurveyResponse(BaseModel):
 
     @property
     def detected_trip_day_summaries(self):
-        return self.detected_trip_day_summaries_backref.order_by(DetectedTripDaySummary.trip_num)
+        return self.detected_trip_day_summaries_backref.order_by(DetectedTripDaySummary.date_UTC)
     
 
 
@@ -261,9 +301,12 @@ class DetectedTripDaySummary(BaseModel):
     user = ForeignKeyField(UserSurveyResponse, backref='detected_trip_day_summaries_backref')
     date_UTC = DateField()
     has_trips = BooleanField()
+    is_complete = BooleanField()
+    consecutive_inactive_days = IntegerField()
+    inactivity_streak = IntegerField(null=True)
+    inactivity_distance = FloatField(null=True)
     start_point = ForeignKeyField(DetectedTripCoordinate, null=True)
     end_point = ForeignKeyField(DetectedTripCoordinate, null=True)
-    is_complete = BooleanField()
 
 
 class SubwayStationEntrance(BaseModel):

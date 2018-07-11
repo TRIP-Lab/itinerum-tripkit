@@ -136,8 +136,6 @@ def find_explained_inactivity_periods(daily_summaries, daily_trip_summaries):
     there are complete days adjacent (up to 2 day maximum).
     """
     for date, summary in sorted(daily_summaries.items()):
-        summary['inactivity_distance'] = 0.
-
         no_trip_data = not any([summary['has_trips'], summary['is_complete']])
         if no_trip_data:
             # test whether day is included within a 1-2 missing data streak

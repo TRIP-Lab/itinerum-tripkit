@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # Kyle Fitzsimmons, 2018
 from copy import deepcopy
+import csv
 import json
 import os
 import polyline
@@ -186,4 +187,26 @@ def write_features_to_geojson_f(cfg, filename, features):
     geojson_fp = os.path.join(cfg.OUTPUT_DATA_DIR, filename)
     with open(geojson_fp, 'w') as geojson_f:
         geojson_f.write(json.dumps(collection, default=utils.json_serialize))
+
+
+def write_complete_days_csv(cfg, filename, trip_day_summaries):
+    csv_fp = os.path.join(cfg.OUTPUT_DATA_DIR, filename)
+
+    csv_rows = []
+    for uuid, daily_summaries in sorted(trip_day_summaries.items()):
+        for date, summary in sorted(daily_summaries.items()):
+            summary['uuid'] = uuid
+            summary['date_UTC'] = date
+            summary['has_trips'] = int(summary['has_trips'])
+            summary['is_complete'] = int(summary['is_complete'])
+            csv_rows.append(summary)
+
+    headers = ['uuid', 'date_UTC', 'has_trips', 'is_complete', 'consecutive_inactive_days',
+               'inactivity_streak', 'inactivity_distance', 'start_latitude', 'start_longitude',
+               'end_latitude', 'end_longitude']
+    with open(csv_fp, 'w') as csv_f:
+        writer = csv.DictWriter(csv_f, fieldnames=headers)
+        writer.writeheader()
+        writer.writerows(csv_rows)
+
 

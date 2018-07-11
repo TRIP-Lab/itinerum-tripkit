@@ -10,10 +10,10 @@ itinerum = Itinerum(config=datakit_config)
 
 
 # -- Stage 1: load platform data to cache if surveys responses table does not exist
-itinerum.setup(force=False)
+# itinerum.setup(force=False)
 
 # -- Stage 2: perform trip detection via library algorithms
-users = itinerum.load_all_users()
+users = itinerum.load_users()
 
 parameters = {
     'subway_stations': itinerum.database.load_subway_entrances(),
@@ -22,10 +22,16 @@ parameters = {
     'cold_start_distance': datakit_config.TRIP_DETECTION_COLD_START_DISTANCE_METERS,
     'accuracy_cutoff_meters': datakit_config.TRIP_DETECTION_ACCURACY_CUTOFF_METERS    
 }
-results = itinerum.run_process(itinerum.process.trip_detection.triplab.algorithm, users, parameters)
+
+results = {}
+for idx, user in enumerate(users, start=1):
+    print('Processing user ({}) trips: {}/{}...'.format(user.uuid, idx, len(users)))
+    results[user] = itinerum.process.trip_detection.triplab.algorithm.run(user.coordinates.dicts(),
+                                                                          parameters=parameters)
 
 # -- Stage 3: save output in database as cache
 # format trips into a SQL-friendly flat list of labelled coordinates
+print('Writing detected trip data to the database...')
 detected_trip_points = []
 for user, (trips, summaries) in results.items():
     if trips:
