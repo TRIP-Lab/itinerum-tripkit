@@ -51,7 +51,7 @@ def csv_rows_to_UTC(filename, dt_columns, expected_columns, rename_columns, tz=N
                 local_dt = row.pop(col)
                 col_utc = col + '_UTC'
                 if tz:
-                    ciso8601.parse_datetime(local_dt, tzinfo=tz).astimezone(pytz.utc).replace(tzinfo=None)
+                    row[col_utc] = tz.localize(ciso8601.parse_datetime(local_dt)).astimezone(pytz.utc).replace(tzinfo=None)
                 else:
                     row[col_utc] = ciso8601.parse_datetime(local_dt).astimezone(pytz.utc).replace(tzinfo=None)
             for orig, rename in rename_columns:
@@ -70,20 +70,20 @@ if __name__ == '__main__':
     print('Check whether source data contains tzinfo on timestamp first!')
 
     start = time.time()
-    logging.info('Updating records to UTC for: {dir}/{fn}'.format(dir=source_dir_name,
-                                                                  fn='survey_responses.csv'))
-    csv_rows_to_UTC('survey_responses.csv',
-                    dt_columns=['created_at'],
-                    expected_columns=['modified_at_UTC'],
-                    rename_columns=[])
+    # logging.info('Updating records to UTC for: {dir}/{fn}'.format(dir=source_dir_name,
+    #                                                               fn='survey_responses.csv'))
+    # csv_rows_to_UTC('survey_responses.csv',
+    #                 dt_columns=['created_at'],
+    #                 expected_columns=['modified_at_UTC'],
+    #                 rename_columns=[])
 
 
-    logging.info('Updating records to UTC for: {dir}/{fn}'.format(dir=source_dir_name,
-                                                                  fn='prompt_responses.csv'))
-    csv_rows_to_UTC('prompt_responses.csv',
-                    dt_columns=['displayed_at', 'recorded_at'],
-                    expected_columns=['prompt_uuid', 'edited_at_UTC'],
-                    rename_columns=[])
+    # logging.info('Updating records to UTC for: {dir}/{fn}'.format(dir=source_dir_name,
+    #                                                               fn='prompt_responses.csv'))
+    # csv_rows_to_UTC('prompt_responses.csv',
+    #                 dt_columns=['displayed_at', 'recorded_at'],
+    #                 expected_columns=['prompt_uuid', 'edited_at_UTC'],
+    #                 rename_columns=[])
 
 
     logging.info('Updating records to UTC for: {dir}/{fn}'.format(dir=source_dir_name,
@@ -91,7 +91,8 @@ if __name__ == '__main__':
     csv_rows_to_UTC('coordinates.csv',
                     dt_columns=['timestamp'],
                     expected_columns=[],
-                    rename_columns=[])
+                    rename_columns=[],
+                    tz=pytz.timezone('America/Toronto'))
 
     end = time.time()
     logging.info('Processing finished in {:.3f} seconds.'.format(end - start))

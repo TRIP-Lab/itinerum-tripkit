@@ -62,14 +62,16 @@ class Itinerum(object):
     @property
     def csv(self):
         """
-        Gives access to the :py:class:`datakit.csvparser.CSVParser` object initialized with Itinerum object.
+        Gives access to the :py:class:`datakit.csvparser.CSVParser` object
+        initialized with Itinerum object.
         """
         return self._csv
     
     @property  
     def database(self):
         """
-        Gives access to the cache :py:class:`datakit.database.Database` object initialized with Itinerum object.
+        Gives access to the cache :py:class:`datakit.database.Database` object
+        initialized with Itinerum object.
         """
         return self._database
 
@@ -86,14 +88,18 @@ class Itinerum(object):
         Gives access to the GPS point and trip processing submodules.
         """
         return self._process
-    
 
-    def setup(self, force=False):
+    def setup(self, force=False, generate_null_survey=False):
         """
         Create the cache database tables if the UserSurveyResponse table does not exist.
 
-        :param force: optionally supply True to force creation of a new cache database
-        :type force: boolean
+        :param force:                optionally supply True to force creation
+                                     of a new  cache database
+        :param generate_null_survey: optionally supply True to generate an empty
+                                     survey responses table for coordinates-only data
+
+        :type force:                 boolean
+        :type generate_null_survey:  boolean
         """
         if force:
             self.database.drop()
@@ -101,14 +107,28 @@ class Itinerum(object):
         if not UserSurveyResponse.table_exists():
             self.database.create()
             self.csv.load_subway_stations(self.config.SUBWAY_STATIONS_FP)
-            self.csv.load_exports(self.config.INPUT_DATA_DIR)
+            if generate_null_survey is False:
+                self.csv.load_export_survey_responses(self.config.INPUT_DATA_DIR)
+            else:
+                self.csv.generate_null_survey(self.config.INPUT_DATA_DIR)
+            self.csv.load_export_coordinates(self.config.INPUT_DATA_DIR)
+            # self.csv.load_export_prompt_responses(self.config.INPUT_DATA_DIR)
+            # self.csv.load_export_cancelled_prompt_responses(self.config.INPUT_DATA_DIR)
 
     def load_users(self, uuid=None, limit=None, load_trips=True):
         """
         Returns all available users as ``<User>`` objects from the database
         :rtype: list of ``<User>`` objects
-        """
 
+        :param uuid:       Optionally supply an individual user's UUID to load
+        :param limit:      Optionally supply a maximum number of users to load
+        :param load_trips: Optionally supply False to disable automatic loading
+                           of trips to User objects on initialization
+
+        :type uuid:        string
+        :type limit:       integer
+        :type load_trips:  boolean
+        """
         if uuid:
             uuids = [uuid]
         else:
@@ -122,6 +142,6 @@ class Itinerum(object):
 
             user = self.database.load_user(uuid)
             if load_trips:
-                user.trips = self.load_trips(db_user, start, end)
+                user.trips = self.database.load_trips(user)
             users.append(user)
         return users

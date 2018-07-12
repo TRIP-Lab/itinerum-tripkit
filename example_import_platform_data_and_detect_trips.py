@@ -23,19 +23,18 @@ parameters = {
     'accuracy_cutoff_meters': datakit_config.TRIP_DETECTION_ACCURACY_CUTOFF_METERS    
 }
 
-results = {}
 for idx, user in enumerate(users, start=1):
     print('Processing user ({}) trips: {}/{}...'.format(user.uuid, idx, len(users)))
-    results[user] = itinerum.process.trip_detection.triplab.algorithm.run(user.coordinates.dicts(),
-                                                                          parameters=parameters)
+    user.trips = itinerum.process.trip_detection.triplab.algorithm.run(user.coordinates.dicts(),
+                                                                       parameters=parameters)
 
 # -- Stage 3: save output in database as cache
 # format trips into a SQL-friendly flat list of labelled coordinates
 print('Writing detected trip data to the database...')
 detected_trip_points = []
-for user, (trips, summaries) in results.items():
-    if trips:
-        for trip_num, trip in trips.items():
+for user in users:
+    if user.trips:
+        for trip in user.trips.items():
             for c in trip:
                 c['uuid'] = user.uuid
                 detected_trip_points.append(c)

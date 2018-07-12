@@ -34,7 +34,7 @@ def group_trips_by_day(first_date, last_date, trips):
         daily_trip_summaries[date] = {}
         daily_trip_summaries[date]['trip_codes'] = []
         daily_trip_summaries[date]['start_points'] = []
-        daily_trip_summaries[date]['second_trip_points'] = []
+        daily_trip_summaries[date]['second_points'] = []
         daily_trip_summaries[date]['end_points'] = []
 
     for t in trips:
@@ -43,7 +43,7 @@ def group_trips_by_day(first_date, last_date, trips):
         date = t.start_UTC.date()
         daily_trip_summaries[date]['start_points'].append(t.start)
         if len(t.points) > 1:
-            daily_trip_summaries[date]['second_trip_points'].append(t.points[1])
+            daily_trip_summaries[date]['second_points'].append(t.points[1])
         daily_trip_summaries[date]['end_points'].append(t.end)
         daily_trip_summaries[date]['trip_codes'].append(t.trip_code)
     return daily_trip_summaries
@@ -158,8 +158,7 @@ def find_explained_inactivity_periods(daily_summaries, daily_trip_summaries):
                     last_end_point = daily_trip_summaries[prev_active_day]['end_points'][-1]
                     last_end_coordinate = (last_end_point.latitude, last_end_point.longitude)
 
-                    # print(daily_trip_summaries[next_active_day])
-                    next_start_point = daily_trip_summaries[next_active_day]['second_trip_points'][0]
+                    next_start_point = daily_trip_summaries[next_active_day]['second_points'][0]
                     next_start_coordinate = (next_start_point.latitude, next_start_point.longitude)
                     inactivity_distance = distance.distance(last_end_coordinate, next_start_coordinate).meters
 
