@@ -3,6 +3,7 @@ Babel==2.6.0
 certifi==2018.4.16
 chardet==3.0.4
 docutils==0.14
+fiona==1.7.12
 geographiclib==1.49
 geopy==1.14.0
 idna==2.6
