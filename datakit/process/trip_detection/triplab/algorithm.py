@@ -220,7 +220,7 @@ def filter_single_points(linked_trips):
     return cleaned_trips
 
 
-def infer_missing_trips(stations, linked_trips):
+def infer_missing_trips(stations, linked_trips, cold_start_m=750):
     '''Determines the missing distance and period between each trip; key is correlated to linked_trips
        where the missing trip key indicates the gap before the linked trip with the same key'''
     missing_trips = {}
@@ -260,13 +260,14 @@ def infer_missing_trips(stations, linked_trips):
             # check for missing trips to/from a metro
             intersect1, station1 = metro_buffer(stations, prior_point, 300)
             intersect2, station2 = metro_buffer(stations, first_point, 300)
+
             if intersect1 and intersect2 and station1 != station2:
                 missing['note'] = 'missing trip - metro'
                 missing['merge_codes'].append('missing trip - metro')
                 missing_trips[num] = missing
 
             # next, check if missing trip is below the cold start threshold
-            elif spatial_gap <= 750:
+            elif spatial_gap <= cold_start_m:
                 missing['note'] = 'cold start'
                 missing['prev_time'] = prior_timestamp
                 missing['timestamp_UTC'] = timestamp
@@ -462,7 +463,6 @@ def summarize(rows):
         }
 
         summaries[num] = outrow
-
         for p in trip:
             p['trip_code'] = c
 
@@ -482,7 +482,7 @@ def run(points, parameters):
     metro_linked_trips = find_metro_transfers(stations, segment_groups, buffer_m=parameters['subway_buffer_meters'])
     velocity_connected_trips = connect_by_velocity(metro_linked_trips)
     cleaned_trips = filter_single_points(velocity_connected_trips)
-    missing_trips = infer_missing_trips(stations, cleaned_trips)
+    missing_trips = infer_missing_trips(stations, cleaned_trips, cold_start_m=parameters['cold_start_distance'])
     rows = merge_trips(cleaned_trips, missing_trips, stations)
     trips, summaries = summarize(rows)
     return trips, summaries

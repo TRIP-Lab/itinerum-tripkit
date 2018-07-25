@@ -24,7 +24,8 @@ user = itinerum.database.load_user(uuid, start=datetime(2018, 5, 26), end=dateti
 
 
 ## perform mapmatching using OSRM API
-mapmatched_results = itinerum.process.map_match.osrm.match(coordinates=user.coordinates, matcher='BIKING')
+mapmatched_results = itinerum.process.map_match.osrm.match(coordinates=user.coordinates,
+                                                           matcher='BIKING')
 
 
 # -- Stage 3: write input and output data to geojsons

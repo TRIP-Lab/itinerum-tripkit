@@ -7,3 +7,5 @@ notebooks/.ipynb_checkpoints
 extra/cleaned
 extra/uncleaned
 itinerum.sqlite-journal
+extra/diffs
+datakit/process/trip_detection/legacy

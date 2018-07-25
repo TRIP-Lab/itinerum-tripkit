@@ -115,19 +115,25 @@ class Itinerum(object):
             # self.csv.load_export_prompt_responses(self.config.INPUT_DATA_DIR)
             # self.csv.load_export_cancelled_prompt_responses(self.config.INPUT_DATA_DIR)
 
-    def load_users(self, uuid=None, limit=None, load_trips=True):
+    def load_users(self, uuid=None, load_trips=True, limit=None, start=None, end=None):
         """
         Returns all available users as ``<User>`` objects from the database
         :rtype: list of ``<User>`` objects
 
         :param uuid:       Optionally supply an individual user's UUID to load
-        :param limit:      Optionally supply a maximum number of users to load
         :param load_trips: Optionally supply False to disable automatic loading
                            of trips to User objects on initialization
+        :param limit:      Optionally supply a maximum number of users to load
+        :param start:      Optionally supply a miminum timestamp bounds (inclusive)
+                           for loading user coordinate and prompts data
+        :param end:        Optionally supply a maximum timestamp bounds (inclusive)
+                           for loading user coordinate and prompts data
 
         :type uuid:        string
-        :type limit:       integer
         :type load_trips:  boolean
+        :type limit:       integer
+        :type start:       datetime
+        :type end:         datetime
         """
         if uuid:
             uuids = [uuid]
@@ -140,8 +146,8 @@ class Itinerum(object):
         for idx, uuid in enumerate(uuids, start=1):
             logger.info('Loading user from database: {}/{}...'.format(idx, len(uuids)))
 
-            user = self.database.load_user(uuid)
+            user = self.database.load_user(uuid, start=start, end=end)
             if load_trips:
-                user.trips = self.database.load_trips(user)
+                user.trips = self.database.load_trips(user, start=start, end=end)
             users.append(user)
         return users

@@ -180,7 +180,6 @@ def write_mapmatched_geojson(cfg, fn_base, results):
     :param fn_base: The base filename to prepend to the output geojson file
     :param results: JSON results from map matching API query
     """
-    print('matchings:', len(results['matchings']))
     mapmatched_features = []
     # create points features with a confidence for each match (distance in meters)
     for p in results['tracepoints']:
@@ -218,6 +217,17 @@ def write_features_to_geojson_f(cfg, filename, features):
     geojson_fp = os.path.join(cfg.OUTPUT_DATA_DIR, filename)
     with open(geojson_fp, 'w') as geojson_f:
         geojson_f.write(json.dumps(collection, default=utils.json_serialize))
+
+
+def write_trip_summaries_csv(cfg, filename, summaries):
+    export_csv = os.path.join(cfg.OUTPUT_DATA_DIR, filename)
+    with open(export_csv, 'w') as csv_f:
+        headers = ['uuid', 'trip_id', 'start', 'end', 'trip_code',
+                   'olat', 'olon', 'dlat', 'dlon', 'merge_codes',
+                   'direct_distance', 'cumulative_distance']
+        writer = csv.DictWriter(csv_f, fieldnames=headers)
+        writer.writeheader()
+        writer.writerows(summaries)
 
 
 def write_complete_days_csv(cfg, filename, trip_day_summaries):

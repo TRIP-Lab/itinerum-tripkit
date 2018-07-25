@@ -6,8 +6,8 @@
 import csv
 
 # config
-in_csv_fp = './uncleaned/subway_stations/tor_stations.csv'
-out_csv_fp = './cleaned/subway_stations/tor_stations.csv'
+in_csv_fp = './uncleaned/subway_stations/mtlvantor_stations.csv'
+out_csv_fp = './cleaned/subway_stations/mtlvantor_stations.csv'
 
 
 # create a list of unique .csv rows to write to new file

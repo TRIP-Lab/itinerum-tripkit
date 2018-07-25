@@ -5,11 +5,11 @@ import math
 import time
 import utm
 
-# python 2+3 cpickle import
+# python 2 cPickle import speedup
 try:
-    import _pickle as cPickle
+    import cPickle as pickle
 except ImportError:
-    import cPickle
+    import pickle    
 
 
 def timeit(func):
@@ -47,7 +47,7 @@ def process_utm(points):
 # hackish way to copy a dictionary faster than deepcopy
 # @timeit
 def quick_deepcopy(dictionary):
-    return cPickle.loads(cPickle.dumps(dictionary, -1))
+    return pickle.loads(pickle.dumps(dictionary, -1))
 
 
 def pythagoras(point1, point2):

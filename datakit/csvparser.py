@@ -33,8 +33,9 @@ class CSVParser(object):
 
 
     def _get(self, row, key, cast_func=None):
-        value = row.get(key, '').strip()
+        value = row.get(key)
         if value:
+            value = value.strip()
             if cast_func:
                 return cast_func(value)
             return value
@@ -133,16 +134,31 @@ class CSVParser(object):
                         for keys in expected_keys
                         if keys[1] in headers }
 
+            slice_size = SQLITE_MAX_STATEMENT_VARIABLES // len(key_map)
+            ignore = {'user'}
             datasource = []
             for row in reader:
-                data = { keys[0]: row[keys[1]] for keys in key_map.items() }
+                data = {}
+                for key, key_idx in key_map.items():
+                    row_value = row[key_idx]
+                    if key not in ignore:
+                        cast_type = Coordinate._meta.columns[key].adapt
+                        if not row_value and cast_type is not str:
+                            row_value = 0
+                        else:
+                            row_value = cast_type(row_value)
+                    data[key] = row_value
                 datasource.append(data)
 
-            # wrap in single transaction for faster insert
-            slice_size = SQLITE_MAX_STATEMENT_VARIABLES // len(data)
-            with self.db.atomic():
-                for idx in range(0, len(datasource), slice_size):
-                    Coordinate.insert_many(datasource[idx:idx+slice_size]).execute()
+                # chunk write results every 50,000 records and clear buffer to
+                # limit memory usage
+                if len(datasource) == 50000:
+                    # wrap in single transaction for faster insert
+                    with self.db.atomic():
+                        for idx in range(0, len(datasource), slice_size):
+                            Coordinate.insert_many(datasource[idx:idx+slice_size]).execute()
+                    datasource = []
+
         migrate(self._migrator.add_index('coordinates', ('user_id',), False))
 
     # profiled with mobilité

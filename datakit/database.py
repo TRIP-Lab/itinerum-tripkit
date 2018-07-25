@@ -38,6 +38,12 @@ class Database(object):
                              CancelledPromptResponse, DetectedTripCoordinate,
                              SubwayStationEntrance])
 
+    def count_users(self):
+        """
+        Returns a count of all survey responses in cache database.
+        """
+        return UserSurveyResponse.select().count()
+
 
     def load_user(self, uuid, start=None, end=None):
         """
@@ -73,7 +79,6 @@ class Database(object):
             user.detected_trip_day_summaries = (user.detected_trip_day_summaries
                                                     .where(DetectedTripDaySummary.date_UTC <= end))
         return user
-
 
     def load_trips(self, user, start=None, end=None):
         """
@@ -129,7 +134,7 @@ class Database(object):
         return SubwayStationEntrance.select()
 
 
-    def save_trips(self, detected_trips):
+    def save_trips(self, detected_trips, overwrite=True):
         """
         Saves detected trips from processing algorithms to cache database. This
         table will be recreated on each save.
@@ -137,8 +142,10 @@ class Database(object):
         :param detected_trips: List of labelled coordinates from a trip processing
                                algorithm.
         """
-        DetectedTripCoordinate.drop_table()
-        DetectedTripCoordinate.create_table()
+        if overwrite:
+            print('generating new trips table...')
+            DetectedTripCoordinate.drop_table()
+            DetectedTripCoordinate.create_table()
 
         datasource = []
         for c in detected_trips:
@@ -168,20 +175,27 @@ class Database(object):
         DetectedTripDaySummary.drop_table()
         DetectedTripDaySummary.create_table()
 
+        datasource = []
         for s in trip_day_summaries:
             start_point_id, end_point_id = None, None
             if s['start_point']:
                 start_point_id = s['start_point'].database_id
                 end_point_id = s['end_point'].database_id
-            DetectedTripDaySummary.create(user=s['uuid'],
-                                          date_UTC=s['date_UTC'],
-                                          has_trips=s['has_trips'],
-                                          is_complete=s['is_complete'],
-                                          consecutive_inactive_days=s['consecutive_inactive_days'],
-                                          inactivity_streak=s.get('inactive_day_streak'),
-                                          inactivity_distance=s.get('inactivity_distance'),
-                                          start_point=start_point_id,
-                                          end_point=end_point_id)
+            datasource.append({
+                'user': s['uuid'],
+                'date_UTC': s['date_UTC'],
+                'has_trips': s['has_trips'],
+                'is_complete': s['is_complete'],
+                'consecutive_inactive_days': s['consecutive_inactive_days'],
+                'inactivity_streak': s.get('inactive_day_streak'),
+                'inactivity_distance': s.get('inactivity_distance'),
+                'start_point': start_point_id,
+                'end_point': end_point_id
+            })
+
+        with self.db.atomic():
+            for idx in range(0, len(datasource), 80):
+                DetectedTripDaySummary.insert_many(datasource[idx:idx+80]).execute()
 
 
 class BaseModel(Model):
@@ -218,11 +232,11 @@ class UserSurveyResponse(BaseModel):
 
     @property
     def prompts(self):
-        return self.prompts_backref
+        return self.prompts_backref.order_by(PromptResponse.displayed_at_UTC)
     
     @property
     def cancelled_prompts(self):
-        return self.cancelled_prompts_backref
+        return self.cancelled_prompts_backref.order_by(CancelledPromptResponse.displayed_at_UTC)
 
     @property
     def detected_trip_coordinates(self):
@@ -317,4 +331,3 @@ class SubwayStationEntrance(BaseModel):
 
     latitude = FloatField()
     longitude = FloatField()
-
