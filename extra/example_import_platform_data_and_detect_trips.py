@@ -1,5 +1,13 @@
 #!/usr/bin/env python
 # Kyle Fitzsimmons, 2018
+
+# run from parent directory
+import os
+import sys
+sys.path[0] = sys.path[0].replace('/extra', '')
+os.chdir(sys.path[0])
+
+# begin
 from datakit import Itinerum
 
 import datakit_config
@@ -10,7 +18,7 @@ itinerum = Itinerum(config=datakit_config)
 
 
 # -- Stage 1: load platform data to cache if surveys responses table does not exist
-itinerum.setup(force=False)
+itinerum.setup(force=True)
 
 # -- Stage 2: perform trip detection via library algorithms
 users = itinerum.load_users()

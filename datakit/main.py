@@ -112,8 +112,8 @@ class Itinerum(object):
             else:
                 self.csv.generate_null_survey(self.config.INPUT_DATA_DIR)
             self.csv.load_export_coordinates(self.config.INPUT_DATA_DIR)
-            # self.csv.load_export_prompt_responses(self.config.INPUT_DATA_DIR)
-            # self.csv.load_export_cancelled_prompt_responses(self.config.INPUT_DATA_DIR)
+            self.csv.load_export_prompt_responses(self.config.INPUT_DATA_DIR)
+            self.csv.load_export_cancelled_prompt_responses(self.config.INPUT_DATA_DIR)
 
     def load_users(self, uuid=None, load_trips=True, limit=None, start=None, end=None):
         """

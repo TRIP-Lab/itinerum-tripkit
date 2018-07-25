@@ -158,6 +158,11 @@ class CSVParser(object):
                         for idx in range(0, len(datasource), slice_size):
                             Coordinate.insert_many(datasource[idx:idx+slice_size]).execute()
                     datasource = []
+        
+        # write any remaining rows
+        with self.db.atomic():
+            for idx in range(0, len(datasource), slice_size):
+                Coordinate.insert_many(datasource[idx:idx+slice_size]).execute()
 
         migrate(self._migrator.add_index('coordinates', ('user_id',), False))
 

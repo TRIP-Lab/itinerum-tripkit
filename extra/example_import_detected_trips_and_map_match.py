@@ -1,5 +1,13 @@
 #!/usr/bin/env python
 # Kyle Fitzsimmons, 2018
+
+# run from parent directory
+import os
+import sys
+sys.path[0] = sys.path[0].replace('/extra', '')
+os.chdir(sys.path[0])
+
+# begin
 from datetime import datetime
 
 from datakit import Itinerum
