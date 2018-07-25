@@ -5,6 +5,14 @@
 
 Welcome to itinerum-datakit's documentation!
 ============================================
+The itinerum-datakit is a processing library for handling exports from the
+Itinerum data collection platform. The datakit provides methods for handling
+and cleaning GPS .csv data, processing collected points to trip features,
+and writing GIS-compatible files for visualizing results.
+
+The :ref:`QuickStartPage` shows the most common usage patterns of the
+datakit library while the :ref:`APIPage` section will detail how to interact
+with the library's core methods directly.
 
 .. toctree::
    :maxdepth: 2

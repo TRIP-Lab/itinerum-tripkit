@@ -1,3 +1,5 @@
+.. _APIPage:
+
 API
 ===
 ..  autoclass:: datakit.Itinerum
