@@ -91,7 +91,8 @@ Trips can be detected using the library on a raw dataset or trips can be manuall
 | `subway_stations` | A list of subway station entrance database objects containing `latitude` and `longitude` attributes |
 | `coordinates`     | A timestamp-ordered list of coordinates as dicts for a specific user. Multiple users should be run in sequence and have their output coordinates concatenated into a single list after if desired. |
 
-**Outputs:**
+#### Outputs
+
 Trips will be output with the following trip codes to indicate the type of trip:
 
 | Trip Code | Description                         |
