@@ -5,7 +5,7 @@ Library Objects
 
 User
 ----
-The ``User`` object provides the representation of a user in a survey with their
+The :py:class:`User` object provides the representation of a user in a survey with their
 associated coordinates, prompt, cancelled prompts and trips (if available in cache).
 
 ..  autoclass:: datakit.models.User
@@ -14,7 +14,7 @@ associated coordinates, prompt, cancelled prompts and trips (if available in cac
 
 Trip
 ----
-The ``Trip`` object provides the representation of a user's trip with some inferred
+The :py:class:`Trip` object provides the representation of a user's trip with some inferred
 properties about it.
 
 ..  autoclass:: datakit.models.Trip
@@ -23,7 +23,7 @@ properties about it.
 
 Trip Point
 ----------
-The ``TripPoint`` object provides the respresentation of a user's GPS coordinates
+The :py:class:`TripPoint` object provides the respresentation of a user's GPS coordinates
 after having been processed by a trip detection algorithm.
 
 ..  autoclass:: datakit.models.TripPoint
