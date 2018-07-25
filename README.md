@@ -23,7 +23,7 @@ Then either:
 
  - The included `datakit` directory can be copied to other projects as a library until more complete packaging is available
 
-Refer to the [API documentation](https://itinerum-datakit.readthedocs.io/) for usage.
+Refer to the [API documentation](https://itinerum-datakit.readthedocs.io/usage/api.html) for usage.
 
 ### Loading Data from Platform
 
@@ -65,13 +65,14 @@ user = itinerum.database.load_user('00000000-0000-0000-0000-000000000000')
 
 # run a provided trip detection algorithm
 parameters = {
-'subway_stations': itinerum.database.load_subway_entrances(),
+    'subway_stations': itinerum.database.load_subway_entrances(),
     'break_interval_seconds': datakit_config.TRIP_DETECTION_BREAK_INTERVAL_SECONDS,
     'subway_buffer_meters': datakit_config.TRIP_DETECTION_SUBWAY_BUFFER_METERS,
     'cold_start_distance': datakit_config.TRIP_DETECTION_COLD_START_DISTANCE_METERS,
     'accuracy_cutoff_meters': datakit_config.TRIP_DETECTION_ACCURACY_CUTOFF_METERS
 }
-trips = itinerum.process.trip_detection.triplab.algorithm.run(users, parameters)
+trips, summaries = itinerum.process.trip_detection.triplab.algorithm.run(user.coordinates.dicts(), 
+                                                                         parameters)
 ```
 
 
@@ -90,9 +91,21 @@ Trips can be detected using the library on a raw dataset or trips can be manuall
 | `subway_stations` | A list of subway station entrance database objects containing `latitude` and `longitude` attributes |
 | `coordinates`     | A timestamp-ordered list of coordinates as dicts for a specific user. Multiple users should be run in sequence and have their output coordinates concatenated into a single list after if desired. |
 
+**Outputs:**
+Trips will be output with the following trip codes to indicate the type of trip:
+| Trip Code | Description                         |
+| --------- | ----------------------------------- |
+| 1         | Complete trip                       |
+| 2         | Complete trip - subway              |
+| 101       | Missing trip                        |
+| 102       | Missing trip - subway               |
+| 103       | Missing trip - less than 250m       |
+| 201       | Single point                        |
+| 202       | Distance too short - less than 250m |
+
 ##### Thoughts
 
-~~The `coordinates`  values should be provided as list of dictionaries instead of database models to provide better compatibility of the detection algorithms across applications. Since a variety of databases and ORMs could be used, it seems simpler to require input data is formatted as dict() than something like a NamedTuple to make the algorithm compatible across SQLAlchemy or Peewee.~~
+The `coordinates`  values should be provided as list of dictionaries instead of database models to provide better compatibility of the detection algorithms across applications. Since a variety of databases and ORMs could be used, it seems simpler to require input data is formatted as dict() than something like a NamedTuple to make the algorithm compatible across SQLAlchemy or Peewee.~~
 
 All supplied values should be provided in their own light-weight class for better object safety, clarity about each object's purpose and ownership, and providing some special helper methods such as trip properties (as seen with https://github.com/SAUSy-Lab/itinerum-trip-breaker). This does have the potential to be much slower than using dictionaries in simple profiling (although using the `__slots__` property may help to improve memory usage), so this may need to be amended in the future. NamedTuple seemed appropriate, however, it seems like performance in Python3 is significantly worse than in older versions and may not be optimized for dot-attributes over indexed lookups (double-check this). Using the class-based approach now, however, may allow for drop-in compatibility with either database ORM. 
 
