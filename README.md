@@ -93,6 +93,7 @@ Trips can be detected using the library on a raw dataset or trips can be manuall
 
 **Outputs:**
 Trips will be output with the following trip codes to indicate the type of trip:
+
 | Trip Code | Description                         |
 | --------- | ----------------------------------- |
 | 1         | Complete trip                       |
