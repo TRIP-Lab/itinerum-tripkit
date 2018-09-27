@@ -2,18 +2,18 @@
 
 [![Python Version](https://img.shields.io/badge/Python-3.6-blue.svg?style=flat-square)]()
 
-This library seeks to serve as a bootstrapping framework to processing data from the Itinerum platform in a standardized format. It is both to be used through Jupyter for exploring data and to provide easy-to-use Itinerum objects in standalone applications.
-
-This repository should mirror the deployed version(s) of the Itinerum platform algorithms.
-
 Documentation for library usage: https://itinerum-datakit.readthedocs.io/
+
+This library serves as a bootstrapping framework to process data from the Itinerum platform in a standardized format. It can be used both through Jupyter for exploring data interactively and imported as a module in standalone applications.
+
+This repository should mirror the deployed version(s) of the Itinerum platform algorithms within the TRIPLab directories.
 
 ## Setup
 
 ### Quickstart
 
 1. Clone this repository and `pip install -r requirements.txt` ([virtualenv](https://virtualenv.pypa.io/en/stable/) and [virtualenvwrapper](https://virtualenvwrapper.readthedocs.io/en/latest/) are recommended)
-2. Place source data in the `./input` folder and edit `./datakit/config.py` with the appropriate filepaths.
+2. Place source data in the `./input` folder (create if necessary) and edit `./datakit/config.py` with the appropriate filepaths.
 
 Then either:
 
@@ -21,11 +21,9 @@ Then either:
 
    *or*
 
- - The included `datakit` directory can be copied to other projects as a library until more complete packaging is available
+ - Copy the `datakit` directory into other projects as a library (until more complete packaging is available)
 
-Refer to the [API documentation](https://itinerum-datakit.readthedocs.io/usage/api.html) for usage.
-
-### Loading Data from Platform
+### Loading Data from Dashboard CSV Export
 
 Data exported from the Itinerum dashboard is read directly as *.csv* files. The source data should be placed within the `./input` directory and the `INPUT_DATA_DIR` config parameter edited to reflect the filepath.
 
@@ -75,11 +73,7 @@ trips, summaries = itinerum.process.trip_detection.triplab.algorithm.run(user.co
                                                                          parameters)
 ```
 
-
-
 ## Processing
-
-The library is intended to work modularly with drop-in algorithm scripts for trip processing, map matching and mode inference. Therefore, the inputs to each stage should be standardized (described below) and developed with this in mind.
 
 #### Trip Detection
 

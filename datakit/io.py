@@ -219,12 +219,13 @@ def write_features_to_geojson_f(cfg, filename, features):
         geojson_f.write(json.dumps(collection, default=utils.json_serialize))
 
 
-def write_trip_summaries_csv(cfg, filename, summaries):
+def write_trip_summaries_csv(cfg, filename, summaries, extra_fields=None):
     export_csv = os.path.join(cfg.OUTPUT_DATA_DIR, filename)
     with open(export_csv, 'w') as csv_f:
         headers = ['uuid', 'trip_id', 'start', 'end', 'trip_code',
                    'olat', 'olon', 'dlat', 'dlon', 'merge_codes',
                    'direct_distance', 'cumulative_distance']
+        headers.extend(extra_fields)
         writer = csv.DictWriter(csv_f, fieldnames=headers)
         writer.writeheader()
         writer.writerows(summaries)

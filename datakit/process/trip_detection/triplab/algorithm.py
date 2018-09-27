@@ -25,8 +25,8 @@ def filter_errorneous_distance(points, check_speed=60):
 
         # do not test first point but save for testing next point
         if not last_p:
+            last_p = p
             yield p
-            continue
 
         # find the distance and time passed since last point collected
         distance_from_last_point = tools.pythagoras((last_p['easting'], last_p['northing']),
@@ -39,11 +39,12 @@ def filter_errorneous_distance(points, check_speed=60):
             kph_since_last_point = (distance_from_last_point / seconds_since_last_point) * 3.6
             distance_between_adjacent_points = tools.pythagoras((last_p['easting'], last_p['northing']),
                                                                 (next_p['easting'], next_p['northing']))
-            if (kph_since_last_point >= check_speed and 
-                distance_between_adjacent_points < distance_from_last_point):
+            if ((kph_since_last_point >= check_speed) and 
+                (distance_between_adjacent_points < distance_from_last_point)):
                 continue
-        yield p
+        
         last_p = p
+        yield p
 
 
 def break_by_timegap(points, timegap=360):

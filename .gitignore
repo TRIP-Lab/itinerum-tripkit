@@ -9,3 +9,4 @@ extra/uncleaned
 itinerum.sqlite-journal
 extra/diffs
 datakit/process/trip_detection/legacy
+*.zip

@@ -13,14 +13,14 @@ def find_participation_daterange(trips, min_dt):
     """
     first_date, last_date = None, None
     for trip in trips:
-        if trip.start_UTC > min_dt:
-            first_date = trip.start_UTC.date()
+        if trip.start_local > min_dt:
+            first_date = trip.start_local.date()
             break
-    last_date = trips[-1].end_UTC.date()
+    last_date = trips[-1].end_local.date()
     return first_date, last_date
 
 
-def group_trips_by_day(first_date, last_date, trips):
+def group_trips_by_day(first_date, last_date, trips, tz):
     """
     Create a preliminary dict which summarizes just the
     information we care about from trips on every day a
@@ -28,7 +28,7 @@ def group_trips_by_day(first_date, last_date, trips):
     """
     daily_trip_summaries = {}
     delta = last_date - first_date
-    min_dt = datetime.combine(first_date, datetime.min.time())
+    min_dt = tz.localize(datetime.combine(first_date, datetime.min.time()))
     for i in range(delta.days + 1):
         date = first_date + timedelta(days=i)
         daily_trip_summaries[date] = {}
@@ -38,9 +38,9 @@ def group_trips_by_day(first_date, last_date, trips):
         daily_trip_summaries[date]['end_points'] = []
 
     for t in trips:
-        if not t.start_UTC >= min_dt:
+        if not t.start_local >= min_dt:
             continue
-        date = t.start_UTC.date()
+        date = t.start_local.date()
         daily_trip_summaries[date]['start_points'].append(t.start)
         if len(t.points) > 1:
             daily_trip_summaries[date]['second_points'].append(t.points[1])
@@ -168,11 +168,21 @@ def find_explained_inactivity_periods(daily_summaries, daily_trip_summaries):
     return daily_summaries
 
 
+def trips_UTC_to_local(trips, tz):
+    localized_trips = []
+    for trip in trips:
+        trip.start_local = tz.localize(trip.start_UTC)
+        trip.end_local = tz.localize(trip.end_UTC)
+        localized_trips.append(trip)
+    return localized_trips
+
 # run above functions in sequence
-def run(trips):
-    min_dt = datetime(2017, 6, 1)
+def run(trips, tz):
+    min_dt = tz.localize(datetime(1999, 6, 1))
+    localized_trips = trips_UTC_to_local(trips, tz)
+
     first_date, last_date = find_participation_daterange(trips, min_dt)
-    daily_trip_summaries = group_trips_by_day(first_date, last_date, trips)
+    daily_trip_summaries = group_trips_by_day(first_date, last_date, trips, tz)
     
     daily_summaries = find_complete_days(daily_trip_summaries)
     daily_summaries = add_inactivity_periods(daily_summaries)
