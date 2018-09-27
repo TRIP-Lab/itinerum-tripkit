@@ -38,6 +38,22 @@ class Database(object):
                              CancelledPromptResponse, DetectedTripCoordinate,
                              SubwayStationEntrance])
 
+    def bulk_insert(self, Model, rows, chunk_size=10000):
+        # push rows to database in chunks
+        db_rows = []
+        for row in rows:
+            if row:
+                db_rows.append(row)
+            if len(db_rows) == chunk_size:
+                print('bulk inserting {} rows...'.format(len(db_rows)))
+                with self.db.atomic():
+                    Model.insert_many(db_rows).execute()
+                db_rows = []
+
+        # push any remaining rows
+        with self.db.atomic():
+            Model.insert_many(db_rows).execute()
+
     def count_users(self):
         """
         Returns a count of all survey responses in cache database.
@@ -137,65 +153,109 @@ class Database(object):
     def save_trips(self, detected_trips, overwrite=True):
         """
         Saves detected trips from processing algorithms to cache database. This
-        table will be recreated on each save.
+        table will be recreated on each save by default.
         
         :param detected_trips: List of labelled coordinates from a trip processing
                                algorithm.
         """
+        def _row_filter(rows, model_fields):
+            for row in rows:
+                row['user'] = row['uuid']
+                row['trip_num'] = row['trip']
+
+                trim_cols = set(row.keys()) - model_fields
+                trim_cols.add('id')
+                for col in trim_cols:
+                    if col in row:
+                        del row[col]
+                yield row
+
         if overwrite:
             print('generating new trips table...')
             DetectedTripCoordinate.drop_table()
             DetectedTripCoordinate.create_table()
 
-        datasource = []
-        for c in detected_trips:
-            # TODO: this would be more consistent if trip coordinates
-            # were named tuples for dot attributes
-            datasource.append({
-                'user': c['uuid'],
-                'trip_num': c['trip'],
-                'trip_code': c['trip_code'],
-                'latitude': c['latitude'],
-                'longitude': c['longitude'],
-                'h_accuracy': c['h_accuracy'],
-                'timestamp_UTC': c['timestamp_UTC']
-            })
+        model_fields = set(DetectedTripCoordinate._meta.sorted_field_names)
+        self.bulk_insert(DetectedTripCoordinate, _row_filter(detected_trips, model_fields))
 
-        with self.db.atomic():
-            for idx in range(0, len(datasource), 80):
-                DetectedTripCoordinate.insert_many(datasource[idx:idx+80]).execute()
-
-    def save_trip_day_summaries(self, trip_day_summaries):
+    def save_trip_day_summaries(self, trip_day_summaries, overwrite=True):
         """
         Saves the daily summaries for detected trip days to cache database. This
-        table with be recreated on each save.
+        table with be recreated on each save by default.
 
         :param trip_day_summaries: List of daily summaries from a daily trip counts algorithm.
         """
-        DetectedTripDaySummary.drop_table()
-        DetectedTripDaySummary.create_table()
+        def _row_filter(rows, model_fields):
+            for row in rows:
+                row['user'] = row['uuid']
+                if row['start_point']:
+                    row['start_point_id'] = row['start_point'].database_id
+                    row['end_point_id'] = row['end_point'].database_id
+                else:
+                    row['start_point_id'], row['end_point_id'] = None, None
+                trim_cols = set(row.keys()) - model_fields
+                trim_cols.add('id')
+                for col in trim_cols:
+                    if col in row:
+                        del row[col]
+                yield row
 
-        datasource = []
-        for s in trip_day_summaries:
-            start_point_id, end_point_id = None, None
-            if s['start_point']:
-                start_point_id = s['start_point'].database_id
-                end_point_id = s['end_point'].database_id
-            datasource.append({
-                'user': s['uuid'],
-                'date_UTC': s['date_UTC'],
-                'has_trips': s['has_trips'],
-                'is_complete': s['is_complete'],
-                'consecutive_inactive_days': s['consecutive_inactive_days'],
-                'inactivity_streak': s.get('inactive_day_streak'),
-                'inactivity_distance': s.get('inactivity_distance'),
-                'start_point': start_point_id,
-                'end_point': end_point_id
-            })
+        if overwrite:
+            DetectedTripDaySummary.drop_table()
+            DetectedTripDaySummary.create_table()
 
-        with self.db.atomic():
-            for idx in range(0, len(datasource), 80):
-                DetectedTripDaySummary.insert_many(datasource[idx:idx+80]).execute()
+        model_fields = set(DetectedTripDaySummary._meta.sorted_field_names)
+        self.bulk_insert(DetectedTripDaySummary, _row_filter(trip_day_summaries, model_fields))
+
+
+class BaseModel(Model):
+    class Meta:
+        database = deferred_db
+
+
+class UserSurveyResponse(BaseModel):
+    class Meta:
+        table_name = 'survey_responses'
+
+    uuid = UUIDField(unique=True, primary_key=True)
+    created_at_UTC = DateTimeField()
+    modified_at_UTC = DateTimeField()
+    itinerum_version = CharField()
+    location_home_lat = FloatField()
+    location_home_lon = FloatField()
+    location_study_lat = FloatField(null=True)
+    location_study_lon = FloatField(null=True)
+    location_work_lat = FloatField(null=True)
+    location_work_lon = FloatField(null=True)
+    member_type = CharField()
+    model = CharField()
+    os = CharField()
+    os_version = CharField()
+    travel_mode_study_primary = CharField(null=True)
+    travel_mode_study_secondary = CharField(null=True)
+    travel_mode_work_primary = CharField(null=True)
+    travel_mode_work_secondary = CharField(null=True)
+
+    @property
+    def coordinates(self):
+        return self.coordinates_backref.order_by(Coordinate.timestamp_UTC)
+
+    @property
+    def prompts(self):
+        return self.prompts_backref.order_by(PromptResponse.displayed_at_UTC)
+    
+    @property
+    def cancelled_prompts(self):
+        return self.cancelled_prompts_backref.order_by(CancelledPromptResponse.displayed_at_UTC)
+
+    @property
+    def detected_trip_coordinates(self):
+        return self.detected_trip_coordinates_backref.order_by(DetectedTripCoordinate.timestamp_UTC)
+
+    @property
+    def detected_trip_day_summaries(self):
+        return self.detected_trip_day_summaries_backref.order_by(DetectedTripDaySummary.date_UTC)
+    
 
 
 class BaseModel(Model):
@@ -257,13 +317,16 @@ class Coordinate(BaseModel):
     longitude = FloatField()
     altitude = FloatField(null=True)
     speed = FloatField()
+    direction = FloatField(null=True)
     h_accuracy = FloatField()
     v_accuracy = FloatField()
-    acceleration_x = FloatField(null=True)
-    acceleration_y = FloatField(null=True)
-    acceleration_z = FloatField(null=True)
+    acceleration_x = FloatField()
+    acceleration_y = FloatField()
+    acceleration_z = FloatField()
+    point_type = IntegerField(null=True)
     mode_detected = IntegerField(null=True)
     timestamp_UTC = DateTimeField()
+    timestamp_epoch = IntegerField()
 
 
 class PromptResponse(BaseModel):

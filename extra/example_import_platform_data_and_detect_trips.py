@@ -18,7 +18,7 @@ itinerum = Itinerum(config=datakit_config)
 
 
 # -- Stage 1: load platform data to cache if surveys responses table does not exist
-itinerum.setup(force=True)
+itinerum.setup(force=False)
 
 # -- Stage 2: perform trip detection via library algorithms
 users = itinerum.load_users()

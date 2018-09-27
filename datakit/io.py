@@ -225,7 +225,8 @@ def write_trip_summaries_csv(cfg, filename, summaries, extra_fields=None):
         headers = ['uuid', 'trip_id', 'start', 'end', 'trip_code',
                    'olat', 'olon', 'dlat', 'dlon', 'merge_codes',
                    'direct_distance', 'cumulative_distance']
-        headers.extend(extra_fields)
+        if extra_fields:
+            headers.extend(extra_fields)
         writer = csv.DictWriter(csv_f, fieldnames=headers)
         writer.writeheader()
         writer.writerows(summaries)

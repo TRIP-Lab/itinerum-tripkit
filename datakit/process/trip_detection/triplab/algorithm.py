@@ -21,7 +21,10 @@ def filter_errorneous_distance(points, check_speed=60):
 
     last_p = None
     for p in points:
-        next_p = next(points_copy)
+        try:
+            next_p = next(points_copy)
+        except StopIteration:
+            return
 
         # do not test first point but save for testing next point
         if not last_p:

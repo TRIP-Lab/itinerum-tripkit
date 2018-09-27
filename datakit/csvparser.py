@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # Kyle Fitzsimmons, 2018
 import csv
-from datetime import datetime
 import logging
 import os
 from playhouse.migrate import migrate, SqliteMigrator
@@ -11,11 +10,66 @@ from .database import (UserSurveyResponse, Coordinate, PromptResponse, Cancelled
                        DetectedTripCoordinate, SubwayStationEntrance)
 
 
-SQLITE_MAX_STATEMENT_VARIABLES = 999
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
+## .csv row filters for parsing Itinerum exports to database models
+def _survey_response_row_filter(row):
+    # reject invalid rows
+    if not row['member_type']:
+        return None
+
+    for key, value in row.items():
+        if value == '':
+            row[key] = None
+
+    row['travel_mode_work_primary'] = row.pop('travel_mode_work', None)
+    row['travel_mode_work_secondary'] = row.pop('travel_mode_alt_work', None)
+    row['travel_mode_study_primary'] = row.pop('travel_mode_study', None)
+    row['travel_mode_study_secondary'] = row.pop('travel_mode_alt_study', None)
+    row['travel_mode_study_secondary'] = row.pop('travel_mode_alt_study', None)
+
+    # remove any columns not renamed or found in database model
+    trim_columns = set(row.keys()) - set(UserSurveyResponse._meta.sorted_field_names)
+    for col in trim_columns:
+        del row[col]
+
+    return row
+
+def _coordinates_row_filter(row):
+    # invalid rows
+    if not row['timestamp_UTC']:
+        return None
+
+    row['user'] = row.pop('uuid')
+    for key, value in row.items():
+        if value == '':
+            row[key] = None
+    return row
+
+def _prompts_row_filter(row):
+    row['user'] = row.pop('uuid')
+    trim_columns = ['displayed_at_epoch', 'recorded_at_epoch', 'edited_at_epoch']
+    for col in trim_columns:
+        del row[col]
+    return row
+
+def _cancelled_prompts_row_filter(row):
+    row['user'] = row.pop('uuid')
+    trim_columns = ['displayed_at_epoch', 'cancelled_at_epoch']
+    for col in trim_columns:
+        del row[col]
+    return row
+
+def _trips_row_filter(row):
+    row['user'] = row.pop('uuid')
+    row['trip_num'] = row.pop('trip')
+    row['timestamp_UTC'] = row.pop(timestamp)
+    return row
+
+
+## .csv parsing
 class CSVParser(object):
     """
     Parses Itinerum platform csv files and loads to them to a cache database.
@@ -24,8 +78,8 @@ class CSVParser(object):
     """
 
     def __init__(self, database):
-        self.db = database.db
-        self._migrator = SqliteMigrator(self.db)
+        self.db = database
+        self._migrator = SqliteMigrator(database.db)
         self.cancelled_prompt_responses_csv = 'cancelled_prompts.csv'
         self.coordinates_csv = 'coordinates.csv'
         self.prompt_responses_csv = 'prompt_responses.csv'
@@ -66,45 +120,34 @@ class CSVParser(object):
                                       os='',
                                       os_version='')
 
+    # read .csv file, apply filter and yield row
+    @staticmethod
+    def _row_generator(csv_fp, filter_func=None):
+        with open(csv_fp, 'r', encoding='utf-8-sig') as csv_f:
+            reader = csv.reader(csv_f) # use zip() below instead of DictReader for speed
+            headers = next(reader)
+
+            # generate dictionaries to insert and apply row filter if exists
+            for row in reader:
+                dict_row = dict(zip(headers, row))
+                yield filter_func(dict_row) if filter_func else dict_row
+
 
     def load_export_survey_responses(self, input_dir):
         """
-        Loads Itinerum survey responses data to the itinerum-datakit cache
-        database. For each .csv row, the data is fetched by column name if
-        it exists and cast to appropriate types as set in the database.
+        Loads Itinerum survey responses data to the itinerum-datakit cache database.
 
         :param input_dir: The directory containing the `self.survey_responses_csv`
                           data file.
         """
-        logger.info('Loading survey responses .csv to db...')
         survey_responses_fp = os.path.join(input_dir, self.survey_responses_csv)
-        with open(survey_responses_fp, 'r', encoding='utf-8-sig') as csv_f:
-            reader = csv.DictReader(csv_f)
-            for row in reader:
-                UserSurveyResponse.create(uuid=row['uuid'],
-                                          created_at_UTC=row['created_at_UTC'],
-                                          modified_at_UTC=row['modified_at_UTC'],
-                                          itinerum_version=row['itinerum_version'],
-                                          location_home_lat=self._get(row, 'location_home_lat', cast_func=float),
-                                          location_home_lon=self._get(row, 'location_home_lon', cast_func=float),
-                                          location_study_lat=self._get(row, 'location_study_lat', cast_func=float),
-                                          location_study_lon=self._get(row, 'location_study_lon', cast_func=float),
-                                          location_work_lat=self._get(row, 'location_work_lat', cast_func=float),
-                                          location_work_lon=self._get(row, 'location_work_lon', cast_func=float),
-                                          member_type=row['member_type'],
-                                          model=row['model'],
-                                          os=row['os'],
-                                          os_version=row['os_version'],
-                                          travel_mode_study_primary=self._get(row, 'travel_mode_study'),
-                                          travel_mode_study_secondary=self._get(row, 'travel_mode_alt_study'),
-                                          travel_mode_work_primary=self._get(row, 'travel_mode_work'),
-                                          travel_mode_work_secondary=self._get(row, 'travel_mode_alt_work'))
+        survey_responses_rows = self._row_generator(survey_responses_fp, _survey_response_row_filter)
+        self.db.bulk_insert(UserSurveyResponse, survey_responses_rows)
+
 
     def load_export_coordinates(self, input_dir):
         """
-        Loads Itinerum coordinates data to the itinerum-datakit cache
-        database. For each .csv row, the data is fetched by column name if
-        it exists and cast to appropriate types as set in the database.
+        Loads Itinerum coordinates data to the itinerum-datakit cache database.
 
         :param input_dir: The directory containing the `self.coordinates_csv`
                           data file.
@@ -112,67 +155,11 @@ class CSVParser(object):
         logger.info('Loading coordinates .csv to db...')
         migrate(self._migrator.drop_index(Coordinate, 'coordinate_user_id'))
         coordinates_fp = os.path.join(input_dir, self.coordinates_csv)
-        with open(coordinates_fp, 'r', encoding='utf-8-sig') as csv_f:
-            reader = csv.reader(csv_f)
-
-            # find the row index for each expected values derived
-            # from the first header row
-            expected_keys = [('user', 'uuid'),
-                             ('latitude', 'latitude'),
-                             ('longitude', 'longitude'),
-                             ('altitude', 'altitude'),
-                             ('speed', 'speed'),
-                             ('h_accuracy', 'h_accuracy'),
-                             ('v_accuracy', 'v_accuracy'),
-                             ('acceleration_x', 'acceleration_x'),
-                             ('acceleration_y', 'acceleration_y'),
-                             ('acceleration_z', 'acceleration_z'),
-                             ('mode_detected', 'mode_detected'),
-                             ('timestamp_UTC', 'timestamp_UTC')]
-            headers = next(reader)
-            key_map = { keys[0]: headers.index(keys[1])
-                        for keys in expected_keys
-                        if keys[1] in headers }
-
-            slice_size = SQLITE_MAX_STATEMENT_VARIABLES // len(key_map)
-            ignore = {'user'}
-            datasource = []
-            for row in reader:
-                data = {}
-                for key, key_idx in key_map.items():
-                    row_value = row[key_idx]
-                    if key not in ignore:
-                        cast_type = Coordinate._meta.columns[key].adapt
-                        if not row_value and cast_type is not str:
-                            row_value = 0
-                        else:
-                            row_value = cast_type(row_value)
-                    data[key] = row_value
-                datasource.append(data)
-
-                # chunk write results every 50,000 records and clear buffer to
-                # limit memory usage
-                if len(datasource) == 50000:
-                    # wrap in single transaction for faster insert
-                    with self.db.atomic():
-                        for idx in range(0, len(datasource), slice_size):
-                            Coordinate.insert_many(datasource[idx:idx+slice_size]).execute()
-                    datasource = []
-        
-        # write any remaining rows
-        with self.db.atomic():
-            for idx in range(0, len(datasource), slice_size):
-                Coordinate.insert_many(datasource[idx:idx+slice_size]).execute()
-
+        coordinates_rows = self._row_generator(coordinates_fp, _coordinates_row_filter)
+        self.db.bulk_insert(Coordinate, coordinates_rows)
         migrate(self._migrator.add_index('coordinates', ('user_id',), False))
 
-    # profiled with mobilité
-    # ---
-    # 25.3s - single loop, created directly via model
-    # 23.4s - dropped index, single loop
-    #  7.1s - collect from csv to list and bulk write in 80 slice batches to db
-    #  6.72s - dropped index, collect from csv to list and bulk write in 80 slice batches to db (below)
-    #  7.15s - dropped index, single loop, bulk insert within loop determined by sqlite max slice size
+
     def load_export_prompt_responses(self, input_dir):
         """
         Loads Itinerum prompt responses data to the itinerum-datakit cache
@@ -185,54 +172,23 @@ class CSVParser(object):
         logger.info('Loading prompt responses .csv to db...')
         migrate(self._migrator.drop_index(PromptResponse, 'promptresponse_user_id'))
         prompt_responses_fp = os.path.join(input_dir, self.prompt_responses_csv)
-        with open(prompt_responses_fp, 'r', encoding='utf-8-sig') as csv_f:
-            reader = csv.DictReader(csv_f)
-            datasource = []
-            for row in reader:
-                data = {
-                    'user': row['uuid'],
-                    'prompt_uuid': row['prompt_uuid'],
-                    'prompt_num': row['prompt_num'],
-                    'response': row['response'],
-                    'latitude': (row['latitude']),
-                    'longitude': float(row['longitude']),
-                    'displayed_at_UTC': row['displayed_at_UTC'],
-                    'recorded_at_UTC': row['recorded_at_UTC'],
-                    'edited_at_UTC': row['edited_at_UTC']
-                }
-                datasource.append(data)
-
-            # wrap in single transaction for faster insert
-            slice_size = SQLITE_MAX_STATEMENT_VARIABLES // len(data)
-            with self.db.atomic():
-                for idx in range(0, len(datasource), slice_size):
-                    PromptResponse.insert_many(datasource[idx:idx+slice_size]).execute()
+        prompt_responses_rows = self._row_generator(prompt_responses_fp, _prompts_row_filter)
+        self.db.bulk_insert(PromptResponse, prompt_responses_rows)
         migrate(self._migrator.add_index('prompt_responses', ('user_id',), False))
-
 
     def load_export_cancelled_prompt_responses(self, input_dir):
         """
         Loads Itinerum cancelled prompt responses data to the itinerum-datakit cache
         database. For each .csv row, the data is fetched by column name if
         it exists and cast to appropriate types as set in the database.
-
+        
         :param input_dir: The directory containing the `self.cancelled_prompt_responses.csv`
                           data file.
         """
         logger.info('Loading cancelled prompt responses .csv to db...')
         cancelled_prompt_responses_fp = os.path.join(input_dir, self.cancelled_prompt_responses_csv)
-        with open(cancelled_prompt_responses_fp, 'r', encoding='utf-8-sig') as csv_f:
-            reader = csv.DictReader(csv_f)
-
-            for row in reader:
-                CancelledPromptResponse.create(user=row['uuid'],
-                                               prompt_uuid=row['prompt_uuid'],
-                                               latitude=float(row['latitude']),
-                                               longitude=float(row['longitude']),
-                                               displayed_at_UTC=row['displayed_at_UTC'],
-                                               cancelled_at_UTC=self._get(row, 'cancelled_at_UTC'),
-                                               is_travelling=self._get(row, 'is_travelling'))
-
+        cancelled_prompt_responses_rows = self._row_generator(cancelled_prompt_responses_fp, _cancelled_prompts_row_filter)
+        self.db.bulk_insert(CancelledPromptResponse, cancelled_prompt_responses_rows)
 
     def load_trips(self, trips_csv_fp):
         """
@@ -244,19 +200,9 @@ class CSVParser(object):
                              for a survey.
         """
         logger.info('Loading detected trips .csv to db...')
-        with open(trips_csv_fp, 'r', encoding='utf-8-sig') as csv_f:
-            reader = csv.DictReader(csv_f)
-            DetectedTripCoordinate.drop_table()
-            DetectedTripCoordinate.create_table()
-
-            for row in reader:
-                DetectedTripCoordinate.create(user=row['uuid'],
-                                              trip_num=int(row['trip']),
-                                              latitude=float(row['latitude']),
-                                              longitude=float(row['longitude']),
-                                              h_accuracy=float(row['h_accuracy']),
-                                              timestamp_UTC=row['timestamp'],
-                                              trip_code=int(row['trip_code']))
+        DetectedTripCoordinate.drop_table()
+        DetectedTripCoordinate.create_table()
+        self.db.bulk_insert(DetectedTripCoordinate, trips_csv_fp, _trips_row_filter)
 
 
     def load_subway_stations(self, subway_stations_csv_fp):
