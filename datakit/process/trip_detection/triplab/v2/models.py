@@ -5,7 +5,7 @@
 # and provide immutability against add or removing attributes
 
 
-MODES = ['subway']
+MODES = ['walking', 'subway']
 
 
 class GPSPoint:
@@ -73,7 +73,18 @@ class Trip:
         if self.segments:
             return self.segments[-1]
 
+    @property
+    def start_time(self):
+        if self.first_segment:
+            return self.first_segment.start.timestamp_UTC
+
+    @property
+    def end_time(self):
+        if self.last_segment:
+            return self.last_segment.end.timestamp_UTC    
+
     def link_to(self, trip, mode):
         if not mode in MODES:
             raise Exception('Invalid mode selected. ({})'.format(mode))
         self.links[(self.last_segment.group, trip.first_segment.group)] = mode
+

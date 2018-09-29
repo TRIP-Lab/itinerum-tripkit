@@ -79,7 +79,7 @@ def filter_erroneous_distance(points, check_speed_kph=60):
         yield p
 
 ## break gps points into atomic segments
-def break_points_by_collection_pause(points, break_period=360):
+def break_points_by_collection_pause(points, max_break_period=360):
     '''Break into trip segments when time recorded between points is
        greater than the specified break period'''
     segments = []
@@ -87,21 +87,20 @@ def break_points_by_collection_pause(points, break_period=360):
     for p in points:
         # determine break periods and increment segment groups
         if not last_p:
-            period = 0
-            group = 0
+            break_period, group = 0, 0
         else:
-            period = (p.timestamp_UTC - last_p.timestamp_UTC).total_seconds()
-            if period > break_period:
+            break_period = (p.timestamp_UTC - last_p.timestamp_UTC).total_seconds()
+            if break_period > max_break_period:
                 group += 1
         last_p = p
 
         # generate segments from determined groups
-        p.period_before_seconds = period
+        p.period_before_seconds = break_period
         if segments and segments[-1].group == group:
             segments[-1].points.append(p)
         else:
             new_segment = TripSegment(group=group,
-                                      period_before_seconds=period,
+                                      period_before_seconds=break_period,
                                       points=[p])
             segments.append(new_segment)
     return segments
@@ -121,6 +120,7 @@ def find_subway_connections(trips, subway_entrances, buffer_m=200):
     last_trip = None
     for trip in trips:
         if not last_trip:
+            connected_trips.append(trip)
             last_trip = trip
             continue
 
@@ -129,45 +129,64 @@ def find_subway_connections(trips, subway_entrances, buffer_m=200):
 
         # Test whether the last point of the last segment and the first
         # point of the current segment intersect two different subway
-        # station entrances. Uses elif so the same entrance is not caught
-        # for both segments (when unrelated stops occur near subway entrances).
+        # station entrances.
         end_intersects, start_intersects = False, False
         end_entrance, start_entrance = None, None
         for entrance in subway_entrances:
             if distance_m(entrance, end_point) <= buffer_m:
                 end_intersects = True
                 end_entrance = entrance
-            elif distance_m(entrance, start_point) <= buffer_m:
+            if distance_m(entrance, start_point) <= buffer_m:
                 start_intersects = True
                 start_entrance = entrance
 
         if start_intersects and end_intersects:
             interval = start_point.timestamp_UTC - end_point.timestamp_UTC
             subway_distance = distance_m(end_point, start_point)
-            subway_speed = subway_distance / interval.total_seconds()
-            last_trip.link_to(trip, 'subway')
+            segment_speed = subway_distance / interval.total_seconds()
+            if interval.total_seconds() < 4800 and segment_speed > 0.1:
+                last_trip.link_to(trip, 'subway')
+            else:
+                connected_trips.append(trip)
         else:
             connected_trips.append(trip)
         last_trip = trip
-
     return connected_trips
 
 
 def find_velocity_connections(trips):
+    def _is_gte_walking_speed(p1, p2, period):
+        minimum_walking_speed = 15. * 1000 / 3600  # 15 kpm * 1km / 1hr = m/s
+        interpolated_speed = (distance_m(p1, p2) / period)
+        return interpolated_speed >= minimum_walking_speed
+
     connected_trips = []
     last_trip = None
     for trip in trips:
         if not last_trip:
+            connected_trips.append(trip)
             last_trip = trip
+            continue
 
-        trip = last_trip
+        end_point = last_trip.last_segment.end
+        start_point = trip.first_segment.start
+        interval = start_point.timestamp_UTC - end_point.timestamp_UTC
+        period = int(interval.total_seconds())
+
+        # print(_is_gte_walking_speed(end_point, start_point, period))
+        if _is_gte_walking_speed(end_point, start_point, period):
+            last_trip.link_to(trip, 'walking')
+        else:
+            connected_trips.append(trip)
+        last_trip = trip
+    return connected_trips
 
 
 ## helper functions
 def distance_m(point1, point2):
     '''Returns the distance between two points in meters'''
     a = point2.easting - point1.easting
-    b = point2.northing - point2.northing
+    b = point2.northing - point1.northing
     return math.sqrt(a**2 + b**2)
 
 
@@ -182,7 +201,7 @@ def run(coordinates, parameters):
     cleaned_points = filter_erroneous_distance(high_accuracy_points, check_speed_kph=60)
 
     # break trips into atomic trip segments
-    segments = break_points_by_collection_pause(cleaned_points, break_period=parameters['break_interval_seconds'])
+    segments = break_points_by_collection_pause(cleaned_points, max_break_period=parameters['break_interval_seconds'])
 
     # start by considering every segment a trip
     trips = initialize_trips(segments)
