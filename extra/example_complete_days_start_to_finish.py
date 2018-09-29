@@ -37,8 +37,8 @@ results = {}
 detected_trip_points = []
 for idx, user in enumerate(users, start=1):
     print('Processing user ({}) trips: {}/{}...'.format(user.uuid, idx, len(users)))
-    results[user] = itinerum.process.trip_detection.triplab.algorithm.run(user.coordinates.dicts(),
-                                                                          parameters=parameters)
+    results[user] = itinerum.process.trip_detection.triplab.v1.algorithm.run(user.coordinates.dicts(),
+                                                                             parameters=parameters)
 
     # -- Stage 2.1: save output in database as cache format trips
     # into a SQL-friendly flat list of labelled coordinates

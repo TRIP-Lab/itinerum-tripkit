@@ -29,8 +29,9 @@ parameters = {
 }
 for test_user in sorted(users, key=lambda u: str(u.uuid).lower()):
     # updated version of tripbreaker to compare
-    trips1, summaries1 = itinerum.process.trip_detection.triplab.algorithm.run(test_user.coordinates.dicts(),
-                                                                               parameters=parameters)
+    v1_algorithm = itinerum.process.trip_detection.triplab.v1.algorithm
+    trips1, summaries1 = v1_algorithm.run(test_user.coordinates.dicts(),
+                                          parameters=parameters)
 
     # legacy tripbreaker as control
     legacy_metro_stations = []
@@ -45,9 +46,10 @@ for test_user in sorted(users, key=lambda u: str(u.uuid).lower()):
         c['timestamp'] = c.pop('timestamp_UTC')
         legacy_coordinates.append(c)
 
-    trips2, summaries2 = itinerum.process.trip_detection.legacy.algorithm.run(parameters,
-                                                                              metro_stations=legacy_metro_stations,
-                                                                              points=legacy_coordinates)
+    legacy_algorithm = itinerum.process.trip_detection.legacy.algorithm
+    trips2, summaries2 = legacy_algorithm.run(parameters,
+                                              metro_stations=legacy_metro_stations,
+                                              points=legacy_coordinates)
 
 
     # check whether the start and end points for matching trips by id are equal

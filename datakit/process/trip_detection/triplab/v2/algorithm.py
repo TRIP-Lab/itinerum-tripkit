@@ -11,18 +11,20 @@ from .models import GPSPoint, SubwayEntrance, TripSegment, Trip
 def generate_subway_entrances(coordinates):
     '''Find UTM coordinates for subway stations entrances from lat/lon
        and build structs'''
+    entrances = []
     for c in coordinates:
-        northing, easting, _, _ = utm.from_latlon(c.latitude, c.longitude)
-        yield SubwayEntrance(latitude=c.latitude,
-                             longitude=c.longitude,
-                             northing=northing,
-                             easting=easting)
+        easting, northing, _, _ = utm.from_latlon(c.latitude, c.longitude)
+        entrances.append(SubwayEntrance(latitude=c.latitude,
+                                        longitude=c.longitude,
+                                        northing=northing,
+                                        easting=easting))
+    return entrances
 
 def generate_gps_points(coordinates):
     '''Find UTM coordinates for user GPS points from lat/lon
        and build structs'''
     for c in coordinates:
-        northing, easting, _, _ = utm.from_latlon(c.latitude, c.longitude)
+        easting, northing, _, _ = utm.from_latlon(c.latitude, c.longitude)
         yield GPSPoint(latitude=c.latitude,
                        longitude=c.longitude,
                        northing=northing,
@@ -61,13 +63,13 @@ def filter_erroneous_distance(points, check_speed_kph=60):
             yield p
 
         # find the distance and time passed since previous point was collected
-        distance_from_last_point = euclidean_distance(last_p, p)
+        distance_from_last_point = distance_m(last_p, p)
         seconds_since_last_point = (p.timestamp_UTC - last_p.timestamp_UTC).total_seconds()
 
         # drop point if both speed and distance conditions are met
         if distance_from_last_point and seconds_since_last_point:
             kph_since_last_point = (distance_from_last_point / seconds_since_last_point) * 3.6
-            distance_between_neighbor_points = euclidean_distance(last_p,  next_p)
+            distance_between_neighbor_points = distance_m(last_p,  next_p)
             
             if (kph_since_last_point >= check_speed_kph and 
                 distance_between_neighbor_points < distance_from_last_point):
@@ -76,8 +78,8 @@ def filter_erroneous_distance(points, check_speed_kph=60):
         last_p = p
         yield p
 
-## break trips into atomic segments
-def break_by_collection_pause(points, break_period=360):
+## break gps points into atomic segments
+def break_points_by_collection_pause(points, break_period=360):
     '''Break into trip segments when time recorded between points is
        greater than the specified break period'''
     segments = []
@@ -86,7 +88,7 @@ def break_by_collection_pause(points, break_period=360):
         # determine break periods and increment segment groups
         if not last_p:
             period = 0
-            group = 1
+            group = 0
         else:
             period = (p.timestamp_UTC - last_p.timestamp_UTC).total_seconds()
             if period > break_period:
@@ -105,13 +107,64 @@ def break_by_collection_pause(points, break_period=360):
     return segments
 
 
+# begin by creating a trip for every segment
+def initialize_trips(segments):
+    trips = []
+    for idx, segment in enumerate(segments):
+        trips.append(Trip(num=idx, segments=[segment]))
+    return trips
+
+
 ## stitch segments into longer trips if pre-determined conditions are met
-def find_subway_transfers(subway_entrances, segments, buffer_m=200):
-    pass
+def find_subway_connections(trips, subway_entrances, buffer_m=200):
+    connected_trips = []
+    last_trip = None
+    for trip in trips:
+        if not last_trip:
+            last_trip = trip
+            continue
+
+        end_point = last_trip.last_segment.end
+        start_point = trip.first_segment.start
+
+        # Test whether the last point of the last segment and the first
+        # point of the current segment intersect two different subway
+        # station entrances. Uses elif so the same entrance is not caught
+        # for both segments (when unrelated stops occur near subway entrances).
+        end_intersects, start_intersects = False, False
+        end_entrance, start_entrance = None, None
+        for entrance in subway_entrances:
+            if distance_m(entrance, end_point) <= buffer_m:
+                end_intersects = True
+                end_entrance = entrance
+            elif distance_m(entrance, start_point) <= buffer_m:
+                start_intersects = True
+                start_entrance = entrance
+
+        if start_intersects and end_intersects:
+            interval = start_point.timestamp_UTC - end_point.timestamp_UTC
+            subway_distance = distance_m(end_point, start_point)
+            subway_speed = subway_distance / interval.total_seconds()
+            last_trip.link_to(trip, 'subway')
+        else:
+            connected_trips.append(trip)
+        last_trip = trip
+
+    return connected_trips
+
+
+def find_velocity_connections(trips):
+    connected_trips = []
+    last_trip = None
+    for trip in trips:
+        if not last_trip:
+            last_trip = trip
+
+        trip = last_trip
 
 
 ## helper functions
-def euclidean_distance(point1, point2):
+def distance_m(point1, point2):
     '''Returns the distance between two points in meters'''
     a = point2.easting - point1.easting
     b = point2.northing - point2.northing
@@ -129,12 +182,15 @@ def run(coordinates, parameters):
     cleaned_points = filter_erroneous_distance(high_accuracy_points, check_speed_kph=60)
 
     # break trips into atomic trip segments
-    segments = break_by_collection_pause(cleaned_points, break_period=parameters['break_interval_seconds'])
+    segments = break_points_by_collection_pause(cleaned_points, break_period=parameters['break_interval_seconds'])
+
+    # start by considering every segment a trip
+    trips = initialize_trips(segments)
 
     # apply rules to reconstitute full trips from segments when possible ("stitching")
-    subway_linked_trips = find_subway_transfers(subway_entrances,
-                                                segments,
-                                                buffer_m=parameters['subway_buffer_meters'])
+    subway_linked_trips = find_subway_connections(trips, subway_entrances,
+                                                  buffer_m=parameters['subway_buffer_meters'])
+    velocity_linked_trips = find_velocity_connections(subway_linked_trips)
 
     return segments
 

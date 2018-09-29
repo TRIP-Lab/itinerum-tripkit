@@ -135,6 +135,7 @@ class Itinerum(object):
         :type start:       datetime
         :type end:         datetime
         """
+        return_one = uuid is not None
         if uuid:
             uuids = [uuid]
         else:
@@ -149,5 +150,7 @@ class Itinerum(object):
             user = self.database.load_user(uuid, start=start, end=end)
             if load_trips:
                 user.trips = self.database.load_trips(user, start=start, end=end)
+            if return_one:
+                return user
             users.append(user)
         return users

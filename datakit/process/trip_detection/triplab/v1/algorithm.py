@@ -84,8 +84,8 @@ def metro_stations_utm(metro_stations):
     '''Get UTM coordinates for metro stations supplied by database lat/lngs'''
     stations = []
     for station in metro_stations:
-        northing, easting, _, _ = utm.from_latlon(station.latitude, station.longitude)
-        stations.append((northing, easting))
+        easting, northing, _, _ = utm.from_latlon(station.latitude, station.longitude)
+        stations.append((easting, northing))
     return stations
 
 

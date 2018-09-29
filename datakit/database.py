@@ -39,7 +39,15 @@ class Database(object):
                              SubwayStationEntrance])
 
     def bulk_insert(self, Model, rows, chunk_size=10000):
-        # push rows to database in chunks
+        """
+        Bulk insert an iterable of dictionaries into a supplied
+        Peewee model by ``chunk_size``.
+
+        :param Model:      Peewee database model of target table for inserts.
+        :param rows:       Iterable list or generator of dictionaries matching
+                           table model for bulk insert.
+        :param chunk_size: `Optional.` Number of rows to insert per transaction.
+        """
         db_rows = []
         for row in rows:
             if row:

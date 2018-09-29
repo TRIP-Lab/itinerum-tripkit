@@ -1,6 +1,6 @@
 docs/_build
-input
-output
+input/*
+output/*
 __pycache__
 notebooks/.ipynb_checkpoints
 *.sqlite
@@ -8,5 +8,8 @@ extra/cleaned
 extra/uncleaned
 itinerum.sqlite-journal
 extra/diffs
-datakit/process/trip_detection/legacy
 *.zip
+datakit/process/trip_detection/triplab/legacy
+
+!input/.gitkeep
+!output/.gitkeep

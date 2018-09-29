@@ -5,6 +5,9 @@
 # and provide immutability against add or removing attributes
 
 
+MODES = ['subway']
+
+
 class GPSPoint:
     __slots__ = ['latitude', 'longitude', 'northing', 'easting',
                  'speed', 'h_accuracy', 'timestamp_UTC', 'period_before_seconds']
@@ -53,8 +56,24 @@ class TripSegment:
 
 
 class Trip:
-    __slots__ = ['num', 'segments']
+    __slots__ = ['num', 'segments', 'links']
 
     def __init__(self, *args, **kwargs):
         self.num = kwargs['num']
         self.segments = kwargs['segments']
+        self.links = {}
+
+    @property
+    def first_segment(self):
+        if self.segments:
+            return self.segments[0]
+
+    @property
+    def last_segment(self):
+        if self.segments:
+            return self.segments[-1]
+
+    def link_to(self, trip, mode):
+        if not mode in MODES:
+            raise Exception('Invalid mode selected. ({})'.format(mode))
+        self.links[(self.last_segment.group, trip.first_segment.group)] = mode

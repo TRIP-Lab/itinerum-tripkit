@@ -44,8 +44,8 @@ parameters = {
 }
 for idx, user in enumerate(users, start=1):
     print('Processing user ({}) trips: {}/{}...'.format(user.uuid, idx, len(users)))
-    trips, summaries = itinerum.process.trip_detection.triplab.algorithm.run(user.coordinates.dicts(),
-                                                                             parameters=parameters)
+    trips, summaries = itinerum.process.trip_detection.triplab.v1.algorithm.run(user.coordinates.dicts(),
+                                                                                parameters=parameters)
     
     trip_objs = {}
     for trip_num, trip in trips.items():
