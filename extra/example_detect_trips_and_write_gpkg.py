@@ -20,15 +20,16 @@ itinerum = Itinerum(config=datakit_config)
 # -- Load user trip from database and write as GIS file
 user = itinerum.load_users(uuid='01cf0f37-e017-438e-aa71-c56d23166c50', load_trips=False)
 # for user in itinerum.load_users(load_trips=False):
-# print(user.uuid)
-# parameters = {
-#     'subway_stations': itinerum.database.load_subway_entrances(),
-#     'break_interval_seconds': datakit_config.TRIP_DETECTION_BREAK_INTERVAL_SECONDS,
-#     'subway_buffer_meters': datakit_config.TRIP_DETECTION_SUBWAY_BUFFER_METERS,
-#     'cold_start_distance': datakit_config.TRIP_DETECTION_COLD_START_DISTANCE_METERS,
-#     'accuracy_cutoff_meters': datakit_config.TRIP_DETECTION_ACCURACY_CUTOFF_METERS    
-# }
-# user.detected_trip_coordinates = itinerum.process.trip_detection.triplab.v1.algorithm.run(user.coordinates.dicts(), parameters)
+print(user.uuid)
+parameters = {
+    'subway_stations': itinerum.database.load_subway_entrances(),
+    'break_interval_seconds': datakit_config.TRIP_DETECTION_BREAK_INTERVAL_SECONDS,
+    'subway_buffer_meters': datakit_config.TRIP_DETECTION_SUBWAY_BUFFER_METERS,
+    'cold_start_distance': datakit_config.TRIP_DETECTION_COLD_START_DISTANCE_METERS,
+    'accuracy_cutoff_meters': datakit_config.TRIP_DETECTION_ACCURACY_CUTOFF_METERS    
+}
+user.detected_trip_coordinates, _ = itinerum.process.trip_detection.triplab.v1.algorithm.run(user.coordinates.dicts(), parameters)
+
 
 parameters = {
     'subway_entrances': itinerum.database.load_subway_entrances(),
@@ -38,6 +39,7 @@ parameters = {
     'accuracy_cutoff_meters': datakit_config.TRIP_DETECTION_ACCURACY_CUTOFF_METERS    
 }
 user.detected_trip_coordinates = itinerum.process.trip_detection.triplab.v2.algorithm.run(user.coordinates, parameters)
+import sys; sys.exit()
 
 itinerum.database.load_trips(user)
 print(user.trips)

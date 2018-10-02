@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 # Kyle Fitzsimmons, 2015
 import itertools
+import logging
 import utm
 from .modules import labels, tools
 from .modules.trip_codes import trip_codes
+
+logger = logging.getLogger(__name__)
 
 
 def filter_accuracy(points, cutoff=30):
@@ -489,4 +492,12 @@ def run(points, parameters):
     missing_trips = infer_missing_trips(stations, cleaned_trips, cold_start_m=parameters['cold_start_distance'])
     rows = merge_trips(cleaned_trips, missing_trips, stations)
     trips, summaries = summarize(rows)
+
+    logger.info('-------------------------------')
+    logger.info('V1 - Num. segments: %d', len(segment_groups))
+    logger.info('V1 - Num. subway linked trips: %d', len(metro_linked_trips))
+    logger.info('V1 - Num. velocity linked trips: %d', len(velocity_connected_trips))
+    logger.info('V1 - Num. full-length trips: %d', len(cleaned_trips))
+    logger.info('V1 - Num. missing trips: %d', len(missing_trips))
+    logger.info('V1 - Num. csv rows: %d', len(rows))
     return trips, summaries

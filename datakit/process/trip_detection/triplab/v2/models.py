@@ -3,8 +3,6 @@
 # - Algorithm data structures
 # Uses slots to achieve best performance (comparable to dictionary)
 # and provide immutability against add or removing attributes
-
-
 MODES = ['walking', 'subway']
 
 

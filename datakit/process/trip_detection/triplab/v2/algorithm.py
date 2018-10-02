@@ -1,10 +1,14 @@
 #!/usr/bin/env python
 # Kyle Fitzsimmons, 2015-2018
 import itertools
+import logging
 import math
 import utm
 
 from .models import GPSPoint, SubwayEntrance, MissingTrip, TripSegment, Trip
+
+# logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 
 ## cast input data as objects
@@ -333,7 +337,7 @@ def format_trips_as_point_rows(trips, missing_trips):
                     'longitude': point.longitude
                 }
                 rows.append(trip_row)
-    print(len(rows))
+    return rows
 
 
 ## helper functions
@@ -384,7 +388,14 @@ def run(coordinates, parameters):
                                         subway_buffer_m=parameters['subway_buffer_meters'],
                                         cold_start_m=parameters['cold_start_distance'])
 
-    format_trips_as_point_rows(full_length_trips, missing_trips)
+    csv_rows = format_trips_as_point_rows(full_length_trips, missing_trips)
 
+    logger.info('-------------------------------')
+    logger.info('V2 - Num. segments: %d', len(segments))
+    logger.info('V2 - Num. subway linked trips: %d', len(subway_linked_trips))
+    logger.info('V2 - Num. velocity linked trips: %d', len(velocity_linked_trips))
+    logger.info('V2 - Num. full-length trips: %d', len(full_length_trips))
+    logger.info('V2 - Num. missing trips: %d', len(missing_trips))
+    logger.info('V2 - Num. csv rows: %d', len(csv_rows))
     return segments
 
