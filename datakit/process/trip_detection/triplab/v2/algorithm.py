@@ -4,7 +4,7 @@ import itertools
 import math
 import utm
 
-from .models import GPSPoint, SubwayEntrance, TripSegment, Trip
+from .models import GPSPoint, SubwayEntrance, MissingTrip, TripSegment, Trip
 
 
 ## cast input data as objects
@@ -124,28 +124,19 @@ def find_subway_connections(trips, subway_entrances, buffer_m=200):
             last_trip = trip
             continue
 
+        # Test whether the last point of the last segment and the first point
+        # of the current segment intersect two different subway station entrances.
         end_point = last_trip.last_segment.end
         start_point = trip.first_segment.start
-
-        # Test whether the last point of the last segment and the first
-        # point of the current segment intersect two different subway
-        # station entrances.
-        end_intersects, start_intersects = False, False
-        end_entrance, start_entrance = None, None
-        for entrance in subway_entrances:
-            if distance_m(entrance, end_point) <= buffer_m:
-                end_intersects = True
-                end_entrance = entrance
-            if distance_m(entrance, start_point) <= buffer_m:
-                start_intersects = True
-                start_entrance = entrance
-
-        if start_intersects and end_intersects:
+        end_entrance = points_intersect(subway_entrances, end_point, buffer_m)
+        start_entrance = points_intersect(subway_entrances, start_point, buffer_m)
+        
+        if end_entrance and start_entrance:
             interval = start_point.timestamp_UTC - end_point.timestamp_UTC
             subway_distance = distance_m(end_point, start_point)
             segment_speed = subway_distance / interval.total_seconds()
-            if interval.total_seconds() < 4800 and segment_speed > 0.1:
-                last_trip.link_to(trip, 'subway')
+            if interval.total_seconds() < 4800 and segment_speed > 0.1:  # 80 minutes * seconds, m/s
+                last_trip.link_by_subway(trip)
             else:
                 connected_trips.append(trip)
         else:
@@ -156,7 +147,7 @@ def find_subway_connections(trips, subway_entrances, buffer_m=200):
 
 def find_velocity_connections(trips):
     def _is_gte_walking_speed(p1, p2, period):
-        minimum_walking_speed = 15. * 1000 / 3600  # 15 kpm * 1km / 1hr = m/s
+        minimum_walking_speed = 15. * 1000 / 3600  # 15 kph * 1000m / 1hr = m/s
         interpolated_speed = (distance_m(p1, p2) / period)
         return interpolated_speed >= minimum_walking_speed
 
@@ -173,21 +164,169 @@ def find_velocity_connections(trips):
         interval = start_point.timestamp_UTC - end_point.timestamp_UTC
         period = int(interval.total_seconds())
 
-        # print(_is_gte_walking_speed(end_point, start_point, period))
         if _is_gte_walking_speed(end_point, start_point, period):
-            last_trip.link_to(trip, 'walking')
+            last_trip.link_by_walking(trip)
         else:
             connected_trips.append(trip)
         last_trip = trip
     return connected_trips
 
 
+def filter_single_points(trips):
+    """Remove any isolated GPS points that are not within 20 minutes
+       or 150 meters of the previous end point or next trip start point."""
+    max_break_period = 20 * 60  # minutes * seconds
+    max_distance_m = 150
+
+    filtered_trips = []
+    for idx, trip in enumerate(trips):
+        if len(trip.segments) == 1 and len(trip.segments[0].points) == 1:
+            segment = trip.segments[0]
+            point = segment.points[0]
+            prev_trip_exists = idx - 1 >= 0
+            next_trip_exists = idx + 1 < len(trips)
+
+            is_prev_trip_candidate, is_next_trip_candidate = False, False
+            if prev_trip_exists:
+                prev_trip = trips[idx - 1]
+                interval_prev_trip = (point.timestamp_UTC - prev_trip.last_segment.end.timestamp_UTC).total_seconds()
+                distance_prev_trip = distance_m(prev_trip.last_segment.end, point)
+                is_prev_trip_candidate = all([interval_prev_trip <= max_break_period,
+                                              distance_prev_trip <= max_distance_m])
+            if next_trip_exists:
+                next_trip = trips[idx + 1]
+                interval_next_trip = (next_trip.first_segment.start.timestamp_UTC - point.timestamp_UTC).total_seconds()
+                distance_next_trip = distance_m(point, next_trip.first_segment.start)
+                is_next_trip_candidate = all([interval_next_trip <= max_break_period,
+                                              distance_next_trip <= max_distance_m])
+            
+            append_to_prev_trip = all([is_prev_trip_candidate,
+                                       is_next_trip_candidate,
+                                       distance_prev_trip <= distance_next_trip])
+            append_to_prev_trip = append_to_prev_trip is False and is_prev_trip_candidate
+            if append_to_prev_trip:
+                point.timestamp_UTC = prev_trip.last_segment.end.timestamp_UTC
+                filtered_trips[-1].segments.append(segment)
+            elif is_next_trip_candidate:
+                point.timestamp_UTC = next_trip.first_segment.start.timestamp_UTC
+                next_trip.segments.insert(0, segment)
+            else:
+                pass  # assume point is noise and do nothing
+        else:
+            filtered_trips.append(trip)
+    return filtered_trips
+
+
+def infer_missing_trips(trips, subway_entrances, min_trip_m=250, subway_buffer_m=200, cold_start_m=750):
+    """ Determines where the gap between known trips is unexplained and missing
+        trip information in the source data can be assumed."""
+    missing_trips = []
+
+    last_trip = None
+    for trip in trips:
+        if not last_trip:
+            last_trip = trip
+            continue
+
+        end_point = last_trip.last_segment.end
+        start_point = trip.first_segment.start
+        distance_prev_trip = distance_m(end_point, start_point)
+        interval_prev_trip = (start_point.timestamp_UTC - end_point.timestamp_UTC).total_seconds()
+
+        if not distance_prev_trip:
+            continue
+
+        # 1. label any non-zero distance less than min trip lenghth as missing but too short
+        if distance_prev_trip and distance_prev_trip < min_trip_m:
+            m = MissingTrip(category='lt_min_trip_length',
+                            last_trip_end=end_point,
+                            next_trip_start=start_point,
+                            distance=distance_prev_trip,
+                            duration=interval_prev_trip)
+            missing_trips.append(m)
+        else:
+            # 2. check for missing trips that can be explained by a subway trip with loss of signal
+            end_entrance = points_intersect(subway_entrances, end_point, subway_buffer_m)
+            start_entrance = points_intersect(subway_entrances, start_point, subway_buffer_m)
+            if end_entrance and start_entrance and end_entrance != start_entrance:
+                m = MissingTrip(category='subway',
+                                last_trip_end=end_point,
+                                last_trip_start=start_point,
+                                distance=distance_prev_trip,
+                                duration=interval_prev_trip)
+                missing_trips.append(m)
+            # 3. check for missing trips that are explained by the GPS warm-up time and
+            #    prepend the last point of previous trip to start of current trip. This new
+            #    point will have the same timestamp as the original first (now second) point
+            elif distance_prev_trip <= cold_start_m:
+                print('test this copy that attributes are not changed simultaneously')
+                cold_start_point = end_point.copy()
+                trip.has_cold_start = True
+                trip.first_segment.insert(0, cold_start_point)
+            # 4. all other gaps in the data marked as a general missing trip
+            else:
+                m = MissingTrip(category='general',
+                                next_trip_end=end_point,
+                                next_trip_start=start_point,
+                                distance=distance_prev_trip,
+                                duration=interval_prev_trip)
+                missing_trips.append(m)
+
+            last_trip = trip
+        return missing_trips
+
+def format_trips_as_point_rows(trips, missing_trips):
+    """Merge detected and missing trip datas to single set of points as rows."""
+    def _point_to_csv_row(p):
+        row = {
+            'timestamp_UTC': p.timestamp_UTC,
+            'timestamp_epoch': p.timestamp_epoch,
+            'latitude': p.latitude,
+            'longitude': p.longitude,
+            'easting': p.easting,
+            'northing': p.northing,
+            'h_accuracy': p.h_accuracy,
+            'duration': ,
+            'distance':,
+            'segment':,
+            'trip_num':,
+            'missing':,
+            'missing_category':,
+            'has_cold_start':
+        }
+
+    rows = []
+    missing_trips_gen = iter(missing_trips)
+    next_missing_trip = next(missing_trips_gen)
+    trip_num = 1
+    for trip in trips:
+        if next_missing_trip.timestamp_UTC < trip.first_segment.start.timestamp_UTC:
+            # insert a point to indicate missing trip
+            missing_trip_row = _point_to_csv_row(next_missing_trip.last_trip_end)
+            rows.append(missing_trips_row)
+        
+        # format trips to rows as normal (first checking whether tr)
+        if trip_num
+
+
+
+
+
 ## helper functions
 def distance_m(point1, point2):
-    '''Returns the distance between two points in meters'''
+    """Returns the distance between two points in meters."""
     a = point2.easting - point1.easting
     b = point2.northing - point1.northing
     return math.sqrt(a**2 + b**2)
+
+def points_intersect(points, test_point, buffer_m=200):
+    """Returns the first point that intersects with buffer (m)
+       of a test point."""
+    for point in points:
+        if distance_m(point, test_point) <= buffer_m:
+            return point
+
+
 
 
 ## main
@@ -210,6 +349,15 @@ def run(coordinates, parameters):
     subway_linked_trips = find_subway_connections(trips, subway_entrances,
                                                   buffer_m=parameters['subway_buffer_meters'])
     velocity_linked_trips = find_velocity_connections(subway_linked_trips)
+    full_length_trips = filter_single_points(velocity_linked_trips)
+
+    # find incidents where data about trips is missing
+    missing_trips = infer_missing_trips(trips, subway_entrances,
+                                        min_trip_m=250,
+                                        subway_buffer_m=parameters['subway_buffer_meters'],
+                                        cold_start_m=parameters['cold_start_distance'])
+
+    format_trips_as_points(full_length_trips, missing_trips)
 
     return segments
 

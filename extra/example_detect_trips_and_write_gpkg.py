@@ -18,7 +18,9 @@ import datakit_config
 itinerum = Itinerum(config=datakit_config)
 
 # -- Load user trip from database and write as GIS file
-user = itinerum.load_users(uuid='005991eb-3c17-4a7c-ba3d-e66210910bf8', load_trips=False)
+user = itinerum.load_users(uuid='01cf0f37-e017-438e-aa71-c56d23166c50', load_trips=False)
+# for user in itinerum.load_users(load_trips=False):
+# print(user.uuid)
 # parameters = {
 #     'subway_stations': itinerum.database.load_subway_entrances(),
 #     'break_interval_seconds': datakit_config.TRIP_DETECTION_BREAK_INTERVAL_SECONDS,
