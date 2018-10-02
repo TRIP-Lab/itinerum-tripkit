@@ -9,8 +9,10 @@ from .models import GPSPoint, SubwayEntrance, MissingTrip, TripSegment, Trip
 
 ## cast input data as objects
 def generate_subway_entrances(coordinates):
-    '''Find UTM coordinates for subway stations entrances from lat/lon
-       and build structs'''
+    """
+    Find UTM coordinates for subway stations entrances from lat/lon
+    and yield objects.
+    """
     entrances = []
     for c in coordinates:
         easting, northing, _, _ = utm.from_latlon(c.latitude, c.longitude)
@@ -21,8 +23,10 @@ def generate_subway_entrances(coordinates):
     return entrances
 
 def generate_gps_points(coordinates):
-    '''Find UTM coordinates for user GPS points from lat/lon
-       and build structs'''
+    """
+    Find UTM coordinates for user GPS points from lat/lon
+    and yield objects.
+    """
     for c in coordinates:
         easting, northing, _, _ = utm.from_latlon(c.latitude, c.longitude)
         yield GPSPoint(latitude=c.latitude,
@@ -36,17 +40,21 @@ def generate_gps_points(coordinates):
 
 ## perform cleaning on points
 def filter_by_accuracy(points, cutoff=30):
-    '''Remove points that have worse reported accuracy than the
-       cutoff value in meters'''
+    """
+    Remove points that have worse reported accuracy than the cutoff value
+    in meters.
+    """
     for p in points:
         if p.h_accuracy <= cutoff:
             yield p
 
 
 def filter_erroneous_distance(points, check_speed_kph=60):
-    '''Remove points with unreasonably fast speeds where, in a series
-       of 3 consecutive points (1, 2, and 3), point 3 is closer to point 1
-       than point 2'''
+    """
+    Remove points with unreasonably fast speeds where, in a series
+    of 3 consecutive points (1, 2, and 3), point 3 is closer to point 1
+    than point 2.
+    """
     
     # create two copies of the points generator to compare against
     # and advance the copy ahead one point
@@ -78,10 +86,12 @@ def filter_erroneous_distance(points, check_speed_kph=60):
         last_p = p
         yield p
 
-## break gps points into atomic segments
+
 def break_points_by_collection_pause(points, max_break_period=360):
-    '''Break into trip segments when time recorded between points is
-       greater than the specified break period'''
+    """
+    Break into trip segments when time recorded between points is
+    greater than the specified break period.
+    """
     segments = []
     last_p = None
     for p in points:
@@ -106,8 +116,10 @@ def break_points_by_collection_pause(points, max_break_period=360):
     return segments
 
 
-# begin by creating a trip for every segment
 def initialize_trips(segments):
+    """
+    Begin trip contruction by creating a new trip for each segment.
+    """
     trips = []
     for idx, segment in enumerate(segments):
         trips.append(Trip(num=idx, segments=[segment]))
@@ -116,6 +128,10 @@ def initialize_trips(segments):
 
 ## stitch segments into longer trips if pre-determined conditions are met
 def find_subway_connections(trips, subway_entrances, buffer_m=200):
+    """
+    Look for segments that can be connected by an explained subway trip update
+    the related trip objects.
+    """
     connected_trips = []
     last_trip = None
     for trip in trips:
@@ -218,8 +234,10 @@ def filter_single_points(trips):
 
 
 def infer_missing_trips(trips, subway_entrances, min_trip_m=250, subway_buffer_m=200, cold_start_m=750):
-    """ Determines where the gap between known trips is unexplained and missing
-        trip information in the source data can be assumed."""
+    """
+    Determines where the gap between known trips is unexplained and missing
+    trip information in the source data can be assumed.
+    """
     missing_trips = []
 
     last_trip = None

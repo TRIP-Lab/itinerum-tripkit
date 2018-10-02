@@ -37,12 +37,16 @@ class SubwayEntrance:
 
 
 class TripSegment:
-    __slots__ = ['group', 'points', 'period_before_seconds']
+    __slots__ = ['group', 'points', 'period_before_seconds', 'link_to',
+                 'link_type', 'is_cold_start']
 
     def __init__(self, *args, **kwargs):
         self.group = kwargs['group']
         self.points = kwargs['points']
         self.period_before_seconds = kwargs['period_before_seconds']
+        self.link_to = None
+        self.link_type = None
+        self.is_cold_start = False
 
     @property
     def start(self):
@@ -56,15 +60,10 @@ class TripSegment:
 
 
 class Trip:
-    __slots__ = ['num', 'segments', 'links', 'subway_links',
-                 'walking_links', 'has_cold_start']
+    __slots__ = ['segments']
 
     def __init__(self, *args, **kwargs):
-        self.num = kwargs['num']
         self.segments = kwargs['segments']
-        self.subway_links = set()
-        self.walking_links = set()
-        self.has_cold_start = False
 
     @property
     def first_segment(self):
@@ -86,11 +85,20 @@ class Trip:
         if self.last_segment:
             return self.last_segment.end.timestamp_UTC
 
-    def link_by_subway(self, next_trip):
-        self.subway_links.add(next_trip.num)
+    @property
+    def links(self):
+        _links = {}
+        for idx, segment in enumerate(self.segments):
+            if segment.link_to:
+                connected = self.segments[idx + 1]
+                assert segment.link_to == connected.group
+                _links.setdefault(s.link_type, []).append((segment.group, connected.group))
+        return _links
 
-    def link_by_walking(self, next_trip):
-        self.walking_links.add(next_trip.num)
+    def link_to(self, linked_trip, link_type):
+        self.last_segment.link_to = linked_trip.first_segment.group
+        self.last_segment.link_type = link_type
+        self.segments.extend(linked_trip.segments)
 
 
 class MissingTrip:
