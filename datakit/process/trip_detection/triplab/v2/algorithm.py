@@ -5,6 +5,7 @@ import logging
 import math
 import utm
 
+from datakit.models import Trip as DatakitTrip, TripPoint as DatakitTripPoint
 from .models import GPSPoint, SubwayEntrance, MissingTrip, TripSegment, Trip
 
 # logging.basicConfig(level=logging.DEBUG)
@@ -33,7 +34,8 @@ def generate_gps_points(coordinates):
     """
     for c in coordinates:
         easting, northing, _, _ = utm.from_latlon(c.latitude, c.longitude)
-        yield GPSPoint(latitude=c.latitude,
+        yield GPSPoint(database_id=c.id,
+                       latitude=c.latitude,
                        longitude=c.longitude,
                        northing=northing,
                        easting=easting,
@@ -67,12 +69,17 @@ def filter_erroneous_distance(points, check_speed_kph=60):
 
     last_p = None
     for p in points:
-        next_p = next(points_copy)
+        try:
+            next_p = next(points_copy)
+        except StopIteration:
+            yield p
+            return
 
         # always yield first point without filtering
         if not last_p:
             last_p = p
             yield p
+            continue
 
         # find the distance and time passed since previous point was collected
         distance_from_last_point = distance_m(last_p, p)
@@ -81,7 +88,7 @@ def filter_erroneous_distance(points, check_speed_kph=60):
         # drop point if both speed and distance conditions are met
         if distance_from_last_point and seconds_since_last_point:
             kph_since_last_point = (distance_from_last_point / seconds_since_last_point) * 3.6
-            distance_between_neighbor_points = distance_m(last_p,  next_p)
+            distance_between_neighbor_points = distance_m(last_p, next_p)
             
             if (kph_since_last_point >= check_speed_kph and 
                 distance_between_neighbor_points < distance_from_last_point):
@@ -195,6 +202,7 @@ def filter_single_points(trips):
     """
     Remove any isolated GPS points that are not within 20 minutes
     or 150 meters of the previous end point or next trip start point.
+    Otherwise, attach them to the soonest trip end.
     """
     max_break_period = 20 * 60  # minutes * seconds
     max_distance_m = 150
@@ -205,7 +213,7 @@ def filter_single_points(trips):
             segment = trip.segments[0]
             point = segment.points[0]
             prev_trip_exists = idx - 1 >= 0
-            next_trip_exists = idx + 1 < len(trips)
+            next_trip_exists = idx + 1 <= len(trips)
 
             is_prev_trip_candidate, is_next_trip_candidate = False, False
             if prev_trip_exists:
@@ -223,8 +231,8 @@ def filter_single_points(trips):
             
             append_to_prev_trip = all([is_prev_trip_candidate,
                                        is_next_trip_candidate,
-                                       distance_prev_trip <= distance_next_trip])
-            append_to_prev_trip = append_to_prev_trip is False and is_prev_trip_candidate
+                                       interval_prev_trip <= interval_next_trip])
+
             if append_to_prev_trip:
                 point.timestamp_UTC = prev_trip.last_segment.end.timestamp_UTC
                 filtered_trips[-1].segments.append(segment)
@@ -244,9 +252,8 @@ def infer_missing_trips(trips, subway_entrances, min_trip_m=250, subway_buffer_m
     trip information in the source data can be assumed.
     """
     missing_trips = []
-
     last_trip = None
-    for trip in trips:
+    for idx, trip in enumerate(trips, start=1):
         if not last_trip:
             last_trip = trip
             continue
@@ -289,55 +296,75 @@ def infer_missing_trips(trips, subway_entrances, min_trip_m=250, subway_buffer_m
             # 4. all other gaps in the data marked as a general missing trip
             else:
                 m = MissingTrip(category='general',
-                                next_trip_end=last_end_point,
+                                last_trip_end=last_end_point,
                                 next_trip_start=start_point,
                                 distance=distance_prev_trip,
                                 duration=interval_prev_trip)
                 missing_trips.append(m)
-            last_trip = trip
-        return missing_trips
+        last_trip = trip
+    return missing_trips
 
-def format_trips_as_point_rows(trips, missing_trips):
+
+def merge_trips(complete_trips, missing_trips):
     """
-    Merge detected and missing trip datas to single set of points as rows.
+    Returns a zipped list of complete and missing trips in the correct timestamp order.
     """
-    rows = []
+    merged = []
     missing_trips_gen = iter(missing_trips)
     next_missing_trip = next(missing_trips_gen)
-    for trip_num, trip in enumerate(trips, start=1):
-        if next_missing_trip.timestamp_UTC < trip.first_segment.start.timestamp_UTC:
-            # insert a point to indicate missing trip
-            missing_trip_row = {
-                'timestamp_UTC': next_missing_trip.timestamp_UTC,
-                'duration': next_missing_trip.duration,
-                'distance_': next_missing_trip.distance,
-                'trip_num': None,
-                'segment_num': None,
-                'missing': True,
-                'missing_category': next_missing_trip.category,
-                'has_cold_start': None,
-                'latitude': next_missing_trip.last_trip_end.latitude,
-                'longitude': next_missing_trip.last_trip_end.longitude
-            }
-            rows.append(missing_trip_row)
-        
-        # format trips to rows as normal (first checking whether tr)
-        for segment in trip.segments:
-            for point in segment.points:
-                trip_row = {
-                    'timestamp_UTC': point.timestamp_UTC,
-                    'duration': None,
-                    'distance': None,
-                    'trip_num': trip_num,
-                    'segment_num': segment.group,
-                    'missing': None,
-                    'missing_category': None,
-                    'has_cold_start': segment.is_cold_start if segment.is_cold_start else None,
-                    'latitude': point.latitude,
-                    'longitude': point.longitude
-                }
-                rows.append(trip_row)
-    return rows
+    for trip in complete_trips:
+        if next_missing_trip.start.timestamp_UTC < trip.first_segment.start.timestamp_UTC:
+            while next_missing_trip.start.timestamp_UTC < trip.first_segment.start.timestamp_UTC:
+                merged.append(next_missing_trip)
+                try:
+                    next_missing_trip = next(missing_trips_gen)
+                except StopIteration:
+                    break
+        merged.append(trip)
+    return merged
+
+
+# def format_trips_as_summary_rows(trips, missing_trips):
+#     summary_rows = []
+#     missing_trips_gen = iter(missing_trips)
+#     next_missing_trip = next(missing_trips_gen)
+#     for trip_num, trip in enumerate(trips, start=1):
+#         if next_missing_trip.start.timestamp_UTC < trip.first_segment.start.timestamp_UTC:
+#             while next_missing_trip.start.timestamp_UTC < trip.first_segment.start.timestamp_UTC:
+#                 # insert a point to indicate missing trip
+#                 missing_trip_summary = {
+#                     'trip_num': None,
+#                     'latitude': next_missing_trip.start.latitude,
+#                     'longitude': next_missing_trip.start.longitude,
+#                     'start_timestamp_UTC': next_missing_trip.start.timestamp_UTC,
+#                     'end_latitude': next_missing_trip.end.latitude,
+#                     'end_longitude': next_missing_trip.end.longitude,
+#                     'end_timestamp_UTC': next_missing_trip.end.timestamp_UTC,
+#                     'duration': next_missing_trip.duration,
+#                     'distance_': next_missing_trip.distance,
+#                     'missing': True,
+#                     'missing_category': next_missing_trip.category,
+#                     'has_cold_start': None
+#                 }
+#                 summary_rows.append(missing_trip_summary)
+#                 try:
+#                     next_missing_trip = next(missing_trips_gen)
+#                 except StopIteration:
+#                     break
+
+#         summary_rows.append({
+#             'trip_num': trip_num,
+#             'start_latitude': trip.first_segment.start.latitude,
+#             'start_longitude': trip.first_segment.start.longitude,
+#             'start_timestamp_UTC': trip.first_segment.start.timestamp_UTC,
+#             'end_latitude': trip.last_segment.end.latitude,
+#             'end_longitude': trip.last_segment.end.longitude,
+#             'end_timestamp_UTC': trip.last_segment.end.timestamp_UTC,
+#             'duration': next_missing_trip.duration,
+#             'distance_': next_missing_trip.distance,
+#             'has_cold_start': trip.first_segment.is_cold_start
+#         })
+#     return summary_rows
 
 
 ## helper functions
@@ -357,8 +384,39 @@ def points_intersect(points, test_point, buffer_m=200):
         if distance_m(point, test_point) <= buffer_m:
             return point
 
-
-
+def wrap_for_datakit(detected_trips):
+    """
+    Return result as the same type of object (list of TripPoints) as returned
+    by `itinerum-datakit/datakit/database.py`.
+    """
+    datakit_trips = []
+    for trip_num, detected_trip in enumerate(detected_trips, start=1):
+        if isinstance(detected_trip, Trip):
+            trip = DatakitTrip(num=trip_num, trip_code=-1)
+            for segment in detected_trip.segments:
+                for point in segment.points:
+                    p = DatakitTripPoint(latitude=point.latitude,
+                                         longitude=point.longitude,
+                                         h_accuracy=point.h_accuracy,
+                                         timestamp_UTC=point.timestamp_UTC,
+                                         database_id=point.database_id)
+                    trip.points.append(p)
+            datakit_trips.append(trip)
+        elif isinstance(detected_trip, MissingTrip):
+            trip = DatakitTrip(num=trip_num, trip_code=-100)
+            p1 = DatakitTripPoint(database_id=None,
+                                  latitude=detected_trip.start.latitude,
+                                  longitude=detected_trip.start.longitude,
+                                  h_accuracy=-1.,
+                                  timestamp_UTC=detected_trip.start.timestamp_UTC)
+            p2 = DatakitTripPoint(database_id=None,
+                                  latitude=detected_trip.end.latitude,
+                                  longitude=detected_trip.end.longitude,
+                                  h_accuracy=-1.,
+                                  timestamp_UTC=detected_trip.end.timestamp_UTC)
+            trip.points = [p1, p2]
+            datakit_trips.append(trip)
+    return datakit_trips
 
 ## main
 def run(coordinates, parameters):
@@ -374,21 +432,22 @@ def run(coordinates, parameters):
     segments = break_points_by_collection_pause(cleaned_points, max_break_period=parameters['break_interval_seconds'])
 
     # start by considering every segment a trip
-    trips = initialize_trips(segments)
+    initial_trips = initialize_trips(segments)
 
     # apply rules to reconstitute full trips from segments when possible ("stitching")
-    subway_linked_trips = find_subway_connections(trips, subway_entrances,
+    subway_linked_trips = find_subway_connections(initial_trips, subway_entrances,
                                                   buffer_m=parameters['subway_buffer_meters'])
     velocity_linked_trips = find_velocity_connections(subway_linked_trips)
     full_length_trips = filter_single_points(velocity_linked_trips)
 
     # find incidents where data about trips is missing
-    missing_trips = infer_missing_trips(trips, subway_entrances,
+    missing_trips = infer_missing_trips(full_length_trips, subway_entrances,
                                         min_trip_m=250,
                                         subway_buffer_m=parameters['subway_buffer_meters'],
                                         cold_start_m=parameters['cold_start_distance'])
 
-    csv_rows = format_trips_as_point_rows(full_length_trips, missing_trips)
+    trips = merge_trips(full_length_trips, missing_trips)
+    datakit_trips = wrap_for_datakit(trips)
 
     logger.info('-------------------------------')
     logger.info('V2 - Num. segments: %d', len(segments))
@@ -396,6 +455,5 @@ def run(coordinates, parameters):
     logger.info('V2 - Num. velocity linked trips: %d', len(velocity_linked_trips))
     logger.info('V2 - Num. full-length trips: %d', len(full_length_trips))
     logger.info('V2 - Num. missing trips: %d', len(missing_trips))
-    logger.info('V2 - Num. csv rows: %d', len(csv_rows))
-    return segments
-
+    logger.info('V2 - Num. point rows: %d', len(trips))
+    return datakit_trips

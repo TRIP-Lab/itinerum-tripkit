@@ -7,11 +7,12 @@ MODES = ['walking', 'subway']
 
 
 class GPSPoint:
-    __slots__ = ['latitude', 'longitude', 'northing', 'easting',
+    __slots__ = ['database_id', 'latitude', 'longitude', 'northing', 'easting',
                  'speed', 'h_accuracy', 'timestamp_UTC', 'period_before_seconds']
 
     def __init__(self, *args, **kwargs):
         # input attributes
+        self.database_id = kwargs['database_id']
         self.latitude = kwargs['latitude']
         self.longitude = kwargs['longitude']
         self.northing = kwargs['northing']
@@ -22,7 +23,6 @@ class GPSPoint:
 
         # trip attributes
         self.period_before_seconds = kwargs.get('period_before_seconds')
-
 
 class SubwayEntrance:
     __slots__ = ['latitude', 'longitude', 'northing', 'easting']
@@ -111,6 +111,9 @@ class MissingTrip:
         self.duration = kwargs['duration']
 
     @property
-    def timestamp_UTC(self):
-        return self.last_trip_end.timestamp_UTC
-    
+    def start(self):
+        return self.last_trip_end
+
+    @property
+    def end(self):
+        return self.next_trip_start
