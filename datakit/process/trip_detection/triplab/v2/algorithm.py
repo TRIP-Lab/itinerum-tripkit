@@ -7,6 +7,7 @@ import utm
 
 from datakit.models import Trip as DatakitTrip, TripPoint as DatakitTripPoint
 from .models import GPSPoint, SubwayEntrance, MissingTrip, TripSegment, Trip
+from .trip_codes import TRIP_CODES
 
 # logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -106,17 +107,19 @@ def break_points_by_collection_pause(points, max_break_period=360):
     segments = []
     last_p = None
     for p in points:
-        # determine break periods and increment segment groups
+        # determine break period & distance and increment segment groups
         if not last_p:
-            break_period, group = 0, 0
+            break_period, break_distance, group = 0, 0., 0
         else:
             break_period = (p.timestamp_UTC - last_p.timestamp_UTC).total_seconds()
+            break_distance = distance_m(last_p, p)
             if break_period > max_break_period:
                 group += 1
         last_p = p
+        p.period_before_seconds = break_period
+        p.distance_before_meters = break_distance
 
         # generate segments from determined groups
-        p.period_before_seconds = break_period
         if segments and segments[-1].group == group:
             segments[-1].points.append(p)
         else:
@@ -307,64 +310,82 @@ def infer_missing_trips(trips, subway_entrances, min_trip_m=250, subway_buffer_m
 
 def merge_trips(complete_trips, missing_trips):
     """
-    Returns a zipped list of complete and missing trips in the correct timestamp order.
+    Returns a zipped list of complete and missing trips in the correct timestamp order. If the missing
+    trip previous to a complete trip is labeled as 'too short' (missing category: "lt_min_trip_length"),
+    then join these trips as one.
     """
     merged = []
     missing_trips_gen = iter(missing_trips)
     next_missing_trip = next(missing_trips_gen)
     for trip in complete_trips:
+        merge_missing_too_short = None
         if next_missing_trip.start.timestamp_UTC < trip.first_segment.start.timestamp_UTC:
             while next_missing_trip.start.timestamp_UTC < trip.first_segment.start.timestamp_UTC:
-                merged.append(next_missing_trip)
+                # keep track of too short missing trips only if they are the last
+                # missing trip before a complete one
+                if next_missing_trip.category == 'lt_min_trip_length':
+                    merge_missing_too_short = next_missing_trip
+                else:
+                    merge_missing_too_short = None
+                    merged.append(next_missing_trip)
                 try:
                     next_missing_trip = next(missing_trips_gen)
                 except StopIteration:
                     break
+        
+        if merge_missing_too_short:
+            segment_group = trip.first_segment.group + .1
+            # merge segment with missing trip's start location but the originally detected trip's starting timestamp
+            merge_missing_too_short.start.timestamp_UTC = merge_missing_too_short.end.timestamp_UTC
+            missing_segment = TripSegment(group=segment_group,
+                                          points=[merge_missing_too_short.start,
+                                                  merge_missing_too_short.end],
+                                          period_before_seconds=trip.first_segment.period_before_seconds)
+            trip.segments.insert(0, missing_segment)
+            trip.add_label('lt_min_trip_length')
         merged.append(trip)
     return merged
 
 
-# def format_trips_as_summary_rows(trips, missing_trips):
-#     summary_rows = []
-#     missing_trips_gen = iter(missing_trips)
-#     next_missing_trip = next(missing_trips_gen)
-#     for trip_num, trip in enumerate(trips, start=1):
-#         if next_missing_trip.start.timestamp_UTC < trip.first_segment.start.timestamp_UTC:
-#             while next_missing_trip.start.timestamp_UTC < trip.first_segment.start.timestamp_UTC:
-#                 # insert a point to indicate missing trip
-#                 missing_trip_summary = {
-#                     'trip_num': None,
-#                     'latitude': next_missing_trip.start.latitude,
-#                     'longitude': next_missing_trip.start.longitude,
-#                     'start_timestamp_UTC': next_missing_trip.start.timestamp_UTC,
-#                     'end_latitude': next_missing_trip.end.latitude,
-#                     'end_longitude': next_missing_trip.end.longitude,
-#                     'end_timestamp_UTC': next_missing_trip.end.timestamp_UTC,
-#                     'duration': next_missing_trip.duration,
-#                     'distance_': next_missing_trip.distance,
-#                     'missing': True,
-#                     'missing_category': next_missing_trip.category,
-#                     'has_cold_start': None
-#                 }
-#                 summary_rows.append(missing_trip_summary)
-#                 try:
-#                     next_missing_trip = next(missing_trips_gen)
-#                 except StopIteration:
-#                     break
+def annotate_trips(trips):
+    """
+    """
+    for trip in trips:
+        if isinstance(trip, MissingTrip):
+            if trip.category == 'lt_min_trip_length':
+                trip.code = TRIP_CODES['missing trip - less than min. trip length']
+            elif trip.category == 'subway':
+                trip.code = TRIP_CODES['missing trip - subway']
+            elif trip.category == 'general':
+                trip.code = TRIP_CODES['missing trip']
+        elif isinstance(trip, Trip):
+            # add labels for each link where segments have been linked by rules
+            for link_type in trip.links.keys():
+                trip.add_label(link_type)
 
-#         summary_rows.append({
-#             'trip_num': trip_num,
-#             'start_latitude': trip.first_segment.start.latitude,
-#             'start_longitude': trip.first_segment.start.longitude,
-#             'start_timestamp_UTC': trip.first_segment.start.timestamp_UTC,
-#             'end_latitude': trip.last_segment.end.latitude,
-#             'end_longitude': trip.last_segment.end.longitude,
-#             'end_timestamp_UTC': trip.last_segment.end.timestamp_UTC,
-#             'duration': next_missing_trip.duration,
-#             'distance_': next_missing_trip.distance,
-#             'has_cold_start': trip.first_segment.is_cold_start
-#         })
-#     return summary_rows
+            # label detected trips consisting of one point
+            if len(trip.segments) == 1 and len(trip.segments[0].points) == 1:
+                trip.add_label('single point')
+            elif trip.cumulative_distance == 0:
+                trip.add_label('single point')
+
+            # add additional speed and trip distance information to each point
+            # # edge case: first test for case of a single point attached to a missing trip: "lt_min_trip_length"
+            # single_point_exists = any(map(lambda s: len(s.points) == 1, trip.segments))
+            # missing_too_short_joined = 'lt_min_trip_length' in trip.labels
+            # if len(trip.segments) == 2 and single_point_exists and missing_too_short_joined:
+
+            # apply labeling hierarchy to determine final trip code
+            if 'lt_min_trip_length' in trip.labels:
+                if 'subway' in trip.labels:
+                    trip.code = TRIP_CODES['complete trip - subway']
+                elif 'single point' in trip.labels:
+                    trip.code = TRIP_CODES['single point']
+                else:
+                    trip.code = TRIP_CODES['complete trip']
+            elif trip.cumulative_distance() < 250:
+                trip.code = TRIP_CODES['distance too short']
+        yield trip
 
 
 ## helper functions
@@ -392,7 +413,8 @@ def wrap_for_datakit(detected_trips):
     datakit_trips = []
     for trip_num, detected_trip in enumerate(detected_trips, start=1):
         if isinstance(detected_trip, Trip):
-            trip = DatakitTrip(num=trip_num, trip_code=-1)
+            trip = DatakitTrip(num=trip_num,
+                               trip_code=detected_trip.code)
             for segment in detected_trip.segments:
                 for point in segment.points:
                     p = DatakitTripPoint(latitude=point.latitude,
@@ -403,7 +425,7 @@ def wrap_for_datakit(detected_trips):
                     trip.points.append(p)
             datakit_trips.append(trip)
         elif isinstance(detected_trip, MissingTrip):
-            trip = DatakitTrip(num=trip_num, trip_code=-100)
+            trip = DatakitTrip(num=trip_num, trip_code=detected_trip.code)
             p1 = DatakitTripPoint(database_id=None,
                                   latitude=detected_trip.start.latitude,
                                   longitude=detected_trip.start.longitude,
@@ -447,7 +469,7 @@ def run(coordinates, parameters):
                                         cold_start_m=parameters['cold_start_distance'])
 
     trips = merge_trips(full_length_trips, missing_trips)
-    datakit_trips = wrap_for_datakit(trips)
+    datakit_trips = wrap_for_datakit(annotate_trips(trips))
 
     logger.info('-------------------------------')
     logger.info('V2 - Num. segments: %d', len(segments))

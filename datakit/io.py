@@ -154,7 +154,8 @@ def write_trips_geopackage(cfg, fn_base, trips):
         'geometry': 'LineString',
         'properties': [('start_UTC', 'datetime'),
                        ('end_UTC', 'datetime'),
-                       ('trip_code', 'int')]
+                       ('trip_code', 'int'),
+                       ('distance', 'float')]
     }
     with fiona.open(geopackage_fp, 'w',
                     driver='GPKG',
@@ -164,7 +165,8 @@ def write_trips_geopackage(cfg, fn_base, trips):
             properties = {
                 'start_UTC': trip.start_UTC,
                 'end_UTC': trip.end_UTC,
-                'trip_code': trip.trip_code
+                'trip_code': trip.trip_code,
+                'distance': trip.distance
             }
             feature = points_to_geojson_linestring(trip.geojson_coordinates, properties)
             geopackage_f.write(feature)

@@ -3,12 +3,15 @@
 # - Algorithm data structures
 # Uses slots to achieve best performance (comparable to dictionary)
 # and provide immutability against add or removing attributes
+import math
+
 MODES = ['walking', 'subway']
 
 
 class GPSPoint:
     __slots__ = ['database_id', 'latitude', 'longitude', 'northing', 'easting',
-                 'speed', 'h_accuracy', 'timestamp_UTC', 'period_before_seconds']
+                 'speed', 'h_accuracy', 'timestamp_UTC', 'period_before_seconds',
+                 'distance_before_meters']
 
     def __init__(self, *args, **kwargs):
         # input attributes
@@ -23,6 +26,14 @@ class GPSPoint:
 
         # trip attributes
         self.period_before_seconds = kwargs.get('period_before_seconds')
+        self.distance_before_meters = kwargs.get('distance_before_meters')
+
+    @property
+    def implied_speed(self):
+        if self.distance_before_meters is not None and self.period_before_seconds:
+            return self.distance_before_meters / self.period_before_seconds
+    
+
 
 class SubwayEntrance:
     __slots__ = ['latitude', 'longitude', 'northing', 'easting']
@@ -58,10 +69,12 @@ class TripSegment:
 
 
 class Trip:
-    __slots__ = ['segments']
+    __slots__ = ['segments', 'labels', 'code']
 
     def __init__(self, *args, **kwargs):
         self.segments = kwargs['segments']
+        self.labels = set()
+        self.code = -1
 
     @property
     def first_segment(self):
@@ -84,13 +97,17 @@ class Trip:
             return self.last_segment.end.timestamp_UTC
 
     @property
+    def duration(self):
+        return int((self.end_time - self.start_time).total_seconds())
+
+    @property
     def links(self):
         _links = {}
         for idx, segment in enumerate(self.segments):
             if segment.link_to:
                 connected = self.segments[idx + 1]
                 assert segment.link_to == connected.group
-                _links.setdefault(s.link_type, []).append((segment.group, connected.group))
+                _links.setdefault(segment.link_type, []).append((segment.group, connected.group))
         return _links
 
     def link_to(self, linked_trip, link_type):
@@ -98,10 +115,39 @@ class Trip:
         self.last_segment.link_type = link_type
         self.segments.extend(linked_trip.segments)
 
+    def link_from(self):
+        # could be added if MissingTrip was made interchangeable with
+        # this class to avoid the labels set
+        pass
+
+    def add_label(self, label):
+        self.labels.add(label)
+
+    def direct_distance(self):
+        point1 = self.first_segment.start
+        point2 = self.last_segment.end
+        a = point2.easting - point1.easting
+        b = point2.northing - point1.northing
+        return math.sqrt(a**2 + b**2)
+
+    def cumulative_distance(self):
+        seen = False  # skip first point's leading distance
+        distance = 0.
+        for segment in self.segments:
+            for point in segment.points:
+                if not seen:
+                    seen = True
+                else:
+                    distance += point.distance_before_meters
+        return distance
+
+    def avg_speed(self):
+        return self.duration / self.cumulative_distance
+
 
 class MissingTrip:
     __slots__ = ['category', 'last_trip_end', 'next_trip_start',
-                 'distance', 'duration']
+                 'distance', 'duration', 'code']
 
     def __init__(self, *args, **kwargs):
         self.category = kwargs['category']
@@ -109,6 +155,7 @@ class MissingTrip:
         self.next_trip_start = kwargs['next_trip_start']
         self.distance = kwargs['distance']
         self.duration = kwargs['duration']
+        self.code = -1
 
     @property
     def start(self):
@@ -117,3 +164,7 @@ class MissingTrip:
     @property
     def end(self):
         return self.next_trip_start
+    
+    @property
+    def avg_speed(self):
+        return self.distance / self.duration
