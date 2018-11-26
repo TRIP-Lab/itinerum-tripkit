@@ -1,6 +1,6 @@
 # itinerum-datakit
 
-[![Python Version](https://img.shields.io/badge/Python-3.6-blue.svg?style=flat-square)]()
+[![Python Version](https://img.shields.io/badge/Python-3.6%7C3.7-blue.svg?style=flat-square)]()
 
 Documentation for library usage: https://itinerum-datakit.readthedocs.io/
 
