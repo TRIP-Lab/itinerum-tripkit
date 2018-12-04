@@ -51,6 +51,7 @@ class Itinerum(object):
 
         self._database = Database()
         self._database.db.init(config.DATABASE_FN)
+        self._database._enable_spatialite_extension()
 
         self._csv = CSVParser(self._database)
 

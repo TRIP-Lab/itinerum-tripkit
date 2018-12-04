@@ -21,6 +21,27 @@ class Database(object):
     def __init__(self):
         self.db = deferred_db
 
+
+    def _enable_spatialite_extension(self):
+        """
+        Enables spatialite extensions in SQLite for using coordinate
+        data directly within QGIS: https://gis.stackexchange.com/a/244830
+        """
+        conn = self.db.connection()
+        conn.enable_load_extension(True)
+        self.db.execute_sql('SELECT load_extension("mod_spatialite");')
+        # alternative
+        # self.db.execute('SELECT load_extension("libspatialite");')
+
+        # check whether extension metadata already has been initialized
+        cur = self.db.execute_sql('SELECT name FROM sqlite_master WHERE type="table";')
+        tables = [t for t, in cur.fetchall()]
+        metadata_exists = 'spatial_ref_sys' in tables
+        if not metadata_exists:
+            self.db.execute_sql('SELECT InitSpatialMetaData(1);')
+            self.db.execute_sql('SELECT AddGeometryColumn("detected_trip_coordinates", "geom", 4326, "POINT", "XY");')
+
+
     def create(self):
         """
         Creates all the tables necessary for the itinerum-datakit cache database.
