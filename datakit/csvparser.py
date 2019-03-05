@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # Kyle Fitzsimmons, 2018
 import csv
+from datetime import datetime
 import logging
 import os
 from playhouse.migrate import migrate, SqliteMigrator
@@ -65,7 +66,7 @@ def _cancelled_prompts_row_filter(row):
 def _trips_row_filter(row):
     row['user'] = row.pop('uuid')
     row['trip_num'] = row.pop('trip')
-    row['timestamp_UTC'] = row.pop(timestamp)
+    row['timestamp_UTC'] = row.pop('timestamp')
     return row
 
 

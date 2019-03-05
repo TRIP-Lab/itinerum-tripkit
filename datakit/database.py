@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # Kyle Fitzsimmons, 2018
-from peewee import *
+from peewee import (
+    Model, SqliteDatabase, BooleanField, CharField, DateField, DateTimeField,
+    FloatField, ForeignKeyField, IntegerField, TextField, UUIDField
+)
 
 from .models.Trip import Trip
 from .models.TripPoint import TripPoint
@@ -214,56 +217,6 @@ class Database(object):
 
         model_fields = set(DetectedTripDaySummary._meta.sorted_field_names)
         self.bulk_insert(DetectedTripDaySummary, _row_filter(trip_day_summaries, model_fields))
-
-
-class BaseModel(Model):
-    class Meta:
-        database = deferred_db
-
-
-class UserSurveyResponse(BaseModel):
-    class Meta:
-        table_name = 'survey_responses'
-
-    uuid = UUIDField(unique=True, primary_key=True)
-    created_at_UTC = DateTimeField()
-    modified_at_UTC = DateTimeField()
-    itinerum_version = CharField()
-    location_home_lat = FloatField()
-    location_home_lon = FloatField()
-    location_study_lat = FloatField(null=True)
-    location_study_lon = FloatField(null=True)
-    location_work_lat = FloatField(null=True)
-    location_work_lon = FloatField(null=True)
-    member_type = CharField()
-    model = CharField()
-    os = CharField()
-    os_version = CharField()
-    travel_mode_study_primary = CharField(null=True)
-    travel_mode_study_secondary = CharField(null=True)
-    travel_mode_work_primary = CharField(null=True)
-    travel_mode_work_secondary = CharField(null=True)
-
-    @property
-    def coordinates(self):
-        return self.coordinates_backref.order_by(Coordinate.timestamp_UTC)
-
-    @property
-    def prompts(self):
-        return self.prompts_backref.order_by(PromptResponse.displayed_at_UTC)
-    
-    @property
-    def cancelled_prompts(self):
-        return self.cancelled_prompts_backref.order_by(CancelledPromptResponse.displayed_at_UTC)
-
-    @property
-    def detected_trip_coordinates(self):
-        return self.detected_trip_coordinates_backref.order_by(DetectedTripCoordinate.timestamp_UTC)
-
-    @property
-    def detected_trip_day_summaries(self):
-        return self.detected_trip_day_summaries_backref.order_by(DetectedTripDaySummary.date_UTC)
-    
 
 
 class BaseModel(Model):
