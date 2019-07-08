@@ -1,5 +1,13 @@
 #!/usr/bin/env python
 # Kyle Fitzsimmons, 2018
+'''./extras/normalize_csv.py 
+
+This script is a pre-processing script for normalizing any datetimes with included
+timezone information to UTC format. Working with UTC ultimately requires less
+mental overhead and provides better safety in running algorithms across different
+study areas. The final outputs can then be converted back and reported in the original
+timezones.
+'''
 import csv
 import ciso8601
 from datetime import datetime
@@ -177,22 +185,22 @@ if __name__ == '__main__':
     start = time.time()
     logging.info('Updating records to UTC for: {dir}/{fn}'.format(dir=source_dir_name,
                                                                   fn='survey_responses.csv'))
-    # csv_rows_to_UTC('survey_responses.csv',
-    #                 dt_columns=['created_at'],
-    #                 expected_columns=['modified_at_UTC'],
-    #                 rename_columns=[('version', 'itinerum_version'),
-    #                                 ('osversion', 'os_version')],
-    #                 tz=pytz.timezone('America/Montreal'),
-    #                 split_locations=True)
+    csv_rows_to_UTC('survey_responses.csv',
+                    dt_columns=['created_at'],
+                    expected_columns=['modified_at_UTC'],
+                    rename_columns=[('version', 'itinerum_version'),
+                                    ('osversion', 'os_version')],
+                    tz=pytz.timezone('America/Montreal'),
+                    split_locations=True)
 
 
-    # logging.info('Updating records to UTC for: {dir}/{fn}'.format(dir=source_dir_name,
-    #                                                               fn='prompt_responses.csv'))
-    # csv_rows_to_UTC('prompt_responses.csv',
-    #                 dt_columns=['timestamp'],
-    #                 expected_columns=['prompt_uuid', 'edited_at_UTC'],
-    #                 rename_columns=[('timestamp_UTC', 'displayed_at_UTC')],
-    #                 tz=pytz.timezone('America/Montreal'))
+    logging.info('Updating records to UTC for: {dir}/{fn}'.format(dir=source_dir_name,
+                                                                  fn='prompt_responses.csv'))
+    csv_rows_to_UTC('prompt_responses.csv',
+                    dt_columns=['timestamp'],
+                    expected_columns=['prompt_uuid', 'edited_at_UTC'],
+                    rename_columns=[('timestamp_UTC', 'displayed_at_UTC')],
+                    tz=pytz.timezone('America/Montreal'))
 
 
     logging.info('Updating records to UTC for: {dir}/{fn}'.format(dir=source_dir_name,
