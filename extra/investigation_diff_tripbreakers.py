@@ -15,7 +15,7 @@ import datakit_config
 
 
 itinerum = Itinerum(config=datakit_config)
-itinerum.setup(force=True)
+itinerum.setup(force=False)
 users = itinerum.load_users()
 
 uuids = []
@@ -46,11 +46,10 @@ for test_user in sorted(users, key=lambda u: str(u.uuid).lower()):
         c['timestamp'] = c.pop('timestamp_UTC')
         legacy_coordinates.append(c)
 
-    legacy_algorithm = itinerum.process.trip_detection.legacy.algorithm
-    trips2, summaries2 = legacy_algorithm.run(parameters,
-                                              metro_stations=legacy_metro_stations,
-                                              points=legacy_coordinates)
-
+    trips2, summaries2 = itinerum.process.trip_detection.triplab.legacy.algorithm.run(
+        parameters,
+        metro_stations=legacy_metro_stations,
+        points=legacy_coordinates)
 
     # check whether the start and end points for matching trips by id are equal
     for trip_num1, summary1 in summaries1.items():
@@ -58,11 +57,11 @@ for test_user in sorted(users, key=lambda u: str(u.uuid).lower()):
         ends_match = summary1['end'] == summaries2[trip_num1]['end']
         try:
             assert all([starts_match, ends_match])
-        except AssertionError:
+        except AssertionError as e:
             print(test_user.uuid, '-', trip_num1)
             print(summary1['start'], summaries2[trip_num1]['start'])
             print(summary1['end'], summaries2[trip_num1]['end'])
-            raise AssertionError
+            raise e
 
     if trips1:
         all_trips1.extend(list(trips1.values()))

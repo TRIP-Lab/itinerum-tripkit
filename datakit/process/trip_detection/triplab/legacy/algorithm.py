@@ -1,12 +1,10 @@
 #!/usr/bin/env python
 # Kyle Fitzsimmons, 2015
 import itertools
-import logging
 import utm
+
 from .modules import labels, tools
 from .modules.trip_codes import trip_codes
-
-logger = logging.getLogger(__name__)
 
 
 def filter_accuracy(points, cutoff=30):
@@ -38,7 +36,7 @@ def filter_erroneous_distance(points, check_speed=60):
         # find the distance and time passed since last point collected
         distance_from_last_point = tools.pythagoras((last_p['easting'], last_p['northing']),
                                                     (p['easting'], p['northing']))
-        seconds_since_last_point = (p['timestamp_UTC'] - last_p['timestamp_UTC']).total_seconds()
+        seconds_since_last_point = (p['timestamp'] - last_p['timestamp']).total_seconds()
 
         # toss the point if the speed is greater than `check_speed` and the distance between
         # the previous and next point is less than the distance from the last point to this one
@@ -46,8 +44,8 @@ def filter_erroneous_distance(points, check_speed=60):
             kph_since_last_point = (distance_from_last_point / seconds_since_last_point) * 3.6
             distance_between_adjacent_points = tools.pythagoras((last_p['easting'], last_p['northing']),
                                                                 (next_p['easting'], next_p['northing']))
-            if ((kph_since_last_point >= check_speed) and
-               (distance_between_adjacent_points < distance_from_last_point)):
+            if (kph_since_last_point >= check_speed and 
+                distance_between_adjacent_points < distance_from_last_point):
                 continue
         last_p = p
         yield p
@@ -59,12 +57,12 @@ def break_by_timegap(points, timegap=360):
     trips = []
     group = 1
     for idx, row in enumerate(points):
-        dt = row['timestamp_UTC']
+        dt = row['timestamp']
         if idx == 0:
             previous_row = row
             period = 0
         else:
-            period = int((dt - previous_row['timestamp_UTC']).total_seconds())
+            period = int((dt - previous_row['timestamp']).total_seconds())
             if period > timegap:
                 group += 1
             previous_row = row
@@ -79,7 +77,6 @@ def break_by_timegap(points, timegap=360):
     segment_groups = {}
     for t in trips:
         segment_groups.setdefault(t['segment_group'], []).append(t)
-
     return segment_groups
 
 
@@ -87,8 +84,8 @@ def metro_stations_utm(metro_stations):
     '''Get UTM coordinates for metro stations supplied by database lat/lngs'''
     stations = []
     for station in metro_stations:
-        easting, northing, _, _ = utm.from_latlon(station.latitude, station.longitude)
-        stations.append((easting, northing))
+        northing, easting, _, _ = utm.from_latlon(station['latitude'], station['longitude'])
+        stations.append((northing, easting))
     return stations
 
 
@@ -128,7 +125,7 @@ def find_metro_transfers(stations, segment_groups, buffer_m):
         if intersect1 and intersect2 and station1 != station2:
             # test that metro trip does not take longer than 80 minutes between stops
             # and that the user is travelling at least 0.1m/s on average
-            interval = ((segment2[0]['timestamp_UTC'] - segment1[-1]['timestamp_UTC']).total_seconds())
+            interval = ((segment2[0]['timestamp'] - segment1[-1]['timestamp']).total_seconds())
             distance = tools.pythagoras(segment1_end_p, segment2_start_p)
             segment_speed = distance / interval
             if interval < 4800 and segment_speed > 0.1:
@@ -172,7 +169,7 @@ def connect_by_velocity(linked_trips):
             continue
         prev_pt = (last_trip[-1]['easting'], last_trip[-1]['northing'])
         next_pt = (trip[0]['easting'], trip[0]['northing'])
-        period = int((trip[0]['timestamp_UTC'] - last_trip[-1]['timestamp_UTC']).total_seconds())
+        period = int((trip[0]['timestamp'] - last_trip[-1]['timestamp']).total_seconds())
         last_num = sorted(velocity_connections.keys())[-1]
         if tools.velocity_check(prev_pt, next_pt, period) is True:
             # label end and start points of segments before combining as a single trip
@@ -201,7 +198,7 @@ def filter_single_points(linked_trips):
             point = trip[0]
             point['note'] = 'single point'
             point_loc = (point['easting'], point['northing'])
-            point_dt = point['timestamp_UTC']
+            point_dt = point['timestamp']
 
             last_trip_num = num - 1
             last_trip_end = linked_trips[last_trip_num][-1]
@@ -214,11 +211,11 @@ def filter_single_points(linked_trips):
             next_trip_dist = tools.pythagoras(point_loc, next_trip_pt)
 
             if last_trip_dist <= next_trip_dist:
-                point['timestamp_UTC'] = last_trip_end['timestamp_UTC']
+                point['timestamp'] = last_trip_end['timestamp']
                 labels.single_point(point, cleaned_trips[num - offset - 1], 'append')
                 cleaned_trips[num - offset - 1].append(point)
             else:
-                point['timestamp_UTC'] = next_trip_start['timestamp_UTC']
+                point['timestamp'] = next_trip_start['timestamp']
                 labels.single_point(point, test_trips[num + 1], 'insert')
                 test_trips[num + 1].insert(0, point)
             offset += 1
@@ -227,7 +224,7 @@ def filter_single_points(linked_trips):
     return cleaned_trips
 
 
-def infer_missing_trips(stations, linked_trips, cold_start_m=750):
+def infer_missing_trips(stations, linked_trips):
     '''Determines the missing distance and period between each trip; key is correlated to linked_trips
        where the missing trip key indicates the gap before the linked trip with the same key'''
     missing_trips = {}
@@ -240,8 +237,8 @@ def infer_missing_trips(stations, linked_trips, cold_start_m=750):
         prior_point = (prior_trip[-1]['easting'], prior_trip[-1]['northing'])
         first_point = (trip[0]['easting'], trip[0]['northing'])
         spatial_gap = tools.pythagoras(prior_point, first_point)
-        prior_timestamp = prior_trip[-1]['timestamp_UTC']
-        timestamp = trip[0]['timestamp_UTC']
+        prior_timestamp = prior_trip[-1]['timestamp']
+        timestamp = trip[0]['timestamp']
         period = float((timestamp - prior_timestamp).seconds)
 
         missing = {
@@ -250,8 +247,7 @@ def infer_missing_trips(stations, linked_trips, cold_start_m=750):
             'longitude': prior_trip[-1]['longitude'],
             'easting': prior_trip[-1]['easting'],
             'northing': prior_trip[-1]['northing'],
-            'h_accuracy': prior_trip[-1]['h_accuracy'],
-            'timestamp_UTC': prior_timestamp,
+            'timestamp': prior_timestamp,
             'next_time': timestamp,
             'distance': spatial_gap,
             'break_period': period,
@@ -267,17 +263,16 @@ def infer_missing_trips(stations, linked_trips, cold_start_m=750):
             # check for missing trips to/from a metro
             intersect1, station1 = metro_buffer(stations, prior_point, 300)
             intersect2, station2 = metro_buffer(stations, first_point, 300)
-
             if intersect1 and intersect2 and station1 != station2:
                 missing['note'] = 'missing trip - metro'
                 missing['merge_codes'].append('missing trip - metro')
                 missing_trips[num] = missing
 
             # next, check if missing trip is below the cold start threshold
-            elif spatial_gap <= cold_start_m:
+            elif spatial_gap <= 750:
                 missing['note'] = 'cold start'
                 missing['prev_time'] = prior_timestamp
-                missing['timestamp_UTC'] = timestamp
+                missing['timestamp'] = timestamp
                 missing['merge_codes'].append('cold start')
                 trip.insert(0, missing)
             # if no criteria is match, mark as a vanilla missing trip
@@ -303,22 +298,20 @@ def merge_trips(trips, missing_trips, stations):
                 'longitude': missing_trips[idx]['longitude'],
                 'easting': missing_trips[idx]['easting'],
                 'northing': missing_trips[idx]['northing'],
-                'h_accuracy': missing_trips[idx]['h_accuracy'],
                 'break_period': missing_trips[idx]['break_period'],
                 'dist_prev': missing_trips[idx]['distance'],
                 'trip_distance': '',
                 'segment': '',
                 'trip': idx + offset,
-                'timestamp_UTC': None,
+                'timestamp': None,
                 'note': note,
-                'merge_codes': missing_trips[idx]['merge_codes'],
-            }
-
+                'merge_codes': missing_trips[idx]['merge_codes']
+            }            
             if note == 'missing trip - less than 250m':
-                p['timestamp_UTC'] = trip[0]['timestamp_UTC']
+                p['timestamp'] = trip[0]['timestamp']
                 rows.append(p)
             else:
-                p['timestamp_UTC'] = missing_trips[idx]['timestamp_UTC']
+                p['timestamp'] = missing_trips[idx]['timestamp']
                 p['trip'] = idx + offset
                 rows.append(p)
 
@@ -328,18 +321,16 @@ def merge_trips(trips, missing_trips, stations):
                     'longitude': trip[0]['longitude'],
                     'easting': trip[0]['easting'],
                     'northing': trip[0]['northing'],
-                    'h_accuracy': trip[0]['h_accuracy'],
                     'break_period': missing_trips[idx]['break_period'],
                     'dist_prev': missing_trips[idx]['distance'],
                     'trip_distance': '',
                     'segment': '',
                     'trip': idx + offset,
-                    'timestamp_UTC': missing_trips[idx]['next_time'],
+                    'timestamp': missing_trips[idx]['next_time'],
                     'note': note,
                     'merge_codes': trip[0]['merge_codes']
                 }
                 rows.append(p)
-
                 offset += 1
 
         # label complete trips segments
@@ -393,7 +384,7 @@ def distance_speed(trip_group):
             if p['break_period'] > 0:
                 p['avg_speed'] = p['distance'] / p['break_period']
             else:
-                p['avg_speed'] = trip_group[idx - 1]['avg_speed']
+                p['avg_speed'] = trip_group[idx-1]['avg_speed']
         if p['note'] != 'missing trip - less than 250m':
             last_point = point
     return trip_group
@@ -462,8 +453,8 @@ def summarize(rows):
             'dlon': end_pt['longitude'],
             'trip_id': num,
             'trip_code': c,
-            'start': start_pt['timestamp_UTC'],
-            'end': end_pt['timestamp_UTC'],
+            'start': start_pt['timestamp'],
+            'end': end_pt['timestamp'],
             'direct_distance': direct_distance,
             'cumulative_distance': end_pt['trip_distance'],
             'merge_codes': ', '.join(merge_codes)
@@ -477,8 +468,8 @@ def summarize(rows):
 
 
 # @tools.timeit
-def run(points, parameters):
-    stations = metro_stations_utm(parameters['subway_stations'])
+def run(parameters, metro_stations, points):
+    stations = metro_stations_utm(metro_stations)
     points = tools.process_utm(points)
     if not points or len(points) < 2:
         return None, None
@@ -489,15 +480,7 @@ def run(points, parameters):
     metro_linked_trips = find_metro_transfers(stations, segment_groups, buffer_m=parameters['subway_buffer_meters'])
     velocity_connected_trips = connect_by_velocity(metro_linked_trips)
     cleaned_trips = filter_single_points(velocity_connected_trips)
-    missing_trips = infer_missing_trips(stations, cleaned_trips, cold_start_m=parameters['cold_start_distance'])
+    missing_trips = infer_missing_trips(stations, cleaned_trips)
     rows = merge_trips(cleaned_trips, missing_trips, stations)
     trips, summaries = summarize(rows)
-
-    logger.info('-------------------------------')
-    logger.info('V1 - Num. segments: %d', len(segment_groups))
-    logger.info('V1 - Num. subway linked trips: %d', len(metro_linked_trips))
-    logger.info('V1 - Num. velocity linked trips: %d', len(velocity_connected_trips))
-    logger.info('V1 - Num. full-length trips: %d', len(cleaned_trips))
-    logger.info('V1 - Num. missing trips: %d', len(missing_trips))
-    logger.info('V1 - Num. csv rows: %d', len(rows))
     return trips, summaries

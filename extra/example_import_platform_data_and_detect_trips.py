@@ -34,6 +34,8 @@ parameters = {
 all_summaries = []
 for idx, user in enumerate(users, start=1):
     print('Processing user ({}) trips: {}/{}...'.format(user.uuid, idx, len(users)))
+    itinerum.process.trip_detection.triplab.v2.algorithm.run(user.coordinates, parameter=parameters)
+    import sys; sys.exit()
     user.trips, summaries = itinerum.process.trip_detection.triplab.v1.algorithm.run(user.coordinates.dicts(),
                                                                                      parameters=parameters)
     if summaries:
