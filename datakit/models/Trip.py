@@ -17,7 +17,7 @@ class Trip(object):
     def __init__(self, num, trip_code):
         self.num = int(num)
         self.trip_code = int(trip_code)
-        self.points = []   
+        self.points = []
 
     @property
     def distance(self):
@@ -57,4 +57,3 @@ class Trip(object):
 
     def __repr__(self):
         return '<Trip num={} code={}>'.format(self.num, self.trip_code)
-

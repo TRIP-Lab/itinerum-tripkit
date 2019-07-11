@@ -13,3 +13,4 @@ datakit/process/trip_detection/triplab/legacy
 
 !input/.gitkeep
 !output/.gitkeep
+.vscode

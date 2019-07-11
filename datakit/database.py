@@ -16,8 +16,8 @@ deferred_db = SqliteDatabase(None)
 
 class Database(object):
     """
-    Handles itinerum-datakit interactions with the cached database using peewee. `Note: This 
-    may soon transition to SQLAlchemy to maintain direct compatibility with the Itinerum API 
+    Handles itinerum-datakit interactions with the cached database using peewee. `Note: This
+    may soon transition to SQLAlchemy to maintain direct compatibility with the Itinerum API
     code base.`
     """
 
@@ -31,7 +31,6 @@ class Database(object):
         self.db.create_tables([UserSurveyResponse, Coordinate, PromptResponse,
                                CancelledPromptResponse, DetectedTripCoordinate,
                                SubwayStationEntrance])
-
 
     def drop(self):
         """
@@ -62,15 +61,15 @@ class Database(object):
                 db_rows = []
 
         # push any remaining rows
-        with self.db.atomic():
-            Model.insert_many(db_rows).execute()
+        if db_rows:
+            with self.db.atomic():
+                Model.insert_many(db_rows).execute()
 
     def count_users(self):
         """
         Returns a count of all survey responses in cache database.
         """
         return UserSurveyResponse.select().count()
-
 
     def load_user(self, uuid, start=None, end=None):
         """
@@ -85,7 +84,7 @@ class Database(object):
         db_user = UserSurveyResponse.get_or_none(uuid=uuid)
         if not db_user:
             raise UserNotFoundError(uuid)
-        
+
         user = User(db_user)
         if start:
             user.coordinates = user.coordinates.where(Coordinate.timestamp_UTC >= start)
@@ -127,7 +126,7 @@ class Database(object):
                               timestamp_UTC=c.timestamp_UTC,
                               database_id=c.id)
 
-            if not c.trip_num in trips:
+            if c.trip_num not in trips:
                 trips[c.trip_num] = Trip(num=c.trip_num, trip_code=c.trip_code)
             trips[c.trip_num].points.append(point)
         return [value for key, value in sorted(trips.items())]
@@ -160,12 +159,11 @@ class Database(object):
         """
         return SubwayStationEntrance.select()
 
-
     def save_trips(self, detected_trips, overwrite=True):
         """
         Saves detected trips from processing algorithms to cache database. This
         table will be recreated on each save by default.
-        
+
         :param detected_trips: List of labelled coordinates from a trip processing
                                algorithm.
         """
@@ -254,7 +252,7 @@ class UserSurveyResponse(BaseModel):
     @property
     def prompts(self):
         return self.prompts_backref.order_by(PromptResponse.displayed_at_UTC)
-    
+
     @property
     def cancelled_prompts(self):
         return self.cancelled_prompts_backref.order_by(CancelledPromptResponse.displayed_at_UTC)
@@ -266,7 +264,6 @@ class UserSurveyResponse(BaseModel):
     @property
     def detected_trip_day_summaries(self):
         return self.detected_trip_day_summaries_backref.order_by(DetectedTripDaySummary.date_UTC)
-    
 
 
 class Coordinate(BaseModel):

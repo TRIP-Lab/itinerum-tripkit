@@ -15,7 +15,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-## .csv row filters for parsing Itinerum exports to database models
+# .csv row filters for parsing Itinerum exports to database models
 def _survey_response_row_filter(row):
     # reject invalid rows
     if not row['member_type']:
@@ -70,14 +70,13 @@ def _trips_row_filter(row):
     return row
 
 
-## .csv parsing
+# .csv parsing
 class CSVParser(object):
     """
     Parses Itinerum platform csv files and loads to them to a cache database.
 
     :param database: Open Peewee connection the cache database
     """
-
     def __init__(self, database):
         self.db = database
         self._migrator = SqliteMigrator(database.db)
@@ -85,7 +84,6 @@ class CSVParser(object):
         self.coordinates_csv = 'coordinates.csv'
         self.prompt_responses_csv = 'prompt_responses.csv'
         self.survey_responses_csv = 'survey_responses.csv'
-
 
     def _get(self, row, key, cast_func=None):
         value = row.get(key)
@@ -108,7 +106,7 @@ class CSVParser(object):
             reader = csv.reader(csv_f)
             uuid_idx = next(reader).index('uuid')
             uuids = {r[uuid_idx] for r in reader}
-        
+
         for uuid in uuids:
             UserSurveyResponse.create(uuid=uuid,
                                       created_at_UTC=datetime(2000, 1, 1),
@@ -125,14 +123,13 @@ class CSVParser(object):
     @staticmethod
     def _row_generator(csv_fp, filter_func=None):
         with open(csv_fp, 'r', encoding='utf-8-sig') as csv_f:
-            reader = csv.reader(csv_f) # use zip() below instead of DictReader for speed
+            reader = csv.reader(csv_f)  # use zip() below instead of DictReader for speed
             headers = next(reader)
 
             # generate dictionaries to insert and apply row filter if exists
             for row in reader:
                 dict_row = dict(zip(headers, row))
                 yield filter_func(dict_row) if filter_func else dict_row
-
 
     def load_export_survey_responses(self, input_dir):
         """
@@ -144,7 +141,6 @@ class CSVParser(object):
         survey_responses_fp = os.path.join(input_dir, self.survey_responses_csv)
         survey_responses_rows = self._row_generator(survey_responses_fp, _survey_response_row_filter)
         self.db.bulk_insert(UserSurveyResponse, survey_responses_rows)
-
 
     def load_export_coordinates(self, input_dir):
         """
@@ -159,7 +155,6 @@ class CSVParser(object):
         coordinates_rows = self._row_generator(coordinates_fp, _coordinates_row_filter)
         self.db.bulk_insert(Coordinate, coordinates_rows)
         migrate(self._migrator.add_index('coordinates', ('user_id',), False))
-
 
     def load_export_prompt_responses(self, input_dir):
         """
@@ -182,13 +177,14 @@ class CSVParser(object):
         Loads Itinerum cancelled prompt responses data to the itinerum-datakit cache
         database. For each .csv row, the data is fetched by column name if
         it exists and cast to appropriate types as set in the database.
-        
+
         :param input_dir: The directory containing the `self.cancelled_prompt_responses.csv`
                           data file.
         """
         logger.info('Loading cancelled prompt responses .csv to db...')
         cancelled_prompt_responses_fp = os.path.join(input_dir, self.cancelled_prompt_responses_csv)
-        cancelled_prompt_responses_rows = self._row_generator(cancelled_prompt_responses_fp, _cancelled_prompts_row_filter)
+        cancelled_prompt_responses_rows = self._row_generator(cancelled_prompt_responses_fp,
+                                                              _cancelled_prompts_row_filter)
         self.db.bulk_insert(CancelledPromptResponse, cancelled_prompt_responses_rows)
 
     def load_trips(self, trips_csv_fp):
@@ -204,7 +200,6 @@ class CSVParser(object):
         DetectedTripCoordinate.drop_table()
         DetectedTripCoordinate.create_table()
         self.db.bulk_insert(DetectedTripCoordinate, trips_csv_fp, _trips_row_filter)
-
 
     def load_subway_stations(self, subway_stations_csv_fp):
         """

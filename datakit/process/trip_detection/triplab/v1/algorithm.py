@@ -45,10 +45,9 @@ def filter_errorneous_distance(points, check_speed=60):
             kph_since_last_point = (distance_from_last_point / seconds_since_last_point) * 3.6
             distance_between_adjacent_points = tools.pythagoras((last_p['easting'], last_p['northing']),
                                                                 (next_p['easting'], next_p['northing']))
-            if ((kph_since_last_point >= check_speed) and 
-                (distance_between_adjacent_points < distance_from_last_point)):
+            if ((kph_since_last_point >= check_speed) and
+               (distance_between_adjacent_points < distance_from_last_point)):
                 continue
-        
         last_p = p
         yield p
 
@@ -393,7 +392,7 @@ def distance_speed(trip_group):
             if p['break_period'] > 0:
                 p['avg_speed'] = p['distance'] / p['break_period']
             else:
-                p['avg_speed'] = trip_group[idx-1]['avg_speed']
+                p['avg_speed'] = trip_group[idx - 1]['avg_speed']
         if p['note'] != 'missing trip - less than 250m':
             last_point = point
     return trip_group
@@ -480,7 +479,7 @@ def summarize(rows):
 def run(points, parameters):
     stations = metro_stations_utm(parameters['subway_stations'])
     points = tools.process_utm(points)
-    if not points:
+    if not points or len(points) < 2:
         return None, None
 
     high_accuracy_points = filter_accuracy(points, cutoff=parameters['accuracy_cutoff_meters'])
