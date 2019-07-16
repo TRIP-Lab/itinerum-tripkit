@@ -13,7 +13,7 @@ from datakit import Itinerum
 import datakit_config
 
 
-## Edit ./datakit_config.py first!
+# Edit ./datakit_config.py first!
 itinerum = Itinerum(config=datakit_config)
 
 
@@ -28,12 +28,14 @@ parameters = {
     'break_interval_seconds': datakit_config.TRIP_DETECTION_BREAK_INTERVAL_SECONDS,
     'subway_buffer_meters': datakit_config.TRIP_DETECTION_SUBWAY_BUFFER_METERS,
     'cold_start_distance': datakit_config.TRIP_DETECTION_COLD_START_DISTANCE_METERS,
-    'accuracy_cutoff_meters': datakit_config.TRIP_DETECTION_ACCURACY_CUTOFF_METERS    
+    'accuracy_cutoff_meters': datakit_config.TRIP_DETECTION_ACCURACY_CUTOFF_METERS
 }
 
 all_summaries = []
 for idx, user in enumerate(users, start=1):
     print('Processing user ({}) trips: {}/{}...'.format(user.uuid, idx, len(users)))
+    itinerum.process.trip_detection.triplab.v2.algorithm.run(user.coordinates, parameter=parameters)
+    import sys; sys.exit()
     user.trips, summaries = itinerum.process.trip_detection.triplab.v1.algorithm.run(user.coordinates.dicts(),
                                                                                      parameters=parameters)
     if summaries:

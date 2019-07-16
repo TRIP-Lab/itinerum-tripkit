@@ -14,7 +14,7 @@ from .trip_codes import TRIP_CODES
 logger = logging.getLogger(__name__)
 
 
-## cast input data as objects
+# cast input data as objects
 def generate_subway_entrances(coordinates):
     """
     Find UTM coordinates for subway stations entrances from lat/lon
@@ -46,7 +46,7 @@ def generate_gps_points(coordinates):
                        timestamp_UTC=c.timestamp_UTC)
 
 
-## perform cleaning on points
+# perform cleaning on points
 def filter_by_accuracy(points, cutoff=30):
     """
     Remove points that have worse reported accuracy than the cutoff value
@@ -63,7 +63,7 @@ def filter_erroneous_distance(points, check_speed_kph=60):
     of 3 consecutive points (1, 2, and 3), point 3 is closer to point 1
     than point 2.
     """
-    
+
     # create two copies of the points generator to compare against
     # and advance the copy ahead one point
     points, points_copy = itertools.tee(points)
@@ -91,10 +91,10 @@ def filter_erroneous_distance(points, check_speed_kph=60):
         if distance_from_last_point and seconds_since_last_point:
             kph_since_last_point = (distance_from_last_point / seconds_since_last_point) * 3.6
             distance_between_neighbor_points = distance_m(last_p, next_p)
-            
-            if (kph_since_last_point >= check_speed_kph and 
-                distance_between_neighbor_points < distance_from_last_point):
-                    continue
+
+            if (kph_since_last_point >= check_speed_kph and
+               distance_between_neighbor_points < distance_from_last_point):
+                continue
 
         last_p = p
         yield p
@@ -141,7 +141,7 @@ def initialize_trips(segments):
     return trips
 
 
-## stitch segments into longer trips if pre-determined conditions are met
+# stitch segments into longer trips if pre-determined conditions are met
 def find_subway_connections(trips, subway_entrances, buffer_m=200):
     """
     Look for segments that can be connected by an explained subway trip update
@@ -161,7 +161,7 @@ def find_subway_connections(trips, subway_entrances, buffer_m=200):
         start_point = trip.first_segment.start
         end_entrance = points_intersect(subway_entrances, end_point, buffer_m)
         start_entrance = points_intersect(subway_entrances, start_point, buffer_m)
-        
+
         if end_entrance and start_entrance:
             interval = start_point.timestamp_UTC - end_point.timestamp_UTC
             subway_distance = distance_m(end_point, start_point)
@@ -233,7 +233,7 @@ def filter_single_points(trips):
                 distance_next_trip = distance_m(point, next_trip.first_segment.start)
                 is_next_trip_candidate = all([interval_next_trip <= max_break_period,
                                               distance_next_trip <= max_distance_m])
-            
+
             append_to_prev_trip = all([is_prev_trip_candidate,
                                        is_next_trip_candidate,
                                        interval_prev_trip <= interval_next_trip])
@@ -335,7 +335,7 @@ def merge_trips(complete_trips, missing_trips):
                     next_missing_trip = next(missing_trips_gen)
                 except StopIteration:
                     break
-        
+
         if merge_missing_too_short:
             segment_group = trip.first_segment.group + .1
             # merge segment with missing trip's start location but the originally detected trip's starting timestamp
@@ -391,7 +391,7 @@ def annotate_trips(trips):
         yield trip
 
 
-## helper functions
+# helper functions
 def distance_m(point1, point2):
     """
     Returns the distance between two points in meters.
@@ -443,9 +443,9 @@ def wrap_for_datakit(detected_trips):
             datakit_trips.append(trip)
     return datakit_trips
 
-## main
+# main
 def run(coordinates, parameters):
-    # process points as structs and cast position from lat/lng to UTM    
+    # process points as structs and cast position from lat/lng to UTM
     subway_entrances = generate_subway_entrances(parameters['subway_entrances'])
     gps_points = generate_gps_points(coordinates)
 

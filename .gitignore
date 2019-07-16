@@ -9,8 +9,9 @@ extra/uncleaned
 itinerum.sqlite-journal
 extra/diffs
 *.zip
-datakit/process/trip_detection/triplab/legacy
 
 !input/.gitkeep
 !output/.gitkeep
 *.pyc
+.vscode
+

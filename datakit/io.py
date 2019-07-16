@@ -41,7 +41,7 @@ geojson_multipoint_template = {
     },
     'properties': {}
 }
-    
+
 
 # geojson feature generators
 def point_to_geojson_point(coordinates, properties):
@@ -61,7 +61,7 @@ def points_to_geojson_linestring(coordinates, properties):
 # geojson file I/O
 def write_input_geojson(cfg, fn_base, coordinates, prompts, cancelled_prompts):
     """
-    Writes input coordinates, prompts and cancelled prompts data selected from 
+    Writes input coordinates, prompts and cancelled prompts data selected from
     cache to individual geojson files.
 
     :param cfg:               Global configuration object (eventually this should be
@@ -83,7 +83,7 @@ def write_input_geojson(cfg, fn_base, coordinates, prompts, cancelled_prompts):
         # much faster than peewee's playhouse.shortcuts.model_to_dict
         properties = {
             key: getattr(c, key)
-            for key in Coordinate._meta.fields.keys()  
+            for key in Coordinate._meta.fields.keys()
             if key not in ignore_keys
         }
         point = point_to_geojson_point(coordinates, properties)
@@ -97,7 +97,7 @@ def write_input_geojson(cfg, fn_base, coordinates, prompts, cancelled_prompts):
         coordinates = (p.longitude, p.latitude)
         properties = {
             key: getattr(p, key)
-            for key in PromptResponse._meta.fields.keys()  
+            for key in PromptResponse._meta.fields.keys()
             if key not in ignore_keys
         }
         point = point_to_geojson_point(coordinates, properties)
@@ -111,7 +111,7 @@ def write_input_geojson(cfg, fn_base, coordinates, prompts, cancelled_prompts):
         coordinates = (cp.longitude, cp.latitude)
         properties = {
             key: getattr(cp, key)
-            for key in CancelledPromptResponse._meta.fields.keys()  
+            for key in CancelledPromptResponse._meta.fields.keys()
             if key not in ignore_keys
         }
         point = point_to_geojson_point(coordinates, properties)
@@ -172,8 +172,6 @@ def write_trips_geopackage(cfg, fn_base, trips):
             geopackage_f.write(feature)
 
 
-
-
 def write_mapmatched_geojson(cfg, fn_base, results):
     """
     Writes map matching results from API query to geojson file.
@@ -187,7 +185,7 @@ def write_mapmatched_geojson(cfg, fn_base, results):
     for p in results['tracepoints']:
         if not p:
             continue
-        
+
         properties = {}
         point = point_to_geojson_point(p['location'], properties)
         point['properties']['name'] = p['name']
@@ -199,7 +197,7 @@ def write_mapmatched_geojson(cfg, fn_base, results):
             point['properties']['weight'] = 0  # first point does not have a weight
         else:
             point['properties']['weight'] = results['matchings'][matchings_idx]['legs'][waypoint_idx]['weight']
-        mapmatched_features.append(point)    
+        mapmatched_features.append(point)
 
     # create linestring features from the OSM input network returned as Google polyline
     for m in results['matchings']:
@@ -253,5 +251,3 @@ def write_complete_days_csv(cfg, filename, trip_day_summaries):
         writer = csv.DictWriter(csv_f, fieldnames=headers)
         writer.writeheader()
         writer.writerows(csv_rows)
-
-

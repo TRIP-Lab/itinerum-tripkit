@@ -28,7 +28,7 @@ class Itinerum(object):
 
     The Itinerum object is the entry API for loading .csv data to
     an SQLite database (used as cache), testing and running algorithms
-    on the GPS data, and visualizing and exporting the results to 
+    on the GPS data, and visualizing and exporting the results to
     GIS-friendly formats.
 
     The Itinerum instannce is usually created in your main module
@@ -66,8 +66,8 @@ class Itinerum(object):
         initialized with Itinerum object.
         """
         return self._csv
-    
-    @property  
+
+    @property
     def database(self):
         """
         Gives access to the cache :py:class:`datakit.database.Database` object

@@ -13,7 +13,9 @@ and simply copying the ``datakit`` directory into any project you are working on
 Dependencies
 ------------
 Project dependencies can be installed with pip::
-    
+
     $ pip install -r datakit/requirements.txt
 
-It is recommended to use a virtualenv to help keep things tidy.
+It is recommended to use a virtualenv_ to help keep things tidy.
+
+.. _virtualenv: https://virtualenv.pypa.io/en/latest/
