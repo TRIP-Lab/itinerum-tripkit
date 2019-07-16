@@ -32,7 +32,9 @@ for idx, user in enumerate(users, start=1):
             trip_day_summaries.append(row)
     else:
         print('No trips available for: {}'.format(user.uuid))
-
+if not trip_day_summaries:
+    print('\nError: No complete days detected. Check that trip detection has been performed and try again.')
+    sys.exit()
 print('Saving complete day summaries to database...')
 itinerum.database.save_trip_day_summaries(trip_day_summaries)
 

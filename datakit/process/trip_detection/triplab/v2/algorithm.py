@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-# Kyle Fitzsimmons, 2015-2018
+# Kyle Fitzsimmons, 2015-2019
+from copy import copy
 import itertools
 import logging
 import math
@@ -216,7 +217,7 @@ def filter_single_points(trips):
             segment = trip.segments[0]
             point = segment.points[0]
             prev_trip_exists = idx - 1 >= 0
-            next_trip_exists = idx + 1 <= len(trips)
+            next_trip_exists = idx + 1 < len(trips)
 
             is_prev_trip_candidate, is_next_trip_candidate = False, False
             if prev_trip_exists:
@@ -225,6 +226,7 @@ def filter_single_points(trips):
                 distance_prev_trip = distance_m(prev_trip.last_segment.end, point)
                 is_prev_trip_candidate = all([interval_prev_trip <= max_break_period,
                                               distance_prev_trip <= max_distance_m])
+
             if next_trip_exists:
                 next_trip = trips[idx + 1]
                 interval_next_trip = (next_trip.first_segment.start.timestamp_UTC - point.timestamp_UTC).total_seconds()
@@ -293,9 +295,10 @@ def infer_missing_trips(trips, subway_entrances, min_trip_m=250, subway_buffer_m
             #    point will have the same timestamp as the original first (now second) point
             elif distance_prev_trip <= cold_start_m:
                 print('test this copy that attributes are not changed simultaneously')
-                cold_start_point = last_end_point.copy()
+                new_start_point = copy(last_end_point)
+                new_start_point.timestamp_UTC = trip.start.timestamp_UTC
                 trip.first_segment.is_cold_start = True
-                trip.first_segment.insert(0, cold_start_point)
+                trip.first_segment.insert(0, new_start_point)
             # 4. all other gaps in the data marked as a general missing trip
             else:
                 m = MissingTrip(category='general',

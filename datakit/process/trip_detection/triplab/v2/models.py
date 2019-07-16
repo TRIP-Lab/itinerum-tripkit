@@ -67,6 +67,9 @@ class TripSegment:
         if self.points:
             return self.points[-1]
 
+    def prepend(self, point):
+        self.points.insert(0, point)
+
 
 class Trip:
     __slots__ = ['segments', 'labels', 'code']
