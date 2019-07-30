@@ -9,6 +9,8 @@ def v1_wrap_for_datakit(detected_trips):
     by `itinerum-datakit/datakit/database.py`.
     """
     datakit_trips = []
+    if not detected_trips:
+        return datakit_trips
     for trip_num, detected_trip in detected_trips.items():
         trip_codes = {pt['trip_code'] for pt in detected_trip}
         if len(trip_codes) > 1:
