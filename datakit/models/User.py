@@ -25,4 +25,4 @@ class User(object):
         self.trips = []
 
     def __repr__(self):
-        return '<User uuid={}>'.format(self.uuid)
+        return f"<User uuid={self.uuid}>"

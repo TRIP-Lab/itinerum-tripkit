@@ -9,7 +9,7 @@ import utm
 try:
     import cPickle as pickle
 except ImportError:
-    import pickle    
+    import pickle
 
 
 def timeit(func):
@@ -18,11 +18,7 @@ def timeit(func):
         result = func(*args, **kwargs)
         t1 = time.time()
 
-        print('{func}(args, kwargs): {time} sec'.format(
-            func=func.__name__,
-            # args=args,
-            # kw=kwargs,
-            time=t1-t0))
+        print(f"{func.__name__}(args, kwargs): {t1-t0} sec")
         return result
     return timed
 

@@ -145,7 +145,7 @@ class Itinerum(object):
 
         users = []
         for idx, uuid in enumerate(uuids, start=1):
-            logger.info('Loading user from database: {}/{}...'.format(idx, len(uuids)))
+            logger.info(f"Loading user from database: {idx}/{len(uuids)}...")
 
             user = self.database.load_user(uuid, start=start, end=end)
             if load_trips:

@@ -34,6 +34,7 @@ def filter_erroneous_distance(points, check_speed=60):
         if not last_p:
             last_p = p
             yield p
+            continue
 
         # find the distance and time passed since last point collected
         distance_from_last_point = tools.pythagoras((last_p['easting'], last_p['northing']),
@@ -339,7 +340,6 @@ def merge_trips(trips, missing_trips, stations):
                     'merge_codes': trip[0]['merge_codes']
                 }
                 rows.append(p)
-
                 offset += 1
 
         # label complete trips segments
@@ -495,8 +495,8 @@ def run(points, parameters):
 
     logger.info('-------------------------------')
     logger.info('V1 - Num. segments: %d', len(segment_groups))
-    logger.info('V1 - Num. subway linked trips: %d', len(metro_linked_trips))
-    logger.info('V1 - Num. velocity linked trips: %d', len(velocity_connected_trips))
+    logger.info('V1 - Num. trips (w/ subway links): %d', len(metro_linked_trips))
+    logger.info('V1 - Num. trips (w/ velocity links): %d', len(velocity_connected_trips))
     logger.info('V1 - Num. full-length trips: %d', len(cleaned_trips))
     logger.info('V1 - Num. missing trips: %d', len(missing_trips))
     logger.info('V1 - Num. csv rows: %d', len(rows))

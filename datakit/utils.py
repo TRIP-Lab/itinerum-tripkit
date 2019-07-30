@@ -14,7 +14,7 @@ def json_serialize(obj):
     if 'peewee.' in str(type(obj)):
         return str(obj)
 
-    raise TypeError("Object of type %s is not JSON serializable" % type(obj))
+    raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
 
 class UserNotFoundError(Exception):
     pass

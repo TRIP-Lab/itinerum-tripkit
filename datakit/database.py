@@ -55,7 +55,7 @@ class Database(object):
             if row:
                 db_rows.append(row)
             if len(db_rows) == chunk_size:
-                print('bulk inserting {} rows...'.format(len(db_rows)))
+                print(f"bulk inserting {len(db_rows)} rows...")
                 with self.db.atomic():
                     Model.insert_many(db_rows).execute()
                 db_rows = []

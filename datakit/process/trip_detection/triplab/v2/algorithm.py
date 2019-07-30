@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-# Kyle Fitzsimmons, 2015-2018
+# Kyle Fitzsimmons, 2015-2019
+import copy
 import itertools
 import logging
 import math
@@ -215,27 +216,30 @@ def filter_single_points(trips):
         if len(trip.segments) == 1 and len(trip.segments[0].points) == 1:
             segment = trip.segments[0]
             point = segment.points[0]
-            prev_trip_exists = idx - 1 >= 0
-            next_trip_exists = idx + 1 <= len(trips)
+            prev_trip_exists = idx > 0
+            next_trip_exists = idx + 1 < len(trips)
 
             is_prev_trip_candidate, is_next_trip_candidate = False, False
             if prev_trip_exists:
                 prev_trip = trips[idx - 1]
                 interval_prev_trip = (point.timestamp_UTC - prev_trip.last_segment.end.timestamp_UTC).total_seconds()
                 distance_prev_trip = distance_m(prev_trip.last_segment.end, point)
-                is_prev_trip_candidate = all([interval_prev_trip <= max_break_period,
+                is_prev_trip_candidate = any([interval_prev_trip <= max_break_period,
                                               distance_prev_trip <= max_distance_m])
             if next_trip_exists:
                 next_trip = trips[idx + 1]
                 interval_next_trip = (next_trip.first_segment.start.timestamp_UTC - point.timestamp_UTC).total_seconds()
                 distance_next_trip = distance_m(point, next_trip.first_segment.start)
-                is_next_trip_candidate = all([interval_next_trip <= max_break_period,
+                is_next_trip_candidate = any([interval_next_trip <= max_break_period,
                                               distance_next_trip <= max_distance_m])
 
-            append_to_prev_trip = all([is_prev_trip_candidate,
-                                       is_next_trip_candidate,
-                                       interval_prev_trip <= interval_next_trip])
-
+            # group conditions for appending to previous trip in one boolen value
+            append_to_prev_trip = (is_prev_trip_candidate and
+                                   is_next_trip_candidate and
+                                   interval_prev_trip <= interval_next_trip)
+            if is_prev_trip_candidate and not is_next_trip_candidate:
+                append_to_prev_trip = True
+            # connect point to previous or next
             if append_to_prev_trip:
                 point.timestamp_UTC = prev_trip.last_segment.end.timestamp_UTC
                 filtered_trips[-1].segments.append(segment)
@@ -256,7 +260,7 @@ def infer_missing_trips(trips, subway_entrances, min_trip_m=250, subway_buffer_m
     """
     missing_trips = []
     last_trip = None
-    for idx, trip in enumerate(trips, start=1):
+    for trip in trips:
         if not last_trip:
             last_trip = trip
             continue
@@ -292,10 +296,10 @@ def infer_missing_trips(trips, subway_entrances, min_trip_m=250, subway_buffer_m
             #    prepend the last point of previous trip to start of current trip. This new
             #    point will have the same timestamp as the original first (now second) point
             elif distance_prev_trip <= cold_start_m:
-                print('test this copy that attributes are not changed simultaneously')
-                cold_start_point = last_end_point.copy()
+                logger.debug('test this copy that attributes are not changed simultaneously')
+                cold_start_point = copy.copy(last_end_point)
                 trip.first_segment.is_cold_start = True
-                trip.first_segment.insert(0, cold_start_point)
+                trip.first_segment.prepend(cold_start_point)
             # 4. all other gaps in the data marked as a general missing trip
             else:
                 m = MissingTrip(category='general',
@@ -314,18 +318,24 @@ def merge_trips(complete_trips, missing_trips):
     trip previous to a complete trip is labeled as 'too short' (missing category: "lt_min_trip_length"),
     then join these trips as one.
     """
+    if not missing_trips:
+        logger.info("V2 - No missing trips detected.")
+        return complete_trips
+
     merged = []
     missing_trips_gen = iter(missing_trips)
     next_missing_trip = next(missing_trips_gen)
     for trip in complete_trips:
+        # keep track of "too short" missing trips only if they are the last
+        # missing trip before a complete one
         merge_missing_too_short = None
         if next_missing_trip.start.timestamp_UTC < trip.first_segment.start.timestamp_UTC:
             while next_missing_trip.start.timestamp_UTC < trip.first_segment.start.timestamp_UTC:
-                # keep track of too short missing trips only if they are the last
-                # missing trip before a complete one
                 if next_missing_trip.category == 'lt_min_trip_length':
                     merge_missing_too_short = next_missing_trip
                 else:
+                    # TODO: Is a "too short" missing trip before a "normal" missing trip
+                    # a possible scenario? If so, how should this be handled?
                     merge_missing_too_short = None
                     merged.append(next_missing_trip)
                 try:
@@ -334,12 +344,14 @@ def merge_trips(complete_trips, missing_trips):
                     break
 
         if merge_missing_too_short:
-            segment_group = trip.first_segment.group + .1
             # merge segment with missing trip's start location but the originally detected trip's starting timestamp
-            merge_missing_too_short.start.timestamp_UTC = merge_missing_too_short.end.timestamp_UTC
+            segment_group = trip.first_segment.group + .1
+            start_point = copy.copy(merge_missing_too_short.start)
+            end_point = copy.copy(merge_missing_too_short.end)
+            start_point.timestamp_UTC = end_point.timestamp_UTC
+
             missing_segment = TripSegment(group=segment_group,
-                                          points=[merge_missing_too_short.start,
-                                                  merge_missing_too_short.end],
+                                          points=[start_point, end_point],
                                           period_before_seconds=trip.first_segment.period_before_seconds)
             trip.segments.insert(0, missing_segment)
             trip.add_label('lt_min_trip_length')
@@ -349,6 +361,10 @@ def merge_trips(complete_trips, missing_trips):
 
 def annotate_trips(trips):
     """
+    Filters the labels attached to trips by the hierarchy of their relevance (e.g., "missing trips" with
+    too short of a length [actually a trip end] joined to a complete trip should be labelled as "complete"
+    instead of missing). Using the most appropriate label, set the integer trip code from the `trip_codes.py`
+    lookup table.
     """
     for trip in trips:
         if isinstance(trip, MissingTrip):
@@ -385,6 +401,8 @@ def annotate_trips(trips):
                     trip.code = TRIP_CODES['complete trip']
             elif trip.cumulative_distance() < 250:
                 trip.code = TRIP_CODES['distance too short']
+            elif not trip.labels:
+                trip.code = TRIP_CODES['complete trip']
         yield trip
 
 
@@ -470,12 +488,13 @@ def run(coordinates, parameters):
 
     trips = merge_trips(full_length_trips, missing_trips)
     datakit_trips = wrap_for_datakit(annotate_trips(trips))
+    # datakit_trips = wrap_for_datakit(trips)
 
     logger.info('-------------------------------')
     logger.info('V2 - Num. segments: %d', len(segments))
-    logger.info('V2 - Num. subway linked trips: %d', len(subway_linked_trips))
-    logger.info('V2 - Num. velocity linked trips: %d', len(velocity_linked_trips))
+    logger.info('V2 - Num. trips (w/ subway links): %d', len(subway_linked_trips))
+    logger.info('V2 - Num. trips (w/ velocity links): %d', len(velocity_linked_trips))
     logger.info('V2 - Num. full-length trips: %d', len(full_length_trips))
     logger.info('V2 - Num. missing trips: %d', len(missing_trips))
-    logger.info('V2 - Num. point rows: %d', len(trips))
+    logger.info('V2 - Num. point rows: %d', sum([len(t.points) for t in datakit_trips]))
     return datakit_trips

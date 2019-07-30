@@ -25,3 +25,6 @@ class TripPoint(object):
         self.h_accuracy = float(h_accuracy)
         self.timestamp_UTC = timestamp_UTC
         self.timestamp_epoch = (timestamp_UTC - datetime(1970, 1, 1)).total_seconds()
+
+    def __repr__(self):
+        return f"<TripPoint ({self.latitude}, {self.longitude}) {self.timestamp_UTC}>"

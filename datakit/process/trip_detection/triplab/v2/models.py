@@ -3,6 +3,7 @@
 # - Algorithm data structures
 # Uses slots to achieve best performance (comparable to dictionary)
 # and provide immutability against add or removing attributes
+from datetime import datetime
 import math
 
 MODES = ['walking', 'subway']
@@ -28,11 +29,16 @@ class GPSPoint:
         self.period_before_seconds = kwargs.get('period_before_seconds')
         self.distance_before_meters = kwargs.get('distance_before_meters')
 
+    # Calculates the speed at the current point using the duration and distance
+    # from the previous point
     @property
     def implied_speed(self):
         if self.distance_before_meters is not None and self.period_before_seconds:
             return self.distance_before_meters / self.period_before_seconds
-    
+
+    @property
+    def timestamp_epoch(self):
+        return int((self.timestamp_UTC - datetime(1970, 1, 1)).total_seconds())
 
 
 class SubwayEntrance:
@@ -42,7 +48,7 @@ class SubwayEntrance:
         self.latitude = kwargs['latitude']
         self.longitude = kwargs['longitude']
         self.northing = kwargs['northing']
-        self.easting = kwargs['easting']        
+        self.easting = kwargs['easting']
 
 
 class TripSegment:
@@ -66,6 +72,9 @@ class TripSegment:
     def end(self):
         if self.points:
             return self.points[-1]
+
+    def prepend(self, point):
+        self.points.insert(0, point)
 
 
 class Trip:
@@ -164,7 +173,7 @@ class MissingTrip:
     @property
     def end(self):
         return self.next_trip_start
-    
+
     @property
     def avg_speed(self):
         return self.distance / self.duration

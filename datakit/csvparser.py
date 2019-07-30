@@ -96,7 +96,7 @@ class CSVParser(object):
     def generate_null_survey(self, input_dir):
         """
         Generates an empty survey responses table for surveys with only coordinate
-        data. Needed to populate the foreign keys on related child tables.
+        data. Used for populating foreign keys for queries on the child data tables.
         """
         logger.info('Loading coordinates .csv and populating survey responses with null data in db...')
         coordinates_fp = os.path.join(input_dir, self.coordinates_csv)
