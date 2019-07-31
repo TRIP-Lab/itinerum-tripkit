@@ -438,11 +438,11 @@ def wrap_for_datakit(detected_trips):
                                trip_code=detected_trip.code)
             for segment in detected_trip.segments:
                 for point in segment.points:
-                    p = DatakitTripPoint(latitude=point.latitude,
+                    p = DatakitTripPoint(database_id=point.database_id,
+                                         latitude=point.latitude,
                                          longitude=point.longitude,
                                          h_accuracy=point.h_accuracy,
-                                         timestamp_UTC=point.timestamp_UTC,
-                                         database_id=point.database_id)
+                                         timestamp_UTC=point.timestamp_UTC)
                     trip.points.append(p)
             datakit_trips.append(trip)
         elif isinstance(detected_trip, MissingTrip):

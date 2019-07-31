@@ -24,7 +24,7 @@ itinerum.setup(force=False)
 users = itinerum.load_users()
 
 parameters = {
-    'subway_stations': itinerum.database.load_subway_entrances(),
+    'subway_entrances': itinerum.database.load_subway_entrances(),
     'break_interval_seconds': datakit_config.TRIP_DETECTION_BREAK_INTERVAL_SECONDS,
     'subway_buffer_meters': datakit_config.TRIP_DETECTION_SUBWAY_BUFFER_METERS,
     'cold_start_distance': datakit_config.TRIP_DETECTION_COLD_START_DISTANCE_METERS,
@@ -34,12 +34,13 @@ parameters = {
 all_summaries = []
 for idx, user in enumerate(users, start=1):
     print('Processing user ({}) trips: {}/{}...'.format(user.uuid, idx, len(users)))
-    itinerum.process.trip_detection.triplab.v2.algorithm.run(user.coordinates, parameter=parameters)
-    import sys; sys.exit()
+    parameters['subway_stations'] = parameters['subway_entrances']
     user.trips, summaries = itinerum.process.trip_detection.triplab.v1.algorithm.run(user.coordinates.dicts(),
                                                                                      parameters=parameters)
     if summaries:
         all_summaries.extend(list(summaries.values()))
+    trips = itinerum.process.trip_detection.triplab.v2.algorithm.run(user.coordinates, parameters=parameters)
+    import sys; sys.exit()
 
 
 # -- Stage 3: save output in database as cache

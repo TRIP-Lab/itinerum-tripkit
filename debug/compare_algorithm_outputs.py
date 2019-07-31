@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Kyle Fitzsimmons, 2018
+# Kyle Fitzsimmons, 2019
 
 # run from parent directory
 import datetime
@@ -33,9 +33,6 @@ parameters = {
 
 all_summaries = []
 for idx, user in enumerate(users, start=1):
-    if idx != 2:
-        continue
-
     print("Writing user data to file...")
     data_fn = f"{user.uuid}-input"
     itinerum.io.write_input_geopackage(datakit_config,

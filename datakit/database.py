@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-# Kyle Fitzsimmons, 2018
+# Kyle Fitzsimmons, 2018-2019
+import logging
 from peewee import (
     Model, SqliteDatabase, BooleanField, CharField, DateField, DateTimeField,
     FloatField, ForeignKeyField, IntegerField, TextField, UUIDField
@@ -9,6 +10,8 @@ from .models.Trip import Trip
 from .models.TripPoint import TripPoint
 from .models.User import User
 from .utils import UserNotFoundError
+
+logger = logging.getLogger(__name__)
 
 # globally create a single database connection for SQLite
 deferred_db = SqliteDatabase(None)
@@ -55,7 +58,7 @@ class Database(object):
             if row:
                 db_rows.append(row)
             if len(db_rows) == chunk_size:
-                print(f"bulk inserting {len(db_rows)} rows...")
+                logger.info(f"bulk inserting {len(db_rows)} rows...")
                 with self.db.atomic():
                     Model.insert_many(db_rows).execute()
                 db_rows = []
@@ -120,16 +123,16 @@ class Database(object):
             if end and c.timestamp_UTC >= end:
                 continue
 
-            point = TripPoint(latitude=c.latitude,
+            point = TripPoint(database_id=c.id,
+                              latitude=c.latitude,
                               longitude=c.longitude,
                               h_accuracy=c.h_accuracy,
-                              timestamp_UTC=c.timestamp_UTC,
-                              database_id=c.id)
+                              timestamp_UTC=c.timestamp_UTC)
 
             if c.trip_num not in trips:
                 trips[c.trip_num] = Trip(num=c.trip_num, trip_code=c.trip_code)
             trips[c.trip_num].points.append(point)
-        return [value for key, value in sorted(trips.items())]
+        return [value for _, value in sorted(trips.items())]
 
     def load_trip_day_summaries(self, user):
         """
@@ -159,33 +162,39 @@ class Database(object):
         """
         return SubwayStationEntrance.select()
 
-    def save_trips(self, detected_trips, overwrite=True):
+    def save_trips(self, user, detected_trips, overwrite=True):
         """
         Saves detected trips from processing algorithms to cache database. This
         table will be recreated on each save by default.
 
+        :param user:           A database user response record associate with the saved
+                               trip records.
         :param detected_trips: List of labelled coordinates from a trip processing
                                algorithm.
         """
-        def _row_filter(rows, model_fields):
-            for row in rows:
-                row['user'] = row['uuid']
-                row['trip_num'] = row['trip']
-
-                trim_cols = set(row.keys()) - model_fields
-                trim_cols.add('id')
-                for col in trim_cols:
-                    if col in row:
-                        del row[col]
-                yield row
+        def _trip_row_filter(trip_rows, model_fields):
+            row = {}
+            for trip in trip_rows:
+                print(dir(trip))
+                for point in trip.points:
+                    row = {
+                        'user_id': point.user.uuid,
+                        'trip_num': point.trip_num,
+                        'trip_code': point.trip_code,
+                        'latitude': point.latitude,
+                        'longitude': point.longitude,
+                        'h_accuracy': point.h_accuracy,
+                        'timestamp_UTC': point.timestamp_UTC
+                    }
+                    yield row
 
         if overwrite:
-            print('generating new trips table...')
+            logger.info('generating new trips table...')
             DetectedTripCoordinate.drop_table()
             DetectedTripCoordinate.create_table()
 
         model_fields = set(DetectedTripCoordinate._meta.sorted_field_names)
-        self.bulk_insert(DetectedTripCoordinate, _row_filter(detected_trips, model_fields))
+        self.bulk_insert(DetectedTripCoordinate, _trip_row_filter(detected_trips, model_fields))
 
     def save_trip_day_summaries(self, trip_day_summaries, overwrite=True):
         """

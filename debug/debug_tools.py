@@ -22,11 +22,11 @@ def v1_wrap_for_datakit(detected_trips):
             trip = DatakitTrip(num=trip_num,
                                trip_code=trip_code)
             for point in detected_trip:
-                p = DatakitTripPoint(latitude=point['latitude'],
+                p = DatakitTripPoint(database_id=point['id'],
+                                     latitude=point['latitude'],
                                      longitude=point['longitude'],
                                      h_accuracy=point['h_accuracy'],
-                                     timestamp_UTC=point['timestamp_UTC'],
-                                     database_id=point['id'])
+                                     timestamp_UTC=point['timestamp_UTC'])
                 trip.points.append(p)
             datakit_trips.append(trip)
         else:
