@@ -10,8 +10,7 @@ from . import models
 from . import process
 from .csvparser import CSVParser
 from .database import Database, UserSurveyResponse
-from .database import (Coordinate, PromptResponse, CancelledPromptResponse,
-                       DetectedTripCoordinate, SubwayStationEntrance)
+from .database import Coordinate, PromptResponse, CancelledPromptResponse, DetectedTripCoordinate, SubwayStationEntrance
 
 
 logging.basicConfig(level=logging.DEBUG)

@@ -22,7 +22,7 @@ class Trip(object):
     @property
     def distance(self):
         if len(self.points) > 1:
-            cumulative = 0.
+            cumulative = 0.0
             last_point = None
             for p in self.points:
                 if not last_point:
@@ -31,7 +31,7 @@ class Trip(object):
                 cumulative += distance.distance(last_point, (p.latitude, p.longitude)).meters
                 last_point = (p.latitude, p.longitude)
             return cumulative
-        return 0.
+        return 0.0
 
     @property
     def start_UTC(self):

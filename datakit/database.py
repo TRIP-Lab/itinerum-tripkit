@@ -2,8 +2,17 @@
 # Kyle Fitzsimmons, 2018-2019
 import logging
 from peewee import (
-    Model, SqliteDatabase, BooleanField, CharField, DateField, DateTimeField,
-    FloatField, ForeignKeyField, IntegerField, TextField, UUIDField
+    Model,
+    SqliteDatabase,
+    BooleanField,
+    CharField,
+    DateField,
+    DateTimeField,
+    FloatField,
+    ForeignKeyField,
+    IntegerField,
+    TextField,
+    UUIDField,
 )
 
 from .models.Trip import Trip
@@ -31,17 +40,39 @@ class Database(object):
         """
         Creates all the tables necessary for the itinerum-datakit cache database.
         """
-        self.db.create_tables([UserSurveyResponse, Coordinate, PromptResponse,
-                               CancelledPromptResponse, DetectedTripCoordinate,
-                               SubwayStationEntrance])
+        self.db.create_tables(
+            [
+                UserSurveyResponse,
+                Coordinate,
+                PromptResponse,
+                CancelledPromptResponse,
+                DetectedTripCoordinate,
+                DetectedTripDaySummary,
+                SubwayStationEntrance,
+            ]
+        )
 
     def drop(self):
         """
         Drops all cache database tables.
         """
-        self.db.drop_tables([UserSurveyResponse, Coordinate, PromptResponse,
-                             CancelledPromptResponse, DetectedTripCoordinate,
-                             SubwayStationEntrance])
+        self.db.drop_tables(
+            [
+                UserSurveyResponse,
+                Coordinate,
+                PromptResponse,
+                CancelledPromptResponse,
+                DetectedTripCoordinate,
+                DetectedTripDaySummary,
+                SubwayStationEntrance,
+            ]
+        )
+
+    def delete_user_from_table(self, Model, user):
+        """
+        Deletes a given user's records from a table in preparation for overwriting.
+        """
+        Model.delete().where(Model.user == user.uuid).execute()
 
     def bulk_insert(self, Model, rows, chunk_size=10000):
         """
@@ -92,21 +123,27 @@ class Database(object):
         if start:
             user.coordinates = user.coordinates.where(Coordinate.timestamp_UTC >= start)
             user.prompt_responses = user.prompt_responses.where(PromptResponse.displayed_at_UTC >= start)
-            user.cancelled_prompt_responses = (user.cancelled_prompt_responses
-                                                   .where(CancelledPromptResponse.displayed_at_UTC >= start))
-            user.detected_trip_coordinates = (user.detected_trip_coordinates
-                                                  .where(DetectedTripCoordinate.timestamp_UTC >= start))
-            user.detected_trip_day_summaries = (user.detected_trip_day_summaries
-                                                    .where(DetectedTripDaySummary.date_UTC >= start))
+            user.cancelled_prompt_responses = user.cancelled_prompt_responses.where(
+                CancelledPromptResponse.displayed_at_UTC >= start
+            )
+            user.detected_trip_coordinates = user.detected_trip_coordinates.where(
+                DetectedTripCoordinate.timestamp_UTC >= start
+            )
+            user.detected_trip_day_summaries = user.detected_trip_day_summaries.where(
+                DetectedTripDaySummary.date_UTC >= start
+            )
         if end:
             user.coordinates = user.coordinates.where(Coordinate.timestamp_UTC <= end)
             user.prompt_responses = user.prompt_responses.where(PromptResponse.displayed_at_UTC <= end)
-            user.cancelled_prompt_responses = (user.cancelled_prompt_responses
-                                                   .where(CancelledPromptResponse.displayed_at_UTC <= end))
-            user.detected_trip_coordinates = (user.detected_trip_coordinates
-                                                  .where(DetectedTripCoordinate.timestamp_UTC <= end))
-            user.detected_trip_day_summaries = (user.detected_trip_day_summaries
-                                                    .where(DetectedTripDaySummary.date_UTC <= end))
+            user.cancelled_prompt_responses = user.cancelled_prompt_responses.where(
+                CancelledPromptResponse.displayed_at_UTC <= end
+            )
+            user.detected_trip_coordinates = user.detected_trip_coordinates.where(
+                DetectedTripCoordinate.timestamp_UTC <= end
+            )
+            user.detected_trip_day_summaries = user.detected_trip_day_summaries.where(
+                DetectedTripDaySummary.date_UTC <= end
+            )
         return user
 
     def load_trips(self, user, start=None, end=None):
@@ -123,11 +160,13 @@ class Database(object):
             if end and c.timestamp_UTC >= end:
                 continue
 
-            point = TripPoint(database_id=c.id,
-                              latitude=c.latitude,
-                              longitude=c.longitude,
-                              h_accuracy=c.h_accuracy,
-                              timestamp_UTC=c.timestamp_UTC)
+            point = TripPoint(
+                database_id=c.id,
+                latitude=c.latitude,
+                longitude=c.longitude,
+                h_accuracy=c.h_accuracy,
+                timestamp_UTC=c.timestamp_UTC,
+            )
 
             if c.trip_num not in trips:
                 trips[c.trip_num] = Trip(num=c.trip_num, trip_code=c.trip_code)
@@ -144,15 +183,15 @@ class Database(object):
         day_summaries = {}
         for s in user.detected_trip_day_summaries:
             day_summaries[s.date_UTC] = {
-                'has_trips': s.has_trips,
-                'is_complete': s.is_complete,
-                'consecutive_inactive_days': s.consecutive_inactive_days,
-                'inactivity_streak': s.inactivity_streak,
-                'inactivity_distance': s.inactivity_distance,
-                'start_latitude': s.start_point.latitude if s.start_point else None,
-                'start_longitude': s.start_point.longitude if s.start_point else None,
-                'end_latitude': s.end_point.latitude if s.start_point else None,
-                'end_longitude': s.end_point.longitude if s.start_point else None
+                "has_trips": s.has_trips,
+                "is_complete": s.is_complete,
+                "consecutive_inactive_days": s.consecutive_inactive_days,
+                "inactivity_streak": s.inactivity_streak,
+                "inactivity_distance": s.inactivity_distance,
+                "start_latitude": s.start_point.latitude if s.start_point else None,
+                "start_longitude": s.start_point.longitude if s.start_point else None,
+                "end_latitude": s.end_point.latitude if s.start_point else None,
+                "end_longitude": s.end_point.longitude if s.start_point else None,
             }
         return day_summaries
 
@@ -172,55 +211,59 @@ class Database(object):
         :param detected_trips: List of labelled coordinates from a trip processing
                                algorithm.
         """
+
         def _trip_row_filter(trip_rows, model_fields):
             row = {}
             for trip in trip_rows:
-                print(dir(trip))
                 for point in trip.points:
                     row = {
-                        'user_id': point.user.uuid,
-                        'trip_num': point.trip_num,
-                        'trip_code': point.trip_code,
-                        'latitude': point.latitude,
-                        'longitude': point.longitude,
-                        'h_accuracy': point.h_accuracy,
-                        'timestamp_UTC': point.timestamp_UTC
+                        "user_id": user.uuid,
+                        "trip_num": trip.num,
+                        "trip_code": trip.trip_code,
+                        "latitude": point.latitude,
+                        "longitude": point.longitude,
+                        "h_accuracy": point.h_accuracy,
+                        "timestamp_UTC": point.timestamp_UTC,
                     }
                     yield row
 
         if overwrite:
-            logger.info('generating new trips table...')
-            DetectedTripCoordinate.drop_table()
-            DetectedTripCoordinate.create_table()
+            logger.info("overwriting user trips information...")
+            self.delete_user_from_table(DetectedTripCoordinate, user)
 
         model_fields = set(DetectedTripCoordinate._meta.sorted_field_names)
         self.bulk_insert(DetectedTripCoordinate, _trip_row_filter(detected_trips, model_fields))
 
-    def save_trip_day_summaries(self, trip_day_summaries, overwrite=True):
+    def save_trip_day_summaries(self, user, trip_day_summaries, overwrite=True):
         """
         Saves the daily summaries for detected trip days to cache database. This
         table with be recreated on each save by default.
 
         :param trip_day_summaries: List of daily summaries from a daily trip counts algorithm.
         """
+
         def _row_filter(rows, model_fields):
             for row in rows:
-                row['user'] = row['uuid']
-                if row['start_point']:
-                    row['start_point_id'] = row['start_point'].database_id
-                    row['end_point_id'] = row['end_point'].database_id
+                row["user"] = row["uuid"]
+                if row["start_point"]:
+                    row["start_point_id"] = row["start_point"].database_id
+                    row["end_point_id"] = row["end_point"].database_id
                 else:
-                    row['start_point_id'], row['end_point_id'] = None, None
+                    row["start_point_id"], row["end_point_id"] = None, None
                 trim_cols = set(row.keys()) - model_fields
-                trim_cols.add('id')
+                trim_cols.add("id")
                 for col in trim_cols:
                     if col in row:
                         del row[col]
                 yield row
 
+        if not trip_day_summaries:
+            logger.info(f"No daily summaries for {user.uuid}. Has trip detection been run?")
+            return
+
         if overwrite:
-            DetectedTripDaySummary.drop_table()
-            DetectedTripDaySummary.create_table()
+            logger.info("Overwriting user daily summaries information...")
+            self.delete_user_from_table(DetectedTripDaySummary, user)
 
         model_fields = set(DetectedTripDaySummary._meta.sorted_field_names)
         self.bulk_insert(DetectedTripDaySummary, _row_filter(trip_day_summaries, model_fields))
@@ -233,7 +276,7 @@ class BaseModel(Model):
 
 class UserSurveyResponse(BaseModel):
     class Meta:
-        table_name = 'survey_responses'
+        table_name = "survey_responses"
 
     uuid = UUIDField(unique=True, primary_key=True)
     created_at_UTC = DateTimeField()
@@ -277,9 +320,9 @@ class UserSurveyResponse(BaseModel):
 
 class Coordinate(BaseModel):
     class Meta:
-        table_name = 'coordinates'
+        table_name = "coordinates"
 
-    user = ForeignKeyField(UserSurveyResponse, backref='coordinates_backref')
+    user = ForeignKeyField(UserSurveyResponse, backref="coordinates_backref")
     latitude = FloatField()
     longitude = FloatField()
     altitude = FloatField(null=True)
@@ -298,9 +341,9 @@ class Coordinate(BaseModel):
 
 class PromptResponse(BaseModel):
     class Meta:
-        table_name = 'prompt_responses'
+        table_name = "prompt_responses"
 
-    user = ForeignKeyField(UserSurveyResponse, backref='prompts_backref')
+    user = ForeignKeyField(UserSurveyResponse, backref="prompts_backref")
     prompt_uuid = UUIDField()
     prompt_num = IntegerField()
     response = TextField()
@@ -313,9 +356,9 @@ class PromptResponse(BaseModel):
 
 class CancelledPromptResponse(BaseModel):
     class Meta:
-        table_name = 'cancelled_prompt_responses'
+        table_name = "cancelled_prompt_responses"
 
-    user = ForeignKeyField(UserSurveyResponse, backref='cancelled_prompts_backref')
+    user = ForeignKeyField(UserSurveyResponse, backref="cancelled_prompts_backref")
     prompt_uuid = UUIDField(unique=True)
     latitude = FloatField()
     longitude = FloatField()
@@ -326,9 +369,9 @@ class CancelledPromptResponse(BaseModel):
 
 class DetectedTripCoordinate(BaseModel):
     class Meta:
-        table_name = 'detected_trip_coordinates'
+        table_name = "detected_trip_coordinates"
 
-    user = ForeignKeyField(UserSurveyResponse, backref='detected_trip_coordinates_backref')
+    user = ForeignKeyField(UserSurveyResponse, backref="detected_trip_coordinates_backref")
     trip_num = IntegerField()
     trip_code = IntegerField()
     latitude = FloatField()
@@ -339,9 +382,9 @@ class DetectedTripCoordinate(BaseModel):
 
 class DetectedTripDaySummary(BaseModel):
     class Meta:
-        table_name = 'detected_trip_day_summaries'
+        table_name = "detected_trip_day_summaries"
 
-    user = ForeignKeyField(UserSurveyResponse, backref='detected_trip_day_summaries_backref')
+    user = ForeignKeyField(UserSurveyResponse, backref="detected_trip_day_summaries_backref")
     date_UTC = DateField()
     has_trips = BooleanField()
     is_complete = BooleanField()
@@ -354,10 +397,8 @@ class DetectedTripDaySummary(BaseModel):
 
 class SubwayStationEntrance(BaseModel):
     class Meta:
-        table_name = 'subway_station_entrances'
-        indexes = (
-            (('latitude', 'longitude'), True),
-        )
+        table_name = "subway_station_entrances"
+        indexes = ((("latitude", "longitude"), True),)
 
     latitude = FloatField()
     longitude = FloatField()
