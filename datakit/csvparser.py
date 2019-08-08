@@ -6,7 +6,6 @@ import logging
 import os
 from playhouse.migrate import migrate, SqliteMigrator
 
-
 from .database import (
     UserSurveyResponse,
     Coordinate,

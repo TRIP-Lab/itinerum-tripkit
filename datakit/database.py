@@ -244,7 +244,9 @@ class Database(object):
 
         def _row_filter(rows, model_fields):
             for row in rows:
-                row["user"] = row["uuid"]
+                print(type(row))
+                print(dir(row))
+                row["user"] = user.uuid
                 if row["start_point"]:
                     row["start_point_id"] = row["start_point"].database_id
                     row["end_point_id"] = row["end_point"].database_id
