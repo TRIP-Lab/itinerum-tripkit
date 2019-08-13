@@ -8,7 +8,7 @@ class DaySummary(object):
     :param str timezone:                  String representation of the timezone as listed in the IANA tz
                                           database (e.g., America/Montreal).
                                           See: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
-    :param datetime.Date date:            The date used for determining a complete trip day in the local timezone.
+    :param datetime.Date date:            The naive date used for determining a complete trip day.
     :param bool has_trips:                Boolean value to indicate whether a date contains any trips.
     :param bool is_complete:              Boolean value to indicate whether a date with trips is considered
                                           complete or not.

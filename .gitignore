@@ -13,3 +13,4 @@ extra/diffs
 !input/.gitkeep
 !output/.gitkeep
 .vscode
+.DS_Store

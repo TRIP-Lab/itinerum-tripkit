@@ -76,8 +76,7 @@ class Database(object):
 
     def bulk_insert(self, Model, rows, chunk_size=10000):
         """
-        Bulk insert an iterable of dictionaries into a supplied
-        Peewee model by ``chunk_size``.
+        Bulk insert an iterable of dictionaries into a supplied Peewee model by ``chunk_size``.
 
         :param Model:      Peewee database model of target table for inserts.
         :param rows:       Iterable list or generator of dictionaries matching
@@ -93,7 +92,6 @@ class Database(object):
                 with self.db.atomic():
                     Model.insert_many(db_rows).execute()
                 db_rows = []
-
         # push any remaining rows
         if db_rows:
             with self.db.atomic():
@@ -120,7 +118,10 @@ class Database(object):
             raise UserNotFoundError(uuid)
 
         user = User(db_user)
-        if start:
+        if start and end:
+            # TODO: add BETWEEN queries here
+            raise NotImplementedError("BETWEEN queries: start and end")
+        elif start:
             user.coordinates = user.coordinates.where(Coordinate.timestamp_UTC >= start)
             user.prompt_responses = user.prompt_responses.where(PromptResponse.displayed_at_UTC >= start)
             user.cancelled_prompt_responses = user.cancelled_prompt_responses.where(
@@ -130,9 +131,9 @@ class Database(object):
                 DetectedTripCoordinate.timestamp_UTC >= start
             )
             user.detected_trip_day_summaries = user.detected_trip_day_summaries.where(
-                DetectedTripDaySummary.date_UTC >= start
+                DetectedTripDaySummary.date >= start.date
             )
-        if end:
+        elif end:
             user.coordinates = user.coordinates.where(Coordinate.timestamp_UTC <= end)
             user.prompt_responses = user.prompt_responses.where(PromptResponse.displayed_at_UTC <= end)
             user.cancelled_prompt_responses = user.cancelled_prompt_responses.where(
@@ -142,7 +143,7 @@ class Database(object):
                 DetectedTripCoordinate.timestamp_UTC <= end
             )
             user.detected_trip_day_summaries = user.detected_trip_day_summaries.where(
-                DetectedTripDaySummary.date_UTC <= end
+                DetectedTripDaySummary.date <= end.date
             )
         return user
 
@@ -182,7 +183,7 @@ class Database(object):
         """
         day_summaries = {}
         for s in user.detected_trip_day_summaries:
-            day_summaries[s.date_UTC] = {
+            day_summaries[s.date] = {
                 "has_trips": s.has_trips,
                 "is_complete": s.is_complete,
                 "consecutive_inactive_days": s.consecutive_inactive_days,
@@ -234,7 +235,7 @@ class Database(object):
         model_fields = set(DetectedTripCoordinate._meta.sorted_field_names)
         self.bulk_insert(DetectedTripCoordinate, _trip_row_filter(detected_trips, model_fields))
 
-    def save_trip_day_summaries(self, user, trip_day_summaries, overwrite=True):
+    def save_trip_day_summaries(self, user, trip_day_summaries, timezone, overwrite=True):
         """
         Saves the daily summaries for detected trip days to cache database. This
         table with be recreated on each save by default.
@@ -244,20 +245,10 @@ class Database(object):
 
         def _row_filter(rows, model_fields):
             for row in rows:
-                print(type(row))
-                print(dir(row))
-                row["user"] = user.uuid
-                if row["start_point"]:
-                    row["start_point_id"] = row["start_point"].database_id
-                    row["end_point_id"] = row["end_point"].database_id
-                else:
-                    row["start_point_id"], row["end_point_id"] = None, None
-                trim_cols = set(row.keys()) - model_fields
-                trim_cols.add("id")
-                for col in trim_cols:
-                    if col in row:
-                        del row[col]
-                yield row
+                dict_row = row.__dict__
+                dict_row["user_id"] = user.uuid
+                dict_row["timezone"] = timezone
+                yield dict_row
 
         if not trip_day_summaries:
             logger.info(f"No daily summaries for {user.uuid}. Has trip detection been run?")
@@ -317,7 +308,7 @@ class UserSurveyResponse(BaseModel):
 
     @property
     def detected_trip_day_summaries(self):
-        return self.detected_trip_day_summaries_backref.order_by(DetectedTripDaySummary.date_UTC)
+        return self.detected_trip_day_summaries_backref.order_by(DetectedTripDaySummary.date)
 
 
 class Coordinate(BaseModel):
@@ -387,11 +378,10 @@ class DetectedTripDaySummary(BaseModel):
         table_name = "detected_trip_day_summaries"
 
     user = ForeignKeyField(UserSurveyResponse, backref="detected_trip_day_summaries_backref")
-    date_UTC = DateField()
+    timezone = TextField()
+    date = DateField()
     has_trips = BooleanField()
     is_complete = BooleanField()
-    consecutive_inactive_days = IntegerField()
-    inactivity_streak = IntegerField(null=True)
     inactivity_distance = FloatField(null=True)
     start_point = ForeignKeyField(DetectedTripCoordinate, null=True)
     end_point = ForeignKeyField(DetectedTripCoordinate, null=True)

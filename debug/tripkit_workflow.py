@@ -4,19 +4,19 @@
 # 0: setup - run from parent directory
 import os
 import sys
-sys.path[0] = sys.path[0].replace('/debug', '')
+sys.path[0] = sys.path[0].replace("/debug", "")
 os.chdir(sys.path[0])
 # begin
 from datakit import Itinerum
 import datakit_config
 
-STAGE_2 = False
+STAGE_2 = True
 STAGE_3 = True
 
 
 # 1: import .csv's from Itinerum or QStarz to scratch database and load user objects
 itinerum = Itinerum(config=datakit_config)
-itinerum.setup(force=False)
+itinerum.setup(force=True)
 
 users = itinerum.load_users(uuid="3c4096a7-b8db-44aa-933a-b62608345681")
 # users = itinerum.load_users()
