@@ -68,6 +68,16 @@ def _input_gpkg_schema(db_model, ignore_keys=None):
     return schema
 
 
+def _semantic_locations_features(locations):
+    features = []
+    for label, location in locations.items():
+        coordinates = (location[1], location[0])
+        properties = {"label": label}
+        point = _point_to_geojson_point(coordinates, properties)
+        features.append(point)
+    return features
+
+
 def _input_coordinates_features(coordinates, ignore_keys=None):
     if not ignore_keys:
         ignore_keys = []
@@ -111,13 +121,26 @@ def _input_cancelled_prompts_features(cancelled_prompts, ignore_keys=None):
 
 
 # geojson file I/O
+def write_semantic_locations_geonjson(cfg, fn_base, locations):
+    """
+    Write the semantic locations labeled within the datakit config to a geojson file.
+
+    :param cfg:             Global configuration object (eventually this should be
+                            supplied upon initialization like :py:class:`CSVParser`)
+    :param fn_base:         The base filename to prepend to each output geojson file.
+    :param survey_response: A dictionary object of a user's survey responses containing
+                            columns with semantic location latitude and longitudes.
+    """
+    locations_features = _semantic_locations_features(locations)
+    locations_fn = f"{fn_base}_locations.geojson"
+    write_features_to_geojson_f(cfg, locations_fn, locations_features)
+
 def write_input_geojson(cfg, fn_base, coordinates, prompts, cancelled_prompts):
     """
     Writes input coordinates, prompts and cancelled prompts data selected from
     cache to individual geojson files.
 
-    :param cfg:               Global configuration object (eventually this should be
-                              supplied upon initialization like :py:class:`CSVParser`)
+    :param cfg:               Global configuration object
     :param fn_base:           The base filename to prepend to each output geojson file.
     :param coordinates:       Iterable of database coordinates to write to geojson
                               file. Usually the result of a database query.
