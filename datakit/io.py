@@ -130,17 +130,17 @@ def write_input_geojson(cfg, fn_base, coordinates, prompts, cancelled_prompts):
 
     # coordinates point features
     coordinates_features = _input_coordinates_features(coordinates, ignore_keys)
-    coordinates_filename = fn_base + "_coordinates.geojson"
+    coordinates_filename = f"{fn_base}_coordinates.geojson"
     write_features_to_geojson_f(cfg, coordinates_filename, coordinates_features)
 
     # prompts point features
     prompts_features = _input_prompts_features(prompts, ignore_keys)
-    prompts_filename = fn_base + "_prompts.geojson"
+    prompts_filename = f"{fn_base}_prompts.geojson"
     write_features_to_geojson_f(cfg, prompts_filename, prompts_features)
 
     # cancelled prompts point features
     cancelled_prompts_features = _input_cancelled_prompts_features(cancelled_prompts, ignore_keys)
-    cancelled_prompts_filename = fn_base + "_cancelled_prompts.geojson"
+    cancelled_prompts_filename = f"{fn_base}_cancelled_prompts.geojson"
     write_features_to_geojson_f(cfg, cancelled_prompts_filename, cancelled_prompts_features)
 
 
@@ -157,7 +157,7 @@ def write_trips_geojson(cfg, fn_base, trips):
         properties = {"start_UTC": trip.start_UTC, "end_UTC": trip.end_UTC, "trip_code": trip.trip_code}
         linestring = _points_to_geojson_linestring(trip.geojson_coordinates, properties)
         detected_trips_features.append(linestring)
-    filename = fn_base + "_trips.geojson"
+    filename = f"{fn_base}_trips.geojson"
     write_features_to_geojson_f(cfg, filename, detected_trips_features)
 
 
@@ -196,7 +196,7 @@ def write_mapmatched_geojson(cfg, fn_base, results):
         linestring = _points_to_geojson_linestring(coordinates, properties)
         mapmatched_features.append(linestring)
 
-    filename = fn_base + "_matched.geojson"
+    filename = f"{fn_base}_matched.geojson"
     write_features_to_geojson_f(cfg, filename, mapmatched_features)
 
 
@@ -227,19 +227,19 @@ def write_input_geopackage(cfg, fn_base, coordinates, prompts, cancelled_prompts
     ignore_keys = ("id", "user", "longitude", "latitude", "prompt_uuid")
 
     # coordinates point features
-    coordinates_filename = fn_base + "_coordinates.gpkg"
+    coordinates_filename = f"{fn_base}_coordinates.gpkg"
     coordinates_gpkg_schema = _input_gpkg_schema(coordinates.model, ignore_keys)
     coordinates_features = _input_coordinates_features(coordinates, ignore_keys)
     write_features_to_geopackage_f(cfg, coordinates_filename, coordinates_gpkg_schema, coordinates_features)
 
     # prompts point features
-    prompts_filename = fn_base + "_prompts.gpkg"
+    prompts_filename = f"{fn_base}_prompts.gpkg"
     prompts_gpkg_schema = _input_gpkg_schema(prompts.model, ignore_keys)
     prompts_features = _input_prompts_features(prompts, ignore_keys)
     write_features_to_geopackage_f(cfg, prompts_filename, prompts_gpkg_schema, prompts_features)
 
     # cancelled prompts point features
-    cancelled_prompts_filename = fn_base + "_cancelled_prompts.gpkg"
+    cancelled_prompts_filename = f"{fn_base}_cancelled_prompts.gpkg"
     cancelled_prompts_gpkg_schema = _input_gpkg_schema(cancelled_prompts.model, ignore_keys)
     cancelled_prompts_features = _input_cancelled_prompts_features(cancelled_prompts, ignore_keys)
     write_features_to_geopackage_f(
@@ -249,13 +249,13 @@ def write_input_geopackage(cfg, fn_base, coordinates, prompts, cancelled_prompts
 
 def write_trips_geopackage(cfg, fn_base, trips):
     """
-    Writes detected trips data selected from cache to geopackage file.
+    Writes detected trips data to a geopackage file.
 
     :param cfg:     Global configuration object
     :param fn_base: The base filename to prepend to the output geopackage file
     :param trips:   Iterable of database trips to write to geopackage file
     """
-    geopackage_fp = os.path.join(cfg.OUTPUT_DATA_DIR, fn_base + "_trips.gpkg")
+    geopackage_fp = os.path.join(cfg.OUTPUT_DATA_DIR, f"{fn_base}_trips.gpkg")
     schema = {
         "geometry": "LineString",
         "properties": [("start_UTC", "datetime"), ("end_UTC", "datetime"), ("trip_code", "int"), ("distance", "float")],
@@ -280,9 +280,47 @@ def write_features_to_geopackage_f(cfg, filename, schema, features):
 
 
 # csv file I/0
+def write_trips_csv(cfg, fn_base, trips):
+    """
+    Write detected trips data to a csv file.
+
+    :param cfg:     Global configuration object
+    :param fn_base: The base filename to prepend to the output csv file
+    :param trips:   Iterable of database trips to write to csv file
+    """
+    csv_fp = os.path.join(cfg.OUTPUT_DATA_DIR, f"{fn_base}_trips.csv")
+    headers = ["uuid", "trip", "latitude", "longitude", "h_accuracy", "v_accuracy", "timestamp_UTC",
+               "timestamp_epoch", "trip_distance", "distance", "break_period", "trip_code"]
+    with open(csv_fp, "w") as csv_f:
+        writer = csv.DictWriter(csv_f, fieldnames=headers)
+        writer.writeheader()
+        batch = []
+        for t in trips:
+            for p in t.points:
+                batch.append({
+                    "uuid": None,
+                    "trip": t.num,
+                    "latitude": p.latitude,
+                    "longitude": p.longitude,
+                    "h_accuracy": p.h_accuracy,
+                    # "v_accuracy": p.v_accuracy,
+                    "timestamp_UTC": p.timestamp_UTC,
+                    "timestamp_epoch": p.timestamp_epoch,
+                    "trip_distance": p.trip_distance,
+                    "distance": p.distance_before,
+                    "break_period": p.period_before,
+                    "trip_code": t.trip_code
+                })
+            if len(batch) == 100:
+                writer.writerows(batch)
+                batch = []
+        if batch:
+            writer.writerows(batch)
+
+
 def write_trip_summaries_csv(cfg, filename, summaries, extra_fields=None):
-    export_csv = os.path.join(cfg.OUTPUT_DATA_DIR, filename)
-    with open(export_csv, "w") as csv_f:
+    csv_fp = os.path.join(cfg.OUTPUT_DATA_DIR, filename)
+    with open(csv_fp, "w") as csv_f:
         headers = [
             "uuid",
             "trip_id",

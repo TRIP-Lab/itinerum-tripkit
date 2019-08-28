@@ -47,5 +47,4 @@ if STAGE_3:
 
 # 5: generate output data as .csv, .xlsx, pandas dataframe (feather?)
 for user in users:
-    fn = f"{user.uuid}-trips.csv"
-    itinerum.io.write_trips_csv(datakit_config, filename=fn, trips=user.trips)
+    itinerum.io.write_trips_csv(datakit_config, fn_base=user.uuid, trips=user.trips)

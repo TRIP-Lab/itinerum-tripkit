@@ -355,7 +355,7 @@ def merge_trips(complete_trips, missing_trips):
                     break
 
         if merge_missing_too_short:
-            # merge segment with missing trip's start location but the originally detected trip's starting timestamp
+            # merge segment with missing trip's start position but the original trip's starting timestamp
             segment_group = trip.first_segment.group + 0.1
             start_point = copy.copy(merge_missing_too_short.start)
             end_point = copy.copy(merge_missing_too_short.end)
@@ -363,7 +363,7 @@ def merge_trips(complete_trips, missing_trips):
 
             missing_segment = TripSegment(
                 group=segment_group,
-                points=[start_point, end_point],
+                points=[start_point],
                 period_before_seconds=trip.first_segment.period_before_seconds,
             )
             trip.segments.insert(0, missing_segment)
@@ -498,7 +498,7 @@ def run(coordinates, parameters):
 
     # clean noisy and duplicate points
     high_accuracy_points = filter_by_accuracy(gps_points, cutoff=parameters["accuracy_cutoff_meters"])
-    cleaned_points = filter_erroneous_distance(high_accuracy_points, check_speed_kph=60)
+    cleaned_points = filter_erroneous_distance(high_accuracy_points, check_speed_kph=100)
 
     # break trips into atomic trip segments
     segments = break_points_by_collection_pause(cleaned_points, max_break_period=parameters["break_interval_seconds"])
