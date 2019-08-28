@@ -444,13 +444,18 @@ def wrap_for_datakit(detected_trips):
     for trip_num, detected_trip in enumerate(detected_trips, start=1):
         if isinstance(detected_trip, Trip):
             trip = DatakitTrip(num=trip_num, trip_code=detected_trip.code)
+            trip_distance = 0.0
             for segment in detected_trip.segments:
                 for point in segment.points:
+                    trip_distance += point.distance_before_meters
                     p = DatakitTripPoint(
                         database_id=point.database_id,
                         latitude=point.latitude,
                         longitude=point.longitude,
                         h_accuracy=point.h_accuracy,
+                        distance_before=point.distance_before_meters,
+                        trip_distance=trip_distance,
+                        period_before=point.period_before_seconds,
                         timestamp_UTC=point.timestamp_UTC,
                     )
                     trip.points.append(p)
@@ -462,6 +467,9 @@ def wrap_for_datakit(detected_trips):
                 latitude=detected_trip.start.latitude,
                 longitude=detected_trip.start.longitude,
                 h_accuracy=-1.0,
+                distance_before=0.0,
+                trip_distance=0.0,
+                period_before=0.0,
                 timestamp_UTC=detected_trip.start.timestamp_UTC,
             )
             p2 = DatakitTripPoint(
@@ -469,6 +477,9 @@ def wrap_for_datakit(detected_trips):
                 latitude=detected_trip.end.latitude,
                 longitude=detected_trip.end.longitude,
                 h_accuracy=-1.0,
+                distance_before=detected_trip.distance,
+                trip_distance=detected_trip.distance,
+                period_before=detected_trip.duration,
                 timestamp_UTC=detected_trip.end.timestamp_UTC,
             )
             trip.points = [p1, p2]

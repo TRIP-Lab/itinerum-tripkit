@@ -166,6 +166,9 @@ class Database(object):
                 latitude=c.latitude,
                 longitude=c.longitude,
                 h_accuracy=c.h_accuracy,
+                distance_before=c.distance_before,
+                trip_distance=c.trip_distance,
+                period_before=c.period_before,
                 timestamp_UTC=c.timestamp_UTC,
             )
 
@@ -224,6 +227,9 @@ class Database(object):
                         "latitude": point.latitude,
                         "longitude": point.longitude,
                         "h_accuracy": point.h_accuracy,
+                        "distance_before": point.distance_before,
+                        "trip_distance": point.trip_distance,
+                        "period_before": point.period_before,
                         "timestamp_UTC": point.timestamp_UTC,
                     }
                     yield row
@@ -370,6 +376,9 @@ class DetectedTripCoordinate(BaseModel):
     latitude = FloatField()
     longitude = FloatField()
     h_accuracy = FloatField()
+    distance_before = FloatField()
+    trip_distance = FloatField()
+    period_before = IntegerField()
     timestamp_UTC = DateTimeField()
 
 

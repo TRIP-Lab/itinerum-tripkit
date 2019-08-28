@@ -11,15 +11,15 @@ from datakit import Itinerum
 import datakit_config
 
 STAGE_2 = True
-STAGE_3 = True
+STAGE_3 = False
 
 
 # 1: import .csv's from Itinerum or QStarz to scratch database and load user objects
 itinerum = Itinerum(config=datakit_config)
 itinerum.setup(force=True)
 
-users = itinerum.load_users(uuid="3c4096a7-b8db-44aa-933a-b62608345681")
-# users = itinerum.load_users()
+# users = itinerum.load_users(uuid="3c4096a7-b8db-44aa-933a-b62608345681")
+users = itinerum.load_users()
 if not isinstance(users, list):
     users = [users]
 
@@ -40,10 +40,12 @@ if STAGE_2:
 if STAGE_3:
     for user in users:
         trip_day_summaries = itinerum.process.complete_days.triplab.counter.run(user.trips, datakit_config.TIMEZONE)
-        # if not trip_day_summaries:
-        #     continue
-        itinerum.database.save_trip_day_summaries(user, trip_day_summaries, datakit_config.TIMEZONE)
+        if trip_day_summaries:
+            itinerum.database.save_trip_day_summaries(user, trip_day_summaries, datakit_config.TIMEZONE)
 
 # 4: count time spent at semantic locations
 
 # 5: generate output data as .csv, .xlsx, pandas dataframe (feather?)
+for user in users:
+    fn = f"{user.uuid}-trips.csv"
+    itinerum.io.write_trips_csv(datakit_config, filename=fn, trips=user.trips)
