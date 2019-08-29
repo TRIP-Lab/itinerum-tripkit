@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # Kyle Fitzsimmons, 2019
 #
-# DBSCAN clustering implementation to detect stops when testing for gaps in distance and
+# DBSCAN clustering reference implementation to detect stops when testing for gaps in distance and
 # timestamps between points does not catch them
 # https://github.com/chrisjmccormick/dbscan/blob/master/dbscan.py
 from geopy.distance import distance

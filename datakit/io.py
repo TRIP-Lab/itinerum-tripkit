@@ -303,7 +303,7 @@ def write_features_to_geopackage_f(cfg, filename, schema, features):
 
 
 # csv file I/0
-def write_trips_csv(cfg, fn_base, trips):
+def write_trips_csv(cfg, fn_base, trips, extra_fields=None):
     """
     Write detected trips data to a csv file.
 
@@ -312,15 +312,18 @@ def write_trips_csv(cfg, fn_base, trips):
     :param trips:   Iterable of database trips to write to csv file
     """
     csv_fp = os.path.join(cfg.OUTPUT_DATA_DIR, f"{fn_base}_trips.csv")
-    headers = ["uuid", "trip", "latitude", "longitude", "h_accuracy", "v_accuracy", "timestamp_UTC",
+    headers = ["id", "uuid", "trip", "latitude", "longitude", "h_accuracy", "v_accuracy", "timestamp_UTC",
                "timestamp_epoch", "trip_distance", "distance", "break_period", "trip_code"]
+    if extra_fields:
+        headers.extend(extra_fields)
     with open(csv_fp, "w") as csv_f:
         writer = csv.DictWriter(csv_f, fieldnames=headers)
         writer.writeheader()
-        batch = []
+        idx = 1
         for t in trips:
             for p in t.points:
-                batch.append({
+                record = {
+                    "id": idx,
                     "uuid": None,
                     "trip": t.num,
                     "latitude": p.latitude,
@@ -333,12 +336,12 @@ def write_trips_csv(cfg, fn_base, trips):
                     "distance": p.distance_before,
                     "break_period": p.period_before,
                     "trip_code": t.trip_code
-                })
-            if len(batch) == 100:
-                writer.writerows(batch)
-                batch = []
-        if batch:
-            writer.writerows(batch)
+                }
+                if extra_fields:
+                    for field in extra_fields:
+                        record[field] = getattr(p, field)
+                writer.writerow(record)
+                idx += 1
 
 
 def write_trip_summaries_csv(cfg, filename, summaries, extra_fields=None):
