@@ -6,9 +6,6 @@ import numpy as np
 import scipy
 import utm
 
-EPS = 20      # threshold distance, meters
-MIN_PTS = 50  # minimum number of points to consider as a cluster
-
 
 def distance_m(point1, point2):
     """
