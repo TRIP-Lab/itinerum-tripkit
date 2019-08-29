@@ -345,6 +345,15 @@ def write_trips_csv(cfg, fn_base, trips, extra_fields=None):
 
 
 def write_trip_summaries_csv(cfg, filename, summaries, extra_fields=None):
+    """
+    Write detected trip summary data to csv consisting of a single record for each trip.
+
+    :param cfg:          Global configration object
+    :param filename:     The output filename for the output csv file
+    :param summaries:    Iterable of trip summaries for row records
+    :param extra_fields: (Optional) Additional columns to append to csv (must have matching
+                          key in `summaries` object)
+    """
     csv_fp = os.path.join(cfg.OUTPUT_DATA_DIR, filename)
     with open(csv_fp, "w") as csv_f:
         headers = [
@@ -397,3 +406,29 @@ def write_complete_days_csv(cfg, filename, trip_day_summaries):
         writer = csv.DictWriter(csv_f, fieldnames=headers)
         writer.writeheader()
         writer.writerows(csv_rows)
+
+
+def write_user_summaries_csv(cfg, summaries):
+    """
+    Write the user summary data consisting of participation tallies for individual users
+    over the course of a survey.
+
+    :param cfg:       Global configuration object
+    :param summaries: Iterable of user summaries for row records
+    """
+    headers1 = ["Survey timezone:", cfg.TIMEZONE] + \
+        [None] * 7 + \
+        ["Semantic locations (duration, seconds)", None, None, "Commute times (duration, seconds)"]
+    headers2 = ["uuid", "start_timestamp_local", "start_timestamp_UTC", "end_timestamp_local", "end_timestamp_UTC",
+                "complete_days", "incomplete_days", "inactive_days", "num_trips", "trips_per_day",
+                "total_trips_distance", "avg_trip_distance", "total_trips_duration", "stay_time_home", "stay_time_work",
+                "stay_time_study", "commute_time_study", "commute_time_work"]
+    survey_name = cfg.DATABASE_FN.split(".")[0]
+    csv_fp = os.path.join(cfg.OUTPUT_DATA_DIR, f"{survey_name}-user_summaries.csv")
+    with open(csv_fp, "w") as csv_f:
+        writer = csv.writer(csv_f)
+        writer.writerow(headers1)
+    with open(csv_fp, "a") as csv_f:
+        writer = csv.DictWriter(csv_f, fieldnames=headers2)
+        writer.writeheader()
+        writer.writerows(summaries)

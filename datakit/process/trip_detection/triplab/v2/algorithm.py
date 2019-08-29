@@ -399,15 +399,15 @@ def annotate_trips(trips):
                 trip.add_label("single point")
 
             # apply labeling hierarchy to determine final trip code
-            if "lt_min_trip_length" in trip.labels:
+            if trip.cumulative_distance() < 250:
+                trip.code = TRIP_CODES["distance too short"]
+            elif "lt_min_trip_length" in trip.labels:
                 if "subway" in trip.labels:
                     trip.code = TRIP_CODES["complete trip - subway"]
                 elif "single point" in trip.labels:
                     trip.code = TRIP_CODES["single point"]
                 else:
                     trip.code = TRIP_CODES["complete trip"]
-            elif trip.cumulative_distance() < 250:
-                trip.code = TRIP_CODES["distance too short"]
             else:
                 if "subway" in trip.labels:
                     trip.code = TRIP_CODES["complete trip - subway"]

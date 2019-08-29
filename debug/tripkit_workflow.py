@@ -10,10 +10,11 @@ os.chdir(sys.path[0])
 from datakit import Itinerum
 import datakit_config
 
-STAGE_1 = True
-STAGE_2 = True
-STAGE_3 = True
+STAGE_1 = False
+STAGE_2 = False
+STAGE_3 = False
 STAGE_4 = True
+STAGE_5 = True
 
 
 # 1: import .csv's from Itinerum or QStarz to scratch database and load user objects
@@ -21,7 +22,7 @@ itinerum = Itinerum(config=datakit_config)
 itinerum.setup(force=STAGE_1)
 
 # users = itinerum.load_users(uuid="3c4096a7-b8db-44aa-933a-b62608345681")
-users = itinerum.load_users()
+users = itinerum.load_users(limit=10)
 if not isinstance(users, list):
     users = [users]
 
@@ -46,27 +47,31 @@ if STAGE_3:
             itinerum.database.save_trip_day_summaries(user, trip_day_summaries, datakit_config.TIMEZONE)
 
 # 4: count time spent at semantic locations
+users_activity_summaries = []
 if STAGE_4:
     for user in users:
         user_locations = itinerum.process.activities.triplab.detect.generate_locations(
             location_columns=datakit_config.SEMANTIC_LOCATIONS, survey_response=user.survey_response)
-        itinerum.process.activities.triplab.detect.run(user.trips,
-                                                       locations=user_locations,
-                                                       proximity_m=datakit_config.SEMANTIC_LOCATION_PROXIMITY_M)
+        activity_summary = itinerum.process.activities.triplab.detect.run(
+            user, locations=user_locations, proximity_m=datakit_config.SEMANTIC_LOCATION_PROXIMITY_M)
+        users_activity_summaries.append(activity_summary)
 
 # 5: generate output data as .csv, .xlsx, pandas dataframe (feather?)
-for user in users:
-    user_locations = itinerum.process.activities.triplab.detect.generate_locations(
-        location_columns=datakit_config.SEMANTIC_LOCATIONS, survey_response=user.survey_response)
-    itinerum.io.write_semantic_locations_geonjson(datakit_config,
-                                                  fn_base=user.uuid,
-                                                  locations=user_locations)
-    itinerum.io.write_trips_csv(datakit_config, fn_base=user.uuid, trips=user.trips)
+if STAGE_5:
+    if users_activity_summaries:
+        itinerum.io.write_user_summaries_csv(datakit_config, users_activity_summaries)
+    for user in users:
+        user_locations = itinerum.process.activities.triplab.detect.generate_locations(
+            location_columns=datakit_config.SEMANTIC_LOCATIONS, survey_response=user.survey_response)
+        itinerum.io.write_semantic_locations_geonjson(
+            datakit_config, fn_base=user.uuid, locations=user_locations)
+        itinerum.io.write_trips_csv(datakit_config, fn_base=user.uuid, trips=user.trips)
+        itinerum.io.write_trips_geojson(datakit_config, fn_base=user.uuid, trips=user.trips)
 
-    # 5.1: run HDBSCAN with timeseries filtering on coordinates to help detect stop locations
-    points = [p for t in user.trips for p in t.points]
-    cluster_locations = itinerum.process.clustering.hdbscan_ts.run(
-        datakit_config.TRIP_DETECTION_BREAK_INTERVAL_SECONDS, points)
-    itinerum.io.write_semantic_locations_geonjson(datakit_config,
-                                                  fn_base=str(user.uuid) + "-clusters",
-                                                  locations=cluster_locations)
+        # 5.1: run HDBSCAN with timeseries filtering on coordinates to help detect stop locations
+        points = [p for t in user.trips for p in t.points]
+        cluster_locations = itinerum.process.clustering.hdbscan_ts.run(
+            datakit_config.TRIP_DETECTION_BREAK_INTERVAL_SECONDS, points)
+        itinerum.io.write_semantic_locations_geonjson(datakit_config,
+                                                      fn_base=str(user.uuid) + "-clusters",
+                                                      locations=cluster_locations)
