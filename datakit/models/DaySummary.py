@@ -3,7 +3,7 @@
 
 
 class DaySummary(object):
-    """
+    '''
     ::
     :param str timezone:                  String representation of the timezone as listed in the IANA tz
                                           database (e.g., America/Montreal).
@@ -16,7 +16,7 @@ class DaySummary(object):
     :param int end_point_id:              The database ID for the last available GPS coordinate on a localized date.
     :param float inactivity_distance:     The total distance (m) traveled the two nearest (before and after) complete
                                           activity days.
-    """
+    '''
 
     def __init__(self, timezone, date, has_trips, is_complete, start_point_id, end_point_id, inactivity_distance):
         self.timezone = timezone

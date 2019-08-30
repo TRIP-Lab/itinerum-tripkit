@@ -34,13 +34,13 @@ def create_activity_locations(user):
     if work.latitude and work.longitude:
         locations['work'] = work
     study = Coordinate(latitude=user.survey_response.get('location_study_lat'),
-                      longitude=user.survey_response.get('location_study_lon'))
+                       longitude=user.survey_response.get('location_study_lon'))
     if study.latitude and study.longitude:
         locations['study'] = study
     return locations
 
 
-### main
+# -- main
 itinerum = Itinerum(config=datakit_config)
 users = itinerum.load_users(load_trips=False, limit=1)
 tz = pytz.timezone('America/Montreal')

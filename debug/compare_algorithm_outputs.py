@@ -34,7 +34,7 @@ parameters = {
 all_summaries = []
 for idx, user in enumerate(users, start=1):
     print("Writing user data to file...")
-    data_fn = f"{user.uuid}-input"
+    data_fn = f'{user.uuid}-input'
     itinerum.io.write_input_geopackage(datakit_config,
                                        fn_base=data_fn,
                                        coordinates=user.coordinates,
@@ -45,14 +45,14 @@ for idx, user in enumerate(users, start=1):
     parameters['subway_stations'] = parameters['subway_entrances']
     user.trips, summaries = itinerum.process.trip_detection.triplab.v1.algorithm.run(user.coordinates.dicts(),
                                                                                      parameters=parameters)
-    fn1 = f"{user.uuid}-v1"
+    fn1 = f'{user.uuid}-v1'
     v1_trips = v1_wrap_for_datakit(user.trips)
     itinerum.io.write_trips_geopackage(datakit_config, fn_base=fn1, trips=v1_trips)
     if summaries:
         all_summaries.extend(list(summaries.values()))
 
     trips = itinerum.process.trip_detection.triplab.v2.algorithm.run(user.coordinates, parameters=parameters)
-    fn2 = f"{user.uuid}-v2"
+    fn2 = f'{user.uuid}-v2'
     itinerum.io.write_trips_geopackage(datakit_config, fn_base=fn2, trips=trips)
     import sys; sys.exit()
 

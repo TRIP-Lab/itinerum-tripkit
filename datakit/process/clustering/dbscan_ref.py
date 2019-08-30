@@ -7,7 +7,7 @@
 from geopy.distance import distance
 
 
-EPS = 20      # threshold distance, meters
+EPS = 20  # threshold distance, meters
 MIN_PTS = 10  # minimum number of points to consider as a cluster
 
 
@@ -71,7 +71,7 @@ def run(coordinates):
         print("Clustering: {:.2f}%".format((p_idx + 1) / len(points) * 100))
 
         # points already belonging to a cluster cannot be new seed points and are skipped
-        if not(labels[p_idx] == 0):
+        if not (labels[p_idx] == 0):
             continue
 
         neighbor_idxs = region_query(points, p_idx)

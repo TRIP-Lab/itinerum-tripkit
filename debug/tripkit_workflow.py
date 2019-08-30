@@ -4,7 +4,7 @@
 # 0: setup - run from parent directory
 import os
 import sys
-sys.path[0] = sys.path[0].replace("/debug", "")
+sys.path[0] = sys.path[0].replace('/debug', '')  # TODO: find cross-platform option for Windows
 os.chdir(sys.path[0])
 # begin
 from datakit import Itinerum
@@ -73,5 +73,5 @@ if STAGE_5:
         cluster_locations = itinerum.process.clustering.hdbscan_ts.run(
             datakit_config.TRIP_DETECTION_BREAK_INTERVAL_SECONDS, points)
         itinerum.io.write_semantic_locations_geonjson(datakit_config,
-                                                      fn_base=str(user.uuid) + "-clusters",
+                                                      fn_base=str(user.uuid) + '-clusters',
                                                       locations=cluster_locations)

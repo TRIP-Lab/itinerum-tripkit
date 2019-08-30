@@ -3,7 +3,7 @@
 
 
 class User(object):
-    """
+    '''
     :param db_user:     The ``peewee`` survey response for a given user.
     :ivar list trips:   A user's detected trips. This is only loaded
                         automatically on the ``User`` initialized
@@ -12,7 +12,7 @@ class User(object):
                         saved to the cache.
 
     :vartype trips:     list
-    """
+    '''
 
     def __init__(self, db_user):
         self.uuid = db_user.uuid

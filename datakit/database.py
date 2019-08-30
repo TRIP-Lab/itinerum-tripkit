@@ -27,19 +27,19 @@ deferred_db = SqliteDatabase(None)
 
 
 class Database(object):
-    """
+    '''
     Handles itinerum-datakit interactions with the cached database using peewee. `Note: This
     may soon transition to SQLAlchemy to maintain direct compatibility with the Itinerum API
     code base.`
-    """
+    '''
 
     def __init__(self):
         self.db = deferred_db
 
     def create(self):
-        """
+        '''
         Creates all the tables necessary for the itinerum-datakit cache database.
-        """
+        '''
         self.db.create_tables(
             [
                 UserSurveyResponse,
@@ -53,9 +53,9 @@ class Database(object):
         )
 
     def drop(self):
-        """
+        '''
         Drops all cache database tables.
-        """
+        '''
         self.db.drop_tables(
             [
                 UserSurveyResponse,
@@ -69,20 +69,20 @@ class Database(object):
         )
 
     def delete_user_from_table(self, Model, user):
-        """
+        '''
         Deletes a given user's records from a table in preparation for overwriting.
-        """
+        '''
         Model.delete().where(Model.user == user.uuid).execute()
 
     def bulk_insert(self, Model, rows, chunk_size=10000):
-        """
+        '''
         Bulk insert an iterable of dictionaries into a supplied Peewee model by ``chunk_size``.
 
         :param Model:      Peewee database model of target table for inserts.
         :param rows:       Iterable list or generator of dictionaries matching
                            table model for bulk insert.
         :param chunk_size: `Optional.` Number of rows to insert per transaction.
-        """
+        '''
         db_rows = []
         for row in rows:
             if row:
@@ -98,13 +98,13 @@ class Database(object):
                 Model.insert_many(db_rows).execute()
 
     def count_users(self):
-        """
+        '''
         Returns a count of all survey responses in cache database.
-        """
+        '''
         return UserSurveyResponse.select().count()
 
     def load_user(self, uuid, start=None, end=None):
-        """
+        '''
         Loads user by ``uuid`` to an itinerum-datakit :py:class:`User` object.
 
         :param uuid:  A specific user's UUID from within an Itinerum survey.
@@ -112,7 +112,7 @@ class Database(object):
                       selecting a user's coordinates start period.
         :param end:   `Optional.` Naive datetime object (set within UTC) for
                       selecting a user's coordinates end period.
-        """
+        '''
         db_user = UserSurveyResponse.get_or_none(uuid=uuid)
         if not db_user:
             raise UserNotFoundError(uuid)
@@ -148,12 +148,12 @@ class Database(object):
         return user
 
     def load_trips(self, user, start=None, end=None):
-        """
+        '''
         Load the sorted trips for a given user as list.
 
         :param user: A database user response record with a populated
                      `detected_trip_coordinates` relation.
-        """
+        '''
         trips = {}
         for c in user.detected_trip_coordinates:
             if start and c.timestamp_UTC <= start:
@@ -178,35 +178,35 @@ class Database(object):
         return [value for _, value in sorted(trips.items())]
 
     def load_trip_day_summaries(self, user):
-        """
+        '''
         Load the daily trip summaries for a given user as dict.
 
         :param user: A database user response record with a populated
                      `detected_trip_day_summaries` relation.
-        """
+        '''
         day_summaries = {}
         for s in user.detected_trip_day_summaries:
             day_summaries[s.date] = {
-                "has_trips": s.has_trips,
-                "is_complete": s.is_complete,
-                "consecutive_inactive_days": s.consecutive_inactive_days,
-                "inactivity_streak": s.inactivity_streak,
-                "inactivity_distance": s.inactivity_distance,
-                "start_latitude": s.start_point.latitude if s.start_point else None,
-                "start_longitude": s.start_point.longitude if s.start_point else None,
-                "end_latitude": s.end_point.latitude if s.start_point else None,
-                "end_longitude": s.end_point.longitude if s.start_point else None,
+                'has_trips': s.has_trips,
+                'is_complete': s.is_complete,
+                'consecutive_inactive_days': s.consecutive_inactive_days,
+                'inactivity_streak': s.inactivity_streak,
+                'inactivity_distance': s.inactivity_distance,
+                'start_latitude': s.start_point.latitude if s.start_point else None,
+                'start_longitude': s.start_point.longitude if s.start_point else None,
+                'end_latitude': s.end_point.latitude if s.start_point else None,
+                'end_longitude': s.end_point.longitude if s.start_point else None,
             }
         return day_summaries
 
     def load_subway_entrances(self):
-        """
+        '''
         Queries cache database for all available subway entrances.
-        """
+        '''
         return SubwayStationEntrance.select()
 
     def save_trips(self, user, detected_trips, overwrite=True):
-        """
+        '''
         Saves detected trips from processing algorithms to cache database. This
         table will be recreated on each save by default.
 
@@ -214,23 +214,23 @@ class Database(object):
                                trip records.
         :param detected_trips: List of labelled coordinates from a trip processing
                                algorithm.
-        """
+        '''
 
         def _trip_row_filter(trip_rows, model_fields):
             row = {}
             for trip in trip_rows:
                 for point in trip.points:
                     row = {
-                        "user_id": user.uuid,
-                        "trip_num": trip.num,
-                        "trip_code": trip.trip_code,
-                        "latitude": point.latitude,
-                        "longitude": point.longitude,
-                        "h_accuracy": point.h_accuracy,
-                        "distance_before": point.distance_before,
-                        "trip_distance": point.trip_distance,
-                        "period_before": point.period_before,
-                        "timestamp_UTC": point.timestamp_UTC,
+                        'user_id': user.uuid,
+                        'trip_num': trip.num,
+                        'trip_code': trip.trip_code,
+                        'latitude': point.latitude,
+                        'longitude': point.longitude,
+                        'h_accuracy': point.h_accuracy,
+                        'distance_before': point.distance_before,
+                        'trip_distance': point.trip_distance,
+                        'period_before': point.period_before,
+                        'timestamp_UTC': point.timestamp_UTC,
                     }
                     yield row
 
@@ -242,18 +242,18 @@ class Database(object):
         self.bulk_insert(DetectedTripCoordinate, _trip_row_filter(detected_trips, model_fields))
 
     def save_trip_day_summaries(self, user, trip_day_summaries, timezone, overwrite=True):
-        """
+        '''
         Saves the daily summaries for detected trip days to cache database. This
         table with be recreated on each save by default.
 
         :param trip_day_summaries: List of daily summaries from a daily trip counts algorithm.
-        """
+        '''
 
         def _row_filter(rows, model_fields):
             for row in rows:
                 dict_row = row.__dict__
-                dict_row["user_id"] = user.uuid
-                dict_row["timezone"] = timezone
+                dict_row['user_id'] = user.uuid
+                dict_row['timezone'] = timezone
                 yield dict_row
 
         if not trip_day_summaries:
@@ -275,7 +275,7 @@ class BaseModel(Model):
 
 class UserSurveyResponse(BaseModel):
     class Meta:
-        table_name = "survey_responses"
+        table_name = 'survey_responses'
 
     uuid = UUIDField(unique=True, primary_key=True)
     created_at_UTC = DateTimeField()
@@ -319,9 +319,9 @@ class UserSurveyResponse(BaseModel):
 
 class Coordinate(BaseModel):
     class Meta:
-        table_name = "coordinates"
+        table_name = 'coordinates'
 
-    user = ForeignKeyField(UserSurveyResponse, backref="coordinates_backref")
+    user = ForeignKeyField(UserSurveyResponse, backref='coordinates_backref')
     latitude = FloatField()
     longitude = FloatField()
     altitude = FloatField(null=True)
@@ -340,9 +340,9 @@ class Coordinate(BaseModel):
 
 class PromptResponse(BaseModel):
     class Meta:
-        table_name = "prompt_responses"
+        table_name = 'prompt_responses'
 
-    user = ForeignKeyField(UserSurveyResponse, backref="prompts_backref")
+    user = ForeignKeyField(UserSurveyResponse, backref='prompts_backref')
     prompt_uuid = UUIDField()
     prompt_num = IntegerField()
     response = TextField()
@@ -355,9 +355,9 @@ class PromptResponse(BaseModel):
 
 class CancelledPromptResponse(BaseModel):
     class Meta:
-        table_name = "cancelled_prompt_responses"
+        table_name = 'cancelled_prompt_responses'
 
-    user = ForeignKeyField(UserSurveyResponse, backref="cancelled_prompts_backref")
+    user = ForeignKeyField(UserSurveyResponse, backref='cancelled_prompts_backref')
     prompt_uuid = UUIDField(unique=True)
     latitude = FloatField()
     longitude = FloatField()
@@ -368,9 +368,9 @@ class CancelledPromptResponse(BaseModel):
 
 class DetectedTripCoordinate(BaseModel):
     class Meta:
-        table_name = "detected_trip_coordinates"
+        table_name = 'detected_trip_coordinates'
 
-    user = ForeignKeyField(UserSurveyResponse, backref="detected_trip_coordinates_backref")
+    user = ForeignKeyField(UserSurveyResponse, backref='detected_trip_coordinates_backref')
     trip_num = IntegerField()
     trip_code = IntegerField()
     latitude = FloatField()
@@ -384,9 +384,9 @@ class DetectedTripCoordinate(BaseModel):
 
 class DetectedTripDaySummary(BaseModel):
     class Meta:
-        table_name = "detected_trip_day_summaries"
+        table_name = 'detected_trip_day_summaries'
 
-    user = ForeignKeyField(UserSurveyResponse, backref="detected_trip_day_summaries_backref")
+    user = ForeignKeyField(UserSurveyResponse, backref='detected_trip_day_summaries_backref')
     timezone = TextField()
     date = DateField()
     has_trips = BooleanField()
@@ -398,8 +398,8 @@ class DetectedTripDaySummary(BaseModel):
 
 class SubwayStationEntrance(BaseModel):
     class Meta:
-        table_name = "subway_station_entrances"
-        indexes = ((("latitude", "longitude"), True),)
+        table_name = 'subway_station_entrances'
+        indexes = ((('latitude', 'longitude'), True),)
 
     latitude = FloatField()
     longitude = FloatField()

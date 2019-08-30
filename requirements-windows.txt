@@ -2,7 +2,7 @@ ciso8601==2.1.1
 geopy==1.20.0
 peewee==3.10.0
 polyline==1.4.0
-pytz==pytz-2019.2
+pytz==2019.2
 requests==2.22.0
 scikit-learn==0.17
 utm==0.5.0

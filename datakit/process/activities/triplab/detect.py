@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 def generate_locations(location_columns, survey_response):
-    """
+    '''
     Generates the dictionary object for passing to `activities.triplab.detect.run` with
     the labeled location as the key and list of [latitude, longitude] as the value.
 
@@ -22,7 +22,7 @@ def generate_locations(location_columns, survey_response):
                                  and longitude.
     :param dict survey_response: A dictionary object with a user's survey response information
                                  including semantic location coordinates.
-    """
+    '''
     locations = {}
     for label, columns in location_columns.items():
         lat_col, lon_col = columns
@@ -56,12 +56,12 @@ def label_trip_points(locations, trip, proximity_m):
 
 
 def tally_stay_times(locations, trip):
-    """
+    '''
     Count the time spent at known locations by tallying the intervals between labeled points.
 
     :param dict locations:       Dictionary of semantic locations with name and list of [lat, lon]
     :param `py:class:Trip` trip: An itinerum-datakit trip object
-    """
+    '''
     stay_times = {}
     last_p = None
     for p in trip.points:
@@ -74,21 +74,21 @@ def tally_stay_times(locations, trip):
 
 
 def tally_commute(trip):
-    """
+    '''
     Count the time spent commuting between either home and work or home and study.
 
     :param `py:class:Trip` trip: An itinerum-datakit trip object
-    """
-    commute_times = {"work": 0., "study": 0.}
-    if trip.start.label == "home":
-        if trip.end.label == "work":
-            commute_times["work"] += (trip.end.timestamp_UTC - trip.start.timestamp_UTC).total_seconds()
-        elif trip.end.label == "study":
-            commute_times["study"] += (trip.end.timestamp_UTC - trip.start.timestamp_UTC).total_seconds()
-    elif trip.start.label == "work" and trip.end.label == "home":
-        commute_times["work"] += (trip.end.timestamp_UTC - trip.start.timestamp_UTC).total_seconds()
-    elif trip.start.label == "study" and trip.end.label == "home":
-        commute_times["study"] += (trip.end.timestamp_UTC - trip.start.timestamp_UTC).total_seconds()
+    '''
+    commute_times = {'work': 0.0, 'study': 0.0}
+    if trip.start.label == 'home':
+        if trip.end.label == 'work':
+            commute_times['work'] += (trip.end.timestamp_UTC - trip.start.timestamp_UTC).total_seconds()
+        elif trip.end.label == 'study':
+            commute_times['study'] += (trip.end.timestamp_UTC - trip.start.timestamp_UTC).total_seconds()
+    elif trip.start.label == 'work' and trip.end.label == 'home':
+        commute_times['work'] += (trip.end.timestamp_UTC - trip.start.timestamp_UTC).total_seconds()
+    elif trip.start.label == 'study' and trip.end.label == 'home':
+        commute_times['study'] += (trip.end.timestamp_UTC - trip.start.timestamp_UTC).total_seconds()
     return commute_times
 
 
@@ -103,9 +103,7 @@ def run(user, locations=None, proximity_m=50):
         return
     detect_semantic_location_overlap(user.uuid, locations, proximity_m)
 
-    activity = UserActivity(user.uuid,
-                            start=user.trips[0].start_UTC,
-                            end=user.trips[-1].end_UTC)
+    activity = UserActivity(user.uuid, start=user.trips[0].start_UTC, end=user.trips[-1].end_UTC)
 
     # tally distances and durations for semantic locations and as an aggregate of all trips
     for t in user.trips:

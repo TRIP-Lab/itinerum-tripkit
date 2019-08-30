@@ -4,7 +4,7 @@ from datetime import datetime
 
 
 class TripPoint(object):
-    """
+    '''
     :param integer database_id:    The GPS point's original database coordinates record id.
     :param float latitude:         The GPS point's latitude.
     :param float longitude:        The GPS point's longitude.
@@ -16,10 +16,11 @@ class TripPoint(object):
 
     :ivar timestamp_epoch:         The point's datetime within the UNIX epoch format.
     :vartype timestamp_epoch:      int
-    """
+    '''
 
-    def __init__(self, database_id, latitude, longitude, h_accuracy, distance_before, trip_distance, period_before,
-                 timestamp_UTC):
+    def __init__(
+        self, database_id, latitude, longitude, h_accuracy, distance_before, trip_distance, period_before, timestamp_UTC
+    ):
         assert isinstance(timestamp_UTC, datetime)
 
         self.database_id = database_id

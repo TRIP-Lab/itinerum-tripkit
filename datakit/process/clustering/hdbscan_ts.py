@@ -8,19 +8,19 @@ import utm
 
 
 def distance_m(point1, point2):
-    """
+    '''
     Returns the distance between two points in meters.
-    """
+    '''
     a = point2[0] - point1[0]
     b = point2[1] - point1[1]
     return math.sqrt(a ** 2 + b ** 2)
 
 
 def remove_labels_with_uncertainty(probabilities, labels):
-    """
+    '''
     Iterate through the probabilities matrix and reset to noise any
     cluster label probabilities that are not 1.
-    """
+    '''
     for idx, p in enumerate(probabilities):
         if p < 1.0:
             labels[idx] = -1
@@ -36,10 +36,10 @@ def _first_label(labels):
 
 
 def relabel_clusters_by_timeseries(labels):
-    """
+    '''
     Iterate over clusters in timeseries order and re-label if there is a break of >4 points between cluster
     (a duration of ~30 seconds) or whenever the cluster changes.
-    """
+    '''
     last_label = _first_label(labels)
     new_label = 0
     incrementing_labels = []
@@ -58,10 +58,11 @@ def relabel_clusters_by_timeseries(labels):
             incrementing_labels.append(-1)
     return incrementing_labels
 
+
 def create_coordinate_clusters(coordinates, cluster_labels):
-    """
+    '''
     Create cluster arrays of the input coordinate data from cluster labels.
-    """
+    '''
     clusters = []
     last_label, cluster = None, None
     for idx, label in enumerate(cluster_labels):
@@ -75,10 +76,11 @@ def create_coordinate_clusters(coordinates, cluster_labels):
             cluster.append(coordinates[idx])
     return clusters
 
+
 def check_min_stop_time(clusters, min_s):
-    """
+    '''
     Filter to keep only clusters that have meet the minimum stop time criteria.
-    """
+    '''
     stop_clusters = []
     for cluster_idx, cluster in enumerate(clusters):
         period_s = cluster[-1].timestamp_epoch - cluster[0].timestamp_epoch
@@ -88,23 +90,24 @@ def check_min_stop_time(clusters, min_s):
 
 
 def clusters_center_of_gravity(clusters):
-    """
+    '''
     Get a centroid-like attribute where center is calculated by giving higher weights
     to points with closer neighbors.
-    """
+    '''
     centers = []
     for cluster in clusters:
         c_points = np.asarray([(c.easting, c.northing) for c in cluster])
         # euclidean distance betweens all points with each other point
         m = scipy.spatial.distance_matrix(c_points, c_points)
         # give any points that share a location an impossibly large distance so they are not selected as weights
-        m[m == 0] = 1E16
+        m[m == 0] = 1e16
         # get the closest distance for each point
         closest_points = m.min(axis=0)
         i_closest_points = 1 / closest_points
         avg = np.average(c_points, weights=i_closest_points, axis=0)
         centers.append(avg)
     return centers
+
 
 def run(min_stop_time_s, coordinates):
     # create meter x, y coordinates for euclidean distance calculations
@@ -116,7 +119,7 @@ def run(min_stop_time_s, coordinates):
         points[idx] = [easting, northing]
         c.easting, c.northing = easting, northing
 
-    clusterer = hdbscan.HDBSCAN(min_cluster_size=15, min_samples=20, metric="euclidean", allow_single_cluster=True)
+    clusterer = hdbscan.HDBSCAN(min_cluster_size=15, min_samples=20, metric='euclidean', allow_single_cluster=True)
     base_labels = clusterer.fit_predict(points)
     raw_labels = remove_labels_with_uncertainty(clusterer.probabilities_, base_labels)
     cluster_labels = relabel_clusters_by_timeseries(raw_labels)
@@ -127,7 +130,7 @@ def run(min_stop_time_s, coordinates):
     # return lat/lon centers with named cluster labels
     semantic_locations = {}
     for idx, wc in enumerate(weighted_centers_utm):
-        name = f"cluster{idx}"
+        name = f'cluster{idx}'
         easting, northing = wc
         semantic_locations[name] = utm.to_latlon(easting, northing, utm_zone_number, utm_zone_letter)
     return semantic_locations

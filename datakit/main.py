@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 class Itinerum(object):
-    """
+    '''
     The Itinerum object provides a interface for working with
     data exported from the Itinerum platform as .csv. The object
     is passed a `config` object which should be an imported Python
@@ -30,7 +30,7 @@ class Itinerum(object):
     on the GPS data, and visualizing and exporting the results to
     GIS-friendly formats.
 
-    The Itinerum instannce is usually created in your main module
+    The Itinerum instance is usually created in your main module
     like this::
 
         from datakit import Itinerum
@@ -43,7 +43,7 @@ class Itinerum(object):
                    a bare config class with the same attributes,
                    see :ref:`ConfigAnchor` for more information.
 
-    """
+    '''
 
     def __init__(self, config):
         self.config = config
@@ -60,36 +60,36 @@ class Itinerum(object):
 
     @property
     def csv(self):
-        """
+        '''
         Gives access to the :py:class:`datakit.csvparser.CSVParser` object
         initialized with Itinerum object.
-        """
+        '''
         return self._csv
 
     @property
     def database(self):
-        """
+        '''
         Gives access to the cache :py:class:`datakit.database.Database` object
         initialized with Itinerum object.
-        """
+        '''
         return self._database
 
     @property
     def io(self):
-        """
+        '''
         Gives access to the file reading and writing functions.
-        """
+        '''
         return self._io
 
     @property
     def process(self):
-        """
+        '''
         Gives access to the GPS point and trip processing submodules.
-        """
+        '''
         return self._process
 
     def setup(self, force=False, generate_null_survey=False):
-        """
+        '''
         Create the cache database tables if the UserSurveyResponse table does not exist.
 
         :param force:                optionally supply True to force creation
@@ -99,7 +99,7 @@ class Itinerum(object):
 
         :type force:                 boolean
         :type generate_null_survey:  boolean
-        """
+        '''
         if force:
             self.database.drop()
 
@@ -115,7 +115,7 @@ class Itinerum(object):
             self.csv.load_export_cancelled_prompt_responses(self.config.INPUT_DATA_DIR)
 
     def load_users(self, uuid=None, load_trips=True, limit=None, start=None, end=None):
-        """
+        '''
         Returns all available users as ``<User>`` objects from the database
         :rtype: list of ``<User>`` objects
 
@@ -133,7 +133,7 @@ class Itinerum(object):
         :type limit:       integer
         :type start:       datetime
         :type end:         datetime
-        """
+        '''
         return_one = uuid is not None
         if uuid:
             uuids = [uuid]
