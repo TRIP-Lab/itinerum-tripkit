@@ -4,8 +4,9 @@
 # 0: setup - run from parent directory
 import os
 import sys
-sys.path[0] = sys.path[0].replace('/debug', '')  # TODO: find cross-platform option for Windows
-os.chdir(sys.path[0])
+sys.path[0] = os.path.abspath(os.path.pardir)
+os.chdir(os.path.pardir)
+
 # begin
 from datakit import Itinerum
 import datakit_config
