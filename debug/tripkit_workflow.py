@@ -10,9 +10,9 @@ os.chdir(sys.path[0])
 from datakit import Itinerum
 import datakit_config
 
-STAGE_1 = False
-STAGE_2 = False
-STAGE_3 = False
+STAGE_1 = True
+STAGE_2 = True
+STAGE_3 = True
 STAGE_4 = True
 STAGE_5 = True
 

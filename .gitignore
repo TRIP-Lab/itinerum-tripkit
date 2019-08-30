@@ -14,3 +14,4 @@ extra/diffs
 !output/.gitkeep
 .vscode
 .DS_Store
+datakit-venv
