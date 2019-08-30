@@ -4,6 +4,7 @@
 # run from parent directory
 import os
 import sys
+
 sys.path[0] = sys.path[0].replace('/extra', '')
 os.chdir(sys.path[0])
 
@@ -26,7 +27,7 @@ parameters = {
     'break_interval_seconds': datakit_config.TRIP_DETECTION_BREAK_INTERVAL_SECONDS,
     'subway_buffer_meters': datakit_config.TRIP_DETECTION_SUBWAY_BUFFER_METERS,
     'cold_start_distance': datakit_config.TRIP_DETECTION_COLD_START_DISTANCE_METERS,
-    'accuracy_cutoff_meters': datakit_config.TRIP_DETECTION_ACCURACY_CUTOFF_METERS
+    'accuracy_cutoff_meters': datakit_config.TRIP_DETECTION_ACCURACY_CUTOFF_METERS,
 }
 user.trips = itinerum.process.trip_detection.triplab.v2.algorithm.run(user.coordinates, parameters)
 itinerum.io.write_trips_geopackage(datakit_config, fn_base=str(user.uuid), trips=user.trips)

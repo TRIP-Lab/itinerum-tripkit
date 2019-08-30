@@ -4,6 +4,7 @@
 # run from parent directory
 import os
 import sys
+
 sys.path[0] = sys.path[0].replace('/extra', '')
 os.chdir(sys.path[0])
 
@@ -25,21 +26,17 @@ parameters = {
     'break_interval_seconds': datakit_config.TRIP_DETECTION_BREAK_INTERVAL_SECONDS,
     'subway_buffer_meters': datakit_config.TRIP_DETECTION_SUBWAY_BUFFER_METERS,
     'cold_start_distance': datakit_config.TRIP_DETECTION_COLD_START_DISTANCE_METERS,
-    'accuracy_cutoff_meters': datakit_config.TRIP_DETECTION_ACCURACY_CUTOFF_METERS
+    'accuracy_cutoff_meters': datakit_config.TRIP_DETECTION_ACCURACY_CUTOFF_METERS,
 }
 for test_user in sorted(users, key=lambda u: str(u.uuid).lower()):
     # updated version of tripbreaker to compare
     v1_algorithm = itinerum.process.trip_detection.triplab.v1.algorithm
-    trips1, summaries1 = v1_algorithm.run(test_user.coordinates.dicts(),
-                                          parameters=parameters)
+    trips1, summaries1 = v1_algorithm.run(test_user.coordinates.dicts(), parameters=parameters)
 
     # legacy tripbreaker as control
     legacy_metro_stations = []
     for station in parameters['subway_stations']:
-        legacy_metro_stations.append({
-            'latitude': station.latitude,
-            'longitude': station.longitude
-        })
+        legacy_metro_stations.append({'latitude': station.latitude, 'longitude': station.longitude})
 
     legacy_coordinates = []
     for c in test_user.coordinates.dicts():
@@ -47,9 +44,8 @@ for test_user in sorted(users, key=lambda u: str(u.uuid).lower()):
         legacy_coordinates.append(c)
 
     trips2, summaries2 = itinerum.process.trip_detection.triplab.legacy.algorithm.run(
-        parameters,
-        metro_stations=legacy_metro_stations,
-        points=legacy_coordinates)
+        parameters, metro_stations=legacy_metro_stations, points=legacy_coordinates
+    )
 
     # check whether the start and end points for matching trips by id are equal
     for trip_num1, summary1 in summaries1.items():

@@ -9,6 +9,7 @@
 # run from parent directory
 import os
 import sys
+
 sys.path[0] = sys.path[0].replace('/extra', '')
 os.chdir(sys.path[0])
 # begin
@@ -31,10 +32,23 @@ tz = pytz.timezone('America/Montreal')
 csv_name = '{}-trips.csv'.format(datakit_config.DATABASE_FN.split('.')[0])
 export_csv = os.path.join(datakit_config.OUTPUT_DATA_DIR, csv_name)
 with open(export_csv, 'w') as csv_f:
-    headers = ['uuid', 'trip_id', 'start', 'end', 'trip_code',
-               'olat', 'olon', 'dlat', 'dlon', 'merge_codes',
-               'direct_distance', 'cumulative_distance', 'complete_day',
-               'first_day', 'last_day']
+    headers = [
+        'uuid',
+        'trip_id',
+        'start',
+        'end',
+        'trip_code',
+        'olat',
+        'olon',
+        'dlat',
+        'dlon',
+        'merge_codes',
+        'direct_distance',
+        'cumulative_distance',
+        'complete_day',
+        'first_day',
+        'last_day',
+    ]
     writer = csv.DictWriter(csv_f, fieldnames=headers)
     writer.writeheader()
 
@@ -46,21 +60,24 @@ parameters = {
     'break_interval_seconds': datakit_config.TRIP_DETECTION_BREAK_INTERVAL_SECONDS,
     'subway_buffer_meters': datakit_config.TRIP_DETECTION_SUBWAY_BUFFER_METERS,
     'cold_start_distance': datakit_config.TRIP_DETECTION_COLD_START_DISTANCE_METERS,
-    'accuracy_cutoff_meters': datakit_config.TRIP_DETECTION_ACCURACY_CUTOFF_METERS
+    'accuracy_cutoff_meters': datakit_config.TRIP_DETECTION_ACCURACY_CUTOFF_METERS,
 }
 for idx, user in enumerate(users, start=1):
     print('Processing user ({}) trips: {}/{}...'.format(user.uuid, idx, len(users)))
-    trips, summaries = itinerum.process.trip_detection.triplab.v1.algorithm.run(user.coordinates.dicts(),
-                                                                                parameters=parameters)
+    trips, summaries = itinerum.process.trip_detection.triplab.v1.algorithm.run(
+        user.coordinates.dicts(), parameters=parameters
+    )
 
     trip_objs = {}
     for trip_num, trip in trips.items():
         for c in trip:
-            point = TripPoint(latitude=c['latitude'],
-                              longitude=c['longitude'],
-                              h_accuracy=c['h_accuracy'],
-                              timestamp_UTC=c['timestamp_UTC'],
-                              database_id=c['id'])
+            point = TripPoint(
+                latitude=c['latitude'],
+                longitude=c['longitude'],
+                h_accuracy=c['h_accuracy'],
+                timestamp_UTC=c['timestamp_UTC'],
+                database_id=c['id'],
+            )
 
             trip_num = c['trip']
             if trip_num not in trip_objs:

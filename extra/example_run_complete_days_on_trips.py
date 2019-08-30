@@ -4,6 +4,7 @@
 # run from parent directory
 import os
 import sys
+
 sys.path[0] = sys.path[0].replace('/extra', '')
 os.chdir(sys.path[0])
 

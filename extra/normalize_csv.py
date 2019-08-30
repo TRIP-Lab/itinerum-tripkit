@@ -43,14 +43,13 @@ def count_lines(filename):
         return sum(bl.count(b'\n') for bl in _blocks(mm))
 
 
-def format_headers(headers, dt_columns, expected_columns, rename_columns,
-                   split_locations=False):
-    """
+def format_headers(headers, dt_columns, expected_columns, rename_columns, split_locations=False):
+    '''
     Rename any datetime columns to `datetime_UTC` and rename any
     other declartions in `rename_colums` map. Add non-existing
     `expected_columns` at the end and split locations columns, if
     applicable.
-    """
+    '''
     normalized_headers = []
     rename_keys = [c[0] for c in rename_columns]
     location_keys = [c for c in headers if c.startswith('location')]
@@ -67,28 +66,27 @@ def format_headers(headers, dt_columns, expected_columns, rename_columns,
             normalized_headers.append(h + '_lon')
         else:
             normalized_headers.append(h)
-    normalized_headers.extend(set(expected_columns) - 
-                              set(normalized_headers))
+    normalized_headers.extend(set(expected_columns) - set(normalized_headers))
     return normalized_headers
 
 
 # @profile
 def format_row_datetime(row, dt_columns, tz=None):
-    """
+    '''
     Format the datetimes in a row by column name to UTC. If a tzinfo
     is not given, the timezone will be autodetected from the timestamp. 
     If timestamps are already localized to a naive datetime within the
     source data, a tzinfo object must be provided.
-    """
+    '''
     for col in dt_columns:
         local_dt = row.pop(col)
         col_utc = col + '_UTC'
         if tz:
             if local_dt:
                 try:
-                    row[col_utc] = (tz.localize(ciso8601.parse_datetime(local_dt))
-                                                        .astimezone(pytz.utc)
-                                                        .replace(tzinfo=None))
+                    row[col_utc] = (
+                        tz.localize(ciso8601.parse_datetime(local_dt)).astimezone(pytz.utc).replace(tzinfo=None)
+                    )
                 except ValueError:
                     if local_dt == '0000-00-00 00:00:00':
                         row[col_utc] = min_dt
@@ -97,27 +95,25 @@ def format_row_datetime(row, dt_columns, tz=None):
             else:
                 row[col_utc] = min_dt
         else:
-            row[col_utc] = (ciso8601.parse_datetime(local_dt)
-                                    .astimezone(pytz.utc)
-                                    .replace(tzinfo=None))
+            row[col_utc] = ciso8601.parse_datetime(local_dt).astimezone(pytz.utc).replace(tzinfo=None)
     return row
 
 
 def format_row_rename(row, rename_columns):
-    """
+    '''
     Renames all keys in column where key is present in `rename_columns`
     map.
-    """
+    '''
     for orig, rename in rename_columns:
         row[rename] = row.pop(orig)
     return row
 
 
 def format_row_split_locations(row, location_columns):
-    """
+    '''
     Split a grouped location column into two cells for latitude
     and longitude.
-    """
+    '''
     for key in location_columns:
         location = row.pop(key)
         latitude, longitude = None, None
@@ -129,12 +125,11 @@ def format_row_split_locations(row, location_columns):
 
 
 # @profile
-def csv_rows_to_UTC(filename, dt_columns, expected_columns, rename_columns,
-                    tz=None, split_locations=False):
-    """
+def csv_rows_to_UTC(filename, dt_columns, expected_columns, rename_columns, tz=None, split_locations=False):
+    '''
     Changes a localized datetime to its UTC equivalent and inserts
     blank columns for expected fields when necessary.
-    """
+    '''
     source_csv_fn = os.path.join('./uncleaned', source_dir_name, filename)
     dest_csv_fn = os.path.join('./cleaned', source_dir_name, filename)
 
@@ -146,17 +141,13 @@ def csv_rows_to_UTC(filename, dt_columns, expected_columns, rename_columns,
         with open(source_csv_fn, 'r', encoding='utf-8-sig') as in_csv_f:
             reader = csv.DictReader(in_csv_f)
             headers = reader.fieldnames
-            normalized_headers = format_headers(headers,
-                                                dt_columns,
-                                                expected_columns,
-                                                rename_columns,
-                                                split_locations)
-            
+            normalized_headers = format_headers(headers, dt_columns, expected_columns, rename_columns, split_locations)
+
             writer = csv.DictWriter(out_csv_f, fieldnames=normalized_headers)
             writer.writeheader()
 
             normalized = []
-            write_count = 0.
+            write_count = 0.0
             chunk_size = 50000
             location_columns = [c for c in headers if c.startswith('location')]
             for row in reader:
@@ -170,46 +161,45 @@ def csv_rows_to_UTC(filename, dt_columns, expected_columns, rename_columns,
                 if len(normalized) == chunk_size:
                     write_count += chunk_size
                     progress = write_count / source_line_count * 100
-                    print('Processing {fn}: {pct:.1f}%'.format(fn=filename,
-                                                               pct=progress))
+                    print('Processing {fn}: {pct:.1f}%'.format(fn=filename, pct=progress))
                     writer.writerows(normalized)
                     normalized = []
-            
+
             # write any remaining rows
             writer.writerows(normalized)
 
 
 if __name__ == '__main__':
-    print('Check whether source data contains tzinfo on timestamp first!')
+    print("Check whether source data contains tzinfo on timestamp first!")
 
     start = time.time()
-    logging.info('Updating records to UTC for: {dir}/{fn}'.format(dir=source_dir_name,
-                                                                  fn='survey_responses.csv'))
-    csv_rows_to_UTC('survey_responses.csv',
-                    dt_columns=['created_at'],
-                    expected_columns=['modified_at_UTC'],
-                    rename_columns=[('version', 'itinerum_version'),
-                                    ('osversion', 'os_version')],
-                    tz=pytz.timezone('America/Montreal'),
-                    split_locations=True)
+    logging.info("Updating records to UTC for: {dir}/{fn}".format(dir=source_dir_name, fn='survey_responses.csv'))
+    csv_rows_to_UTC(
+        'survey_responses.csv',
+        dt_columns=['created_at'],
+        expected_columns=['modified_at_UTC'],
+        rename_columns=[('version', 'itinerum_version'), ('osversion', 'os_version')],
+        tz=pytz.timezone('America/Montreal'),
+        split_locations=True,
+    )
 
+    logging.info("Updating records to UTC for: {dir}/{fn}".format(dir=source_dir_name, fn='prompt_responses.csv'))
+    csv_rows_to_UTC(
+        'prompt_responses.csv',
+        dt_columns=['timestamp'],
+        expected_columns=['prompt_uuid', 'edited_at_UTC'],
+        rename_columns=[('timestamp_UTC', 'displayed_at_UTC')],
+        tz=pytz.timezone('America/Montreal'),
+    )
 
-    logging.info('Updating records to UTC for: {dir}/{fn}'.format(dir=source_dir_name,
-                                                                  fn='prompt_responses.csv'))
-    csv_rows_to_UTC('prompt_responses.csv',
-                    dt_columns=['timestamp'],
-                    expected_columns=['prompt_uuid', 'edited_at_UTC'],
-                    rename_columns=[('timestamp_UTC', 'displayed_at_UTC')],
-                    tz=pytz.timezone('America/Montreal'))
-
-
-    logging.info('Updating records to UTC for: {dir}/{fn}'.format(dir=source_dir_name,
-                                                                  fn='coordinates.csv'))
-    csv_rows_to_UTC('coordinates.csv',
-                    dt_columns=['timestamp'],
-                    expected_columns=[],
-                    rename_columns=[],
-                    tz=pytz.timezone('America/Montreal'))
+    logging.info("Updating records to UTC for: {dir}/{fn}".format(dir=source_dir_name, fn='coordinates.csv'))
+    csv_rows_to_UTC(
+        'coordinates.csv',
+        dt_columns=['timestamp'],
+        expected_columns=[],
+        rename_columns=[],
+        tz=pytz.timezone('America/Montreal'),
+    )
 
     end = time.time()
-    logging.info('Processing finished in {:.3f} seconds.'.format(end - start))
+    logging.info("Processing finished in {:.3f} seconds.".format(end - start))

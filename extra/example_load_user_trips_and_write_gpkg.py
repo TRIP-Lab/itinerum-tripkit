@@ -4,6 +4,7 @@
 # run from parent directory
 import os
 import sys
+
 sys.path[0] = sys.path[0].replace('/extra', '')
 os.chdir(sys.path[0])
 
@@ -26,4 +27,3 @@ pprint(user.survey_response)
 print('num trips:', len(user.trips))
 
 itinerum.io.write_trips_geopackage(datakit_config, fn_base=uuid, trips=user.trips)
-

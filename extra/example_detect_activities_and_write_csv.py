@@ -4,6 +4,7 @@
 # run from parent directory
 import os
 import sys
+
 sys.path[0] = sys.path[0].replace('/extra', '')
 os.chdir(sys.path[0])
 
@@ -20,21 +21,25 @@ import datakit_config
 
 
 def create_activity_locations(user):
-    """
+    '''
     Create locations known from survey answers to create activity centroids to match
     with a given user's coordinates.
-    """
+    '''
     Coordinate = namedtuple('Coordinate', ['latitude', 'longitude'])
     locations = {
-        'home': Coordinate(latitude=user.survey_response['location_home_lat'],
-                           longitude=user.survey_response['location_home_lon'])
+        'home': Coordinate(
+            latitude=user.survey_response['location_home_lat'], longitude=user.survey_response['location_home_lon']
+        )
     }
-    work = Coordinate(latitude=user.survey_response.get('location_work_lat'),
-                      longitude=user.survey_response.get('location_work_lon'))
+    work = Coordinate(
+        latitude=user.survey_response.get('location_work_lat'), longitude=user.survey_response.get('location_work_lon')
+    )
     if work.latitude and work.longitude:
         locations['work'] = work
-    study = Coordinate(latitude=user.survey_response.get('location_study_lat'),
-                       longitude=user.survey_response.get('location_study_lon'))
+    study = Coordinate(
+        latitude=user.survey_response.get('location_study_lat'),
+        longitude=user.survey_response.get('location_study_lon'),
+    )
     if study.latitude and study.longitude:
         locations['study'] = study
     return locations
