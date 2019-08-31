@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # Kyle Fitzsimmons, 2018-2019
+from datetime import datetime
 import logging
 from peewee import (
     Model,
@@ -14,6 +15,7 @@ from peewee import (
     TextField,
     UUIDField,
 )
+import uuid
 
 from .models.Trip import Trip
 from .models.TripPoint import TripPoint
@@ -74,7 +76,7 @@ class Database(object):
         '''
         Model.delete().where(Model.user == user.uuid).execute()
 
-    def bulk_insert(self, Model, rows, chunk_size=10000):
+    def bulk_insert(self, Model, rows, chunk_size=50000):
         '''
         Bulk insert an iterable of dictionaries into a supplied Peewee model by ``chunk_size``.
 
@@ -83,19 +85,57 @@ class Database(object):
                            table model for bulk insert.
         :param chunk_size: `Optional.` Number of rows to insert per transaction.
         '''
-        db_rows = []
-        for row in rows:
-            if row:
-                db_rows.append(row)
-            if len(db_rows) == chunk_size:
-                logger.info(f"bulk inserting {len(db_rows)} rows...")
-                with self.db.atomic():
-                    Model.insert_many(db_rows).execute()
-                db_rows = []
-        # push any remaining rows
-        if db_rows:
-            with self.db.atomic():
-                Model.insert_many(db_rows).execute()
+        # Note: Peewee runs into "TOO MANY SQL VARIABLES" limits across systems with similar
+        # versions of Python. The alternative below is to write the bulk insert operations using
+        # the base sqlite3 library directly.
+        conn = self.db.connection()
+        cur = conn.cursor()
+        table_name = Model._meta.table_name
+        columns = Model._meta.columns.keys()
+        
+        columns = list(columns)
+        if 'id' in columns:
+            columns.remove('id')
+
+        chunk = []
+        columns_str = ','.join(columns)
+        values_str = ','.join(['?'] * len(columns))
+        query = f'''INSERT INTO {table_name} ({columns_str}) VALUES ({values_str});'''
+        tx_counter = 0
+        rows_inserted = 0
+        cur.execute('''BEGIN TRANSACTION;''')
+        for row in rows:            
+            if not row:
+                continue
+
+            # transform to the hex representation used by peewee
+            if table_name == 'survey_responses':
+                row['uuid'] = uuid.UUID(hex=row['uuid']).hex
+            elif not 'user_id' in row:
+                row['user_id'] = uuid.UUID(hex=row['user']).hex
+            elif isinstance(row['user_id'], uuid.UUID):
+                row['user_id'] = row['user_id'].hex
+            chunk.append([row[c] for c in columns])
+
+            # write rows to database as transactions of multiple executemany statements
+            if len(chunk) == chunk_size:
+                rows_inserted += chunk_size
+                logger.info(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}: bulk inserting {chunk_size} rows ({rows_inserted})...")
+                cur.executemany(query, chunk)
+
+                # commit every 1000 transactions
+                tx_counter += 1
+                if tx_counter == 1000:
+                    cur.execute('''COMMIT;''')
+                    cur.execute('''BEGIN TRANSACTION;''')
+                    tx_counter = 0
+                # reset chunk
+                chunk = []
+        # commit all remaining transactions
+        if chunk:
+            cur.executemany(query, chunk)
+            cur.execute('''COMMIT;''')
+        conn.commit()
 
     def count_users(self):
         '''

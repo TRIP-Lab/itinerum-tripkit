@@ -2,9 +2,14 @@
 # Kyle Fitzsimmons, 2019
 import hdbscan
 import math
+import logging
 import numpy as np
+import os
 import scipy
 import utm
+
+
+logger = logging.getLogger(__name__)
 
 
 def distance_m(point1, point2):
@@ -110,8 +115,13 @@ def clusters_center_of_gravity(clusters):
 
 
 def run(min_stop_time_s, coordinates):
+    logger.info("Running hdbscan clustering on user points for additional stop locations...")
+
     # create meter x, y coordinates for euclidean distance calculations
     count = len(coordinates)
+    if count <= 10:
+        return {}
+
     points = np.empty([count, 2])
     utm_zone_number, utm_zone_letter = None, None
     for idx, c in enumerate(coordinates):
@@ -119,7 +129,17 @@ def run(min_stop_time_s, coordinates):
         points[idx] = [easting, northing]
         c.easting, c.northing = easting, northing
 
-    clusterer = hdbscan.HDBSCAN(min_cluster_size=15, min_samples=20, metric='euclidean', allow_single_cluster=True)
+    jobs = -1
+    if os.name == 'nt':
+        logger.debug("Reduce cluster jobs on Windows to avoid broken multiprocessing pool")
+        jobs = 1
+    clusterer = hdbscan.HDBSCAN(
+        min_cluster_size=15,
+        min_samples=20,
+        metric='euclidean',
+        allow_single_cluster=True,
+        core_dist_n_jobs=jobs
+    )
     base_labels = clusterer.fit_predict(points)
     raw_labels = remove_labels_with_uncertainty(clusterer.probabilities_, base_labels)
     cluster_labels = relabel_clusters_by_timeseries(raw_labels)

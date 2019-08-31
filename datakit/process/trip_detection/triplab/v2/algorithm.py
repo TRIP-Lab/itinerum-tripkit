@@ -10,7 +10,7 @@ from datakit.models import Trip as DatakitTrip, TripPoint as DatakitTripPoint
 from .models import GPSPoint, SubwayEntrance, MissingTrip, TripSegment, Trip
 from .trip_codes import TRIP_CODES
 
-# logging.basicConfig(level=logging.DEBUG)
+
 logger = logging.getLogger(__name__)
 
 
