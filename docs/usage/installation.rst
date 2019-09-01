@@ -17,8 +17,8 @@ It is recommended to use venv_ to keep the datakit dependency versions isolated 
 
 Linux & MacOS
 +++++++++++++
-
 ::
+
     $ python3 -m venv datakit-venv
     $ chmod +x datakit-ven/bin/activate
     $ source ./datakit-ven/bin/activate
@@ -26,11 +26,11 @@ Linux & MacOS
 Windows
 +++++++
 
-((PowerShell:**
+**PowerShell:**
 With PowerShell, `Set-ExecutionPolicy Unrestricted -Force` may be required to allow the `Activate.ps1` 
 script to run. If you update the permissions, the PowerShell prompt must also be restarted.:
-
 ::
+
     PS C:\Code\itinerum-datakit> python -m venv datakit-venv
     PS C:\Code\itinerum-datakit> .\datakit-venv\Scripts\Activate.ps1
 
