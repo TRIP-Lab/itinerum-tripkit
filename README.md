@@ -23,11 +23,6 @@ Then either:
 
  - Copy the `datakit` directory into other projects as a library (until more complete packaging is available)
 
-### Loading Data from Dashboard CSV Export
-
-Data exported from the Itinerum dashboard is read directly as *.csv* files. The source data should be placed within the `./input` directory and the `INPUT_DATA_DIR` config parameter edited to reflect the filepath.
-
-*Note: On first run, .csv data will be imported if the table*  `user_survey_responses` *does not exist in the output database. It is safe to delete the output .sqlite file to reset the library's cache.*
 
 ### Loading Subway Stations
 

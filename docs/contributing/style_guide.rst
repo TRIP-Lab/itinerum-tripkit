@@ -25,3 +25,5 @@ $ black -l 120 -S -t py37 datakit
 The string formatting exception to Python blacks default rules is to better convey meaning about intention within the library. Internal strings such
 as dictionary keys and filenames use single-quote (') endings whereas strings that will print to the user such as log messages use double-quote (")
 endings.
+
+.. _black: https://black.readthedocs.io/
