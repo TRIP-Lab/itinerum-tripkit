@@ -91,9 +91,7 @@ class Database(object):
         conn = self.db.connection()
         cur = conn.cursor()
         table_name = Model._meta.table_name
-        columns = Model._meta.columns.keys()
-        
-        columns = list(columns)
+        columns = list(Model._meta.columns.keys())
         if 'id' in columns:
             columns.remove('id')
 
@@ -104,7 +102,7 @@ class Database(object):
         tx_counter = 0
         rows_inserted = 0
         cur.execute('''BEGIN TRANSACTION;''')
-        for row in rows:            
+        for row in rows:
             if not row:
                 continue
 
@@ -120,7 +118,9 @@ class Database(object):
             # write rows to database as transactions of multiple executemany statements
             if len(chunk) == chunk_size:
                 rows_inserted += chunk_size
-                logger.info(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}: bulk inserting {chunk_size} rows ({rows_inserted})...")
+                logger.info(
+                    f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}: bulk inserting {chunk_size} rows ({rows_inserted})..."
+                )
                 cur.executemany(query, chunk)
 
                 # commit every 1000 transactions

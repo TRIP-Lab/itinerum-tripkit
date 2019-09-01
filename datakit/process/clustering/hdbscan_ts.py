@@ -134,11 +134,7 @@ def run(min_stop_time_s, coordinates):
         logger.debug("Reduce cluster jobs on Windows to avoid broken multiprocessing pool")
         jobs = 1
     clusterer = hdbscan.HDBSCAN(
-        min_cluster_size=15,
-        min_samples=20,
-        metric='euclidean',
-        allow_single_cluster=True,
-        core_dist_n_jobs=jobs
+        min_cluster_size=15, min_samples=20, metric='euclidean', allow_single_cluster=True, core_dist_n_jobs=jobs
     )
     base_labels = clusterer.fit_predict(points)
     raw_labels = remove_labels_with_uncertainty(clusterer.probabilities_, base_labels)
