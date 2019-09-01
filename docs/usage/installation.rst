@@ -11,13 +11,14 @@ http://github.com/TRIP-Lab/itinerum-datakit
 and copying the ``datakit`` directory.
 
 
-Virtual Env
------------
-It is recommended to use venv_ to keep the datakit dependencies isolate from system Python packges.::
+Virtual Environments
+--------------------
+It is recommended to use venv_ to keep the datakit dependency versions isolated from system packages.
 
 Linux & MacOS
 +++++++++++++
 
+::
     $ python3 -m venv datakit-venv
     $ chmod +x datakit-ven/bin/activate
     $ source ./datakit-ven/bin/activate
@@ -25,11 +26,11 @@ Linux & MacOS
 Windows
 +++++++
 
-PowerShell:
+((PowerShell:**
+With PowerShell, `Set-ExecutionPolicy Unrestricted -Force` may be required to allow the `Activate.ps1` 
+script to run. If you update the permissions, the PowerShell prompt must also be restarted.:
 
-With PowerShell, `Set-ExecutionPolicy Unrestricted -Force` (be sure you understand the implications first!), may 
-be required to allow the `Activate.ps1` script to run. Be sure to restart the PS prompt if you update the permissions.::
-
+::
     PS C:\Code\itinerum-datakit> python -m venv datakit-venv
     PS C:\Code\itinerum-datakit> .\datakit-venv\Scripts\Activate.ps1
 
