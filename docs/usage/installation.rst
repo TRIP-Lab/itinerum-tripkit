@@ -1,14 +1,14 @@
 Installation
 ============
 
-The ``itinerum-datakit`` can be installed via Pip (TBA), the included `setup.py` to install as a library, or can be included in
-your own project by cloning:
+The ``itinerum-datakit`` can be installed as a library using pip or the included `setup.py` file, or can be included in
+as an included dependency in your own project by cloning:
 
 .. rst-class:: center
 
 http://github.com/TRIP-Lab/itinerum-datakit
 
-and copying the ``datakit`` directory as a vendor dependency.
+and copying the ``datakit`` directory.
 
 
 Virtual Env
@@ -68,4 +68,4 @@ Compiled packages to install:
 - https://www.lfd.uci.edu/~gohlke/pythonlibs/#fiona
 
 
-.. venv: https://docs.python.org/3/library/venv.html
+.. _venv: https://docs.python.org/3/library/venv.html
