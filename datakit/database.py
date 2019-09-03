@@ -106,10 +106,12 @@ class Database(object):
             if not row:
                 continue
 
-            # transform to the hex representation used by peewee
+            # transform uuids to the hex representation used by peewee
             if table_name == 'survey_responses':
                 row['uuid'] = uuid.UUID(hex=row['uuid']).hex
-            elif not 'user_id' in row:
+            elif 'uuid' in row:
+                row['user_id'] = uuid.UUID(hex=row['uuid']).hex
+            elif 'user_id' not in row:
                 row['user_id'] = uuid.UUID(hex=row['user']).hex
             elif isinstance(row['user_id'], uuid.UUID):
                 row['user_id'] = row['user_id'].hex
@@ -365,13 +367,13 @@ class Coordinate(BaseModel):
     latitude = FloatField()
     longitude = FloatField()
     altitude = FloatField(null=True)
-    speed = FloatField()
+    speed = FloatField(null=True)
     direction = FloatField(null=True)
-    h_accuracy = FloatField()
-    v_accuracy = FloatField()
-    acceleration_x = FloatField()
-    acceleration_y = FloatField()
-    acceleration_z = FloatField()
+    h_accuracy = FloatField(null=True)
+    v_accuracy = FloatField(null=True)
+    acceleration_x = FloatField(null=True)
+    acceleration_y = FloatField(null=True)
+    acceleration_z = FloatField(null=True)
     point_type = IntegerField(null=True)
     mode_detected = IntegerField(null=True)
     timestamp_UTC = DateTimeField()

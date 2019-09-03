@@ -8,10 +8,9 @@ import logging
 from . import io
 from . import models
 from . import process
-from .csvparser import CSVParser
+from .csvparser import ItinerumCSVParser, QstarzCSVParser
 from .database import Database, UserSurveyResponse
 from .database import Coordinate, PromptResponse, CancelledPromptResponse, DetectedTripCoordinate, SubwayStationEntrance
-
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -50,13 +49,22 @@ class Itinerum(object):
 
         self._database = Database()
         self._database.db.init(config.DATABASE_FN)
-
-        self._csv = CSVParser(self._database)
+        self._csv = self._init_csv_parser()
 
         # attach I/O functions and extensions as objects
         self._io = io
         self._process = process
         self._process.map_match.osrm(self.config)
+
+    def _init_csv_parser(self):
+        if self.config.INPUT_DATA_TYPE == 'itinerum':
+            return ItinerumCSVParser(self._database)
+        if self.config.INPUT_DATA_TYPE == 'qstarz':
+            return QstarzCSVParser(self._database, self.config.INPUT_DATA_DIR)
+        raise Exception(
+            f"Input data type not recognized: {self.config.INPUT_DATA_TYPE} "
+            f"Valid options: itinerum, qstarz"
+        )
 
     @property
     def csv(self):
@@ -106,13 +114,18 @@ class Itinerum(object):
         if not UserSurveyResponse.table_exists():
             self.database.create()
             self.csv.load_subway_stations(self.config.SUBWAY_STATIONS_FP)
-            if generate_null_survey is False:
-                self.csv.load_export_survey_responses(self.config.INPUT_DATA_DIR)
-            else:
+
+            if self.config.INPUT_DATA_TYPE == 'itinerum':
+                if generate_null_survey is False:
+                    self.csv.load_export_survey_responses(self.config.INPUT_DATA_DIR)
+                else:
+                    self.csv.generate_null_survey(self.config.INPUT_DATA_DIR)
+                self.csv.load_export_coordinates(self.config.INPUT_DATA_DIR)
+                self.csv.load_export_prompt_responses(self.config.INPUT_DATA_DIR)
+                self.csv.load_export_cancelled_prompt_responses(self.config.INPUT_DATA_DIR)
+            elif self.config.INPUT_DATA_TYPE == 'qstarz':
                 self.csv.generate_null_survey(self.config.INPUT_DATA_DIR)
-            self.csv.load_export_coordinates(self.config.INPUT_DATA_DIR)
-            self.csv.load_export_prompt_responses(self.config.INPUT_DATA_DIR)
-            self.csv.load_export_cancelled_prompt_responses(self.config.INPUT_DATA_DIR)
+                self.csv.load_export_coordinates(self.config.INPUT_DATA_DIR)
 
     def load_users(self, uuid=None, load_trips=True, limit=None, start=None, end=None):
         '''

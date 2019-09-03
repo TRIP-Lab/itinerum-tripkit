@@ -1,13 +1,12 @@
 #!/usr/bin/env python
 # Kyle Fitzsimmons, 2019
-import hdbscan
 import math
 import logging
 import numpy as np
 import os
 import scipy
 import utm
-
+import warnings
 
 logger = logging.getLogger(__name__)
 
@@ -115,6 +114,9 @@ def clusters_center_of_gravity(clusters):
 
 
 def run(min_stop_time_s, coordinates):
+    # lazy load hdbscan (therefore scikit-learn) to improve library performance
+    import hdbscan
+
     logger.info("Running hdbscan clustering on user points for additional stop locations...")
 
     # create meter x, y coordinates for euclidean distance calculations

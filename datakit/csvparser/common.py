@@ -1,0 +1,90 @@
+#!/usr/bin/env python
+# Kyle Fitzsimmons, 2019
+#
+# This contains functions common to multiple csv parsers to be attached
+# as class methods on the parent parsers
+import csv
+from datetime import datetime
+import logging
+import os
+
+from ..database import (
+    SubwayStationEntrance,
+    UserSurveyResponse
+)
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
+def _load_subway_stations(subway_stations_csv_fp):
+    '''
+    Loads a subway station entraces .csv the database for use by trip
+    detection algorithms. Each .csv row should represent a station entrance
+    with the column names of 'x' (or 'longitude') and 'y' (or 'latitude').
+
+    :param subway_stations_csv_fp: The full filepath of subway station entrances
+                                    `.csv` for the survey study region.
+    '''
+    # change selected column keys to latitude and longitude
+    def _rename_columns(location_columns, rows):
+        lat_label, lng_label = location_columns
+        for row in rows:
+            row['latitude'] = row.pop(lat_label)
+            row['longitude'] = row.pop(lng_label)
+            yield row
+
+    logger.info("Loading subway stations .csv to db...")
+    with open(subway_stations_csv_fp, 'r') as csv_f:
+        # detect whether commas or semicolon is used a separator (english/french)
+        dialect = csv.Sniffer().sniff(csv_f.read(), delimiters=';,')
+        csv_f.seek(0)
+
+        reader = csv.DictReader(csv_f, dialect=dialect)
+        reader.fieldnames = [name.lower() for name in reader.fieldnames]
+
+        # determine the exsting keys out of the options for the lat/lng columns
+        location_columns = None
+        location_columns_options = [('latitude', 'longitude'), ('lat', 'lng'), ('lat', 'lon'), ('y', 'x')]
+
+        for columns in location_columns_options:
+            if set(columns).issubset(set(reader.fieldnames)):
+                location_columns = columns
+
+        # rename columns if latitude/longitude are not already found
+        rename = ('latitude' and 'longitude') not in location_columns
+        if rename:
+            reader = _rename_columns(location_columns, reader)
+
+        for row in reader:
+            SubwayStationEntrance.create(latitude=float(row['latitude']), longitude=float(row['longitude']))
+
+def _generate_null_survey(input_dir, coordinates_csv_fn, uuid_column='uuid', headers=None):
+    '''
+    Generates an empty survey responses table for surveys with only coordinate
+    data. Used for populating foreign keys for queries on the child data tables.
+    '''
+    logger.info("Reading coordinates .csv and populating survey responses with null data in db...")
+    coordinates_fp = os.path.join(input_dir, coordinates_csv_fn)
+    uuids = None
+    with open(coordinates_fp, 'r', encoding='utf-8-sig') as csv_f:
+        # much faster than csv.DictReader
+        reader = csv.reader(csv_f)
+        if not headers:
+            headers = [h.lower() for h in next(reader)]
+        uuid_idx = headers.index(uuid_column)
+        uuids = {r[uuid_idx] for r in reader}
+
+    for uuid in uuids:
+        UserSurveyResponse.create(
+            uuid=uuid,
+            created_at_UTC=datetime(2000, 1, 1),
+            modified_at_UTC=datetime(2000, 1, 1),
+            itinerum_version=-1,
+            location_home_lat=0.0,
+            location_home_lon=0.0,
+            member_type=-1,
+            model=-1,
+            os=-1,
+            os_version=-1,
+        )

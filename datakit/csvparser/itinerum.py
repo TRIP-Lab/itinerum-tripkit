@@ -6,7 +6,8 @@ import logging
 import os
 from playhouse.migrate import migrate, SqliteMigrator
 
-from .database import (
+from .common import _generate_null_survey, _load_subway_stations
+from ..database import (
     UserSurveyResponse,
     Coordinate,
     PromptResponse,
@@ -14,7 +15,6 @@ from .database import (
     DetectedTripCoordinate,
     SubwayStationEntrance,
 )
-
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -80,7 +80,7 @@ def _trips_row_filter(row):
 
 
 # .csv parsing
-class CSVParser(object):
+class ItinerumCSVParser(object):
     '''
     Parses Itinerum platform csv files and loads to them to a cache database.
 
@@ -94,6 +94,8 @@ class CSVParser(object):
         self.coordinates_csv = 'coordinates.csv'
         self.prompt_responses_csv = 'prompt_responses.csv'
         self.survey_responses_csv = 'survey_responses.csv'
+        # attach common functions
+        self.load_subway_stations = _load_subway_stations
 
     def _get(self, row, key, cast_func=None):
         value = row.get(key)
@@ -102,34 +104,6 @@ class CSVParser(object):
             if cast_func:
                 return cast_func(value)
             return value
-
-    def generate_null_survey(self, input_dir):
-        '''
-        Generates an empty survey responses table for surveys with only coordinate
-        data. Used for populating foreign keys for queries on the child data tables.
-        '''
-        logger.info("Loading coordinates .csv and populating survey responses with null data in db...")
-        coordinates_fp = os.path.join(input_dir, self.coordinates_csv)
-        uuids = None
-        with open(coordinates_fp, 'r', encoding='utf-8-sig') as csv_f:
-            # much faster than csv.DictReader
-            reader = csv.reader(csv_f)
-            uuid_idx = next(reader).index('uuid')
-            uuids = {r[uuid_idx] for r in reader}
-
-        for uuid in uuids:
-            UserSurveyResponse.create(
-                uuid=uuid,
-                created_at_UTC=datetime(2000, 1, 1),
-                modified_at_UTC=datetime(2000, 1, 1),
-                itinerum_version=-1,
-                location_home_lat=0.0,
-                location_home_lon=0.0,
-                member_type='',
-                model='',
-                os='',
-                os_version='',
-            )
 
     # read .csv file, apply filter and yield row
     @staticmethod
@@ -143,9 +117,17 @@ class CSVParser(object):
                 dict_row = dict(zip(headers, row))
                 yield filter_func(dict_row) if filter_func else dict_row
 
+    def generate_null_survey(self, input_dir):
+        '''
+        Wrapper function to generate null survey responses for each user in coordinates.
+
+        :param input_dir: Directory containing input .csv data
+        '''
+        _generate_null_survey(input_dir, self.coordinates_csv)
+
     def load_export_survey_responses(self, input_dir):
         '''
-        Loads Itinerum survey responses data to the itinerum-datakit cache database.
+        Loads Itinerum survey responses data to the cache database.
 
         :param input_dir: The directory containing the `self.survey_responses_csv`
                           data file.
@@ -156,7 +138,7 @@ class CSVParser(object):
 
     def load_export_coordinates(self, input_dir):
         '''
-        Loads Itinerum coordinates data to the itinerum-datakit cache database.
+        Loads Itinerum coordinates data to the cache database.
 
         :param input_dir: The directory containing the `self.coordinates_csv`
                           data file.
@@ -170,7 +152,7 @@ class CSVParser(object):
 
     def load_export_prompt_responses(self, input_dir):
         '''
-        Loads Itinerum prompt responses data to the itinerum-datakit cache
+        Loads Itinerum prompt responses data to the cache
         database. For each .csv row, the data is fetched by column name if
         it exists and cast to appropriate types as set in the database.
 
@@ -186,9 +168,9 @@ class CSVParser(object):
 
     def load_export_cancelled_prompt_responses(self, input_dir):
         '''
-        Loads Itinerum cancelled prompt responses data to the itinerum-datakit cache
-        database. For each .csv row, the data is fetched by column name if
-        it exists and cast to appropriate types as set in the database.
+        Loads Itinerum cancelled prompt responses data to the cache datbase.
+        For each .csv row, the data is fetched by column name if it exists
+        and cast to appropriate types as set in the database.
 
         :param input_dir: The directory containing the `self.cancelled_prompt_responses.csv`
                           data file.
@@ -213,45 +195,3 @@ class CSVParser(object):
         DetectedTripCoordinate.drop_table()
         DetectedTripCoordinate.create_table()
         self.db.bulk_insert(DetectedTripCoordinate, trips_csv_fp, _trips_row_filter)
-
-    def load_subway_stations(self, subway_stations_csv_fp):
-        '''
-        Loads a subway station entraces .csv the database for use by trip
-        detection algorithms. Each .csv row should represent a station entrance
-        with the column names of 'x' (or 'longitude') and 'y' (or 'latitude').
-
-        :param subway_stations_csv_fp: The full filepath of subway station entrances
-                                       `.csv` for the survey study region.
-        '''
-        # change selected column keys to latitude and longitude
-        def _rename_columns(location_columns, rows):
-            lat_label, lng_label = location_columns
-            for row in rows:
-                row['latitude'] = row.pop(lat_label)
-                row['longitude'] = row.pop(lng_label)
-                yield row
-
-        logger.info("Loading subway stations .csv to db...")
-        with open(subway_stations_csv_fp, 'r') as csv_f:
-            # detect whether commas or semicolon is used a separator (english/french)
-            dialect = csv.Sniffer().sniff(csv_f.read(), delimiters=';,')
-            csv_f.seek(0)
-
-            reader = csv.DictReader(csv_f, dialect=dialect)
-            reader.fieldnames = [name.lower() for name in reader.fieldnames]
-
-            # determine the exsting keys out of the options for the lat/lng columns
-            location_columns = None
-            location_columns_options = [('latitude', 'longitude'), ('lat', 'lng'), ('lat', 'lon'), ('y', 'x')]
-
-            for columns in location_columns_options:
-                if set(columns).issubset(set(reader.fieldnames)):
-                    location_columns = columns
-
-            # rename columns if latitude/longitude are not already found
-            rename = ('latitude' and 'longitude') not in location_columns
-            if rename:
-                reader = _rename_columns(location_columns, reader)
-
-            for row in reader:
-                SubwayStationEntrance.create(latitude=float(row['latitude']), longitude=float(row['longitude']))
