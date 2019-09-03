@@ -61,11 +61,17 @@ class QstarzCSVParser(object):
         Helper function to return the .csv file in the given input data directory which uniquely matches the given
         **contains** parameter.
         '''
+        if contains and not_contains:
+            raise Exception("csv_fn should only contain either a `contains` or `not_contains` search string, not both")
+
         for fn in os.listdir(input_dir):
             if contains and contains in fn:
                 return fn
-            if not_contains and not_contains not in fn:
-                return fn
+            elif not_contains:
+                if '._' in fn:
+                    continue
+                if not_contains not in fn:
+                    return fn
 
     # read .csv file, apply filter and yield row
     @staticmethod
