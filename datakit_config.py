@@ -3,10 +3,12 @@
 
 
 # filename for the itinerum-cli database
-DATABASE_FN = 'itinerum.sqlite'
+DATABASE_FN = 'gert.sqlite'
 
-# path of raw data directory exported from Itinerum platform
-INPUT_DATA_DIR = './input/itinerum-responses'
+# path of raw data directory exported from Itinerum platform or Qstarz
+INPUT_DATA_DIR = './input/gert-output-gpm-modified/2178_20150507'
+# types: "itinerum" or "qstarz"
+INPUT_DATA_TYPE = 'qstarz'
 
 # path of subway station entrances .csv for trip detection
 SUBWAY_STATIONS_FP = './input/subway_stations/mtl_stations.csv'
