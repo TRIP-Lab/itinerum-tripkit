@@ -62,3 +62,4 @@ def run(coordinates):
 
         last_gc = gc
     logger.debug(f"Cleaned input coordinates: {len(processed)}")
+    return processed

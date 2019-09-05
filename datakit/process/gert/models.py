@@ -13,7 +13,7 @@ class GertCoordinate(object):
 
     # explicitly state slots to control against adding unknown attributes to the object
     __slots__ = ['uuid', 'latitude', 'longitude', 'timestamp_UTC', 'duration_s', 'distance_m', 'bearing',
-                 'delta_heading']
+                 'delta_heading', 'status']
 
     def __init__(self, c):
         self.uuid = c.user
@@ -25,8 +25,14 @@ class GertCoordinate(object):
         self.distance_m = 0.
         self.bearing = 0
         self.delta_heading = 0
+        self.status = None
 
     @property
     def speed_ms(self):
         if self.distance_m:
             return self.distance_m / self.duration_s
+
+    def DEBUG_csv_row(self):
+        values = [self.uuid, self.latitude, self.longitude, self.timestamp_UTC.isoformat(), self.duration_s,
+                  self.distance_m, self.bearing, self.delta_heading]
+        return [str(v) for v in values]
