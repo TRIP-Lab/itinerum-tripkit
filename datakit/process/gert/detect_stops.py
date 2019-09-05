@@ -2,6 +2,7 @@
 
 # Based upon GERT 1.2 (2016-06-03): GIS-based Episode Reconstruction Toolkit
 # Ported to itinerum-datakit by Kyle Fitzsimmons, 2019
+from .utils import calc
 
 
 def detect_stop_by_attributes(coordinates):
@@ -65,6 +66,68 @@ def detect_stop_by_attributes(coordinates):
     # last point is always "stop"
     labeled_coordinates[-1].status = 'stop'
     return labeled_coordinates
+
+
+def summarize_stops(labeled_coordinates):
+    # TODO: refactor whatever this is
+    latitudes = []
+    longitudes = []
+    distances = []
+    bearings = []
+    durations = []
+    speeds = []
+    delta_headings = []
+
+    first_line = True
+    last_status = None
+
+    # NOTE: original updates lat/lon with signs based on N,E,S,W attributes in
+    #       .csv row, is this actually necessary? Skipped...
+
+    for c in labeled_coordinates:
+        if first_line:
+            latitudes.append(c.latitude)
+            longitudes.append(c.longitude)
+            distances.append(c.distance_m)
+            durations.append(c.duration_s)
+            bearings.append(c.bearing)
+            speeds.append(c.speed_ms)
+            delta_headings.append(c.delta_heading)
+
+            last_status = c.status
+            first_line = False
+            continue
+
+        if last_status != c.status:
+            total_duration = sum(durations)
+            total_distance = sum(distances)
+            num_points = len(durations)
+            avg_delta_heading = calc.average(delta_headings)
+            avg_speed = calc.average(speeds)
+            
+            # # Debug statements
+            # print(c.latitude, c.longitude, c.distance_m, c.duration_s, c.bearing, c.speed_ms)
+            # print("total duration:", total_duration)
+            # print("total distance:", total_distance)
+            # print("num points:", num_points)
+            # print("avg delta heading:", avg_delta_heading)
+            # print("avg speed:", avg_speed)
+            # print("---------------------")
+
+            # Author's note:
+            # Some background on threshold values:
+            # based on 3 feet per second (fps) minimum pedestrian walking speed (LaPlante & Kaeser 2007)
+            # or 0.91 m/s and a minimum walk duration of 60 s (Bialostozky 2009)
+            # see also MUTCD 2009 Section 4E.06 Pedestrian Intervals and Signal Phases
+            trip_rule_1 = last_status == 'trip' and num_points > 3 and avg_delta_heading < 30
+            trip_rule_2 = total_distance >= 55 and avg_speed >= 0.91
+            stop_rule_1 = last_status == 'stop' and total_duration >= 120
+
+            if trip_rule_1 and trip_rule_2:
+                print("HELLO FROM detect_stops.py")
+                import sys; sys.exit()
+
+        last_status = c.status
 
 
 # # ---- classes
@@ -179,7 +242,11 @@ def run(coordinates):
     if len(coordinates) < 3:
         return []
 
-    stops = detect_stop_by_attributes(coordinates)
+    # preliminary classification
+    labeled_coordinates = detect_stop_by_attributes(coordinates)
+
+    summarize_stops(labeled_coordinates)
+    print(f"total labeled coordinates: {len(labeled_coordinates)}")
 
     # stops = predetect_stop_orig(coordinates)
     # for s in stops:

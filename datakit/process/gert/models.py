@@ -31,6 +31,7 @@ class GertCoordinate(object):
     def speed_ms(self):
         if self.distance_m:
             return self.distance_m / self.duration_s
+        return 0.
 
     def DEBUG_csv_row(self):
         values = [self.uuid, self.latitude, self.longitude, self.timestamp_UTC.isoformat(), self.duration_s,
