@@ -231,8 +231,8 @@ class Database(object):
             day_summaries[s.date] = {
                 'has_trips': s.has_trips,
                 'is_complete': s.is_complete,
-                'consecutive_inactive_days': s.consecutive_inactive_days,
-                'inactivity_streak': s.inactivity_streak,
+                # 'consecutive_inactive_days': s.consecutive_inactive_days,
+                # 'inactivity_streak': s.inactivity_streak,
                 'inactivity_distance': s.inactivity_distance,
                 'start_latitude': s.start_point.latitude if s.start_point else None,
                 'start_longitude': s.start_point.longitude if s.start_point else None,
@@ -247,17 +247,14 @@ class Database(object):
         '''
         return SubwayStationEntrance.select()
 
-    def save_trips(self, user, detected_trips, overwrite=True):
+    def save_trips(self, user, trips, overwrite=True):
         '''
         Saves detected trips from processing algorithms to cache database. This
         table will be recreated on each save by default.
 
-        :param user:           A database user response record associate with the saved
-                               trip records.
-        :param detected_trips: List of labelled coordinates from a trip processing
-                               algorithm.
+        :param user:  A database user response record associate with the saved trip records.
+        :param trips: List of Py:Class:`datakit.models.Trip` from a trip processing algorithm.
         '''
-
         def _trip_row_filter(trip_rows, model_fields):
             row = {}
             for trip in trip_rows:
@@ -281,7 +278,7 @@ class Database(object):
             self.delete_user_from_table(DetectedTripCoordinate, user)
 
         model_fields = set(DetectedTripCoordinate._meta.sorted_field_names)
-        self.bulk_insert(DetectedTripCoordinate, _trip_row_filter(detected_trips, model_fields))
+        self.bulk_insert(DetectedTripCoordinate, _trip_row_filter(trips, model_fields))
 
     def save_trip_day_summaries(self, user, trip_day_summaries, timezone, overwrite=True):
         '''
