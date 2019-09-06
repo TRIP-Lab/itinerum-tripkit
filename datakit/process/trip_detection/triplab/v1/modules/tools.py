@@ -9,7 +9,7 @@ import utm
 try:
     import cPickle as pickle
 except ImportError:
-    import pickle    
+    import pickle
 
 
 def timeit(func):
@@ -18,12 +18,9 @@ def timeit(func):
         result = func(*args, **kwargs)
         t1 = time.time()
 
-        print('{func}(args, kwargs): {time} sec'.format(
-            func=func.__name__,
-            # args=args,
-            # kw=kwargs,
-            time=t1-t0))
+        print(f"{func.__name__}(args, kwargs): {t1-t0} sec")
         return result
+
     return timed
 
 
@@ -54,7 +51,7 @@ def pythagoras(point1, point2):
     '''Calculate the distance in meters between two UTM points'''
     a = point2[0] - point1[0]
     b = point2[1] - point1[1]
-    d = math.sqrt(a**2 + b**2)
+    d = math.sqrt(a ** 2 + b ** 2)
     return d
 
 

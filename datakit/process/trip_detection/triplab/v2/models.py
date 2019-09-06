@@ -3,56 +3,70 @@
 # - Algorithm data structures
 # Uses slots to achieve best performance (comparable to dictionary)
 # and provide immutability against add or removing attributes
+from datetime import datetime
 import math
 
-MODES = ['walking', 'subway']
+MODES = ["walking", "subway"]
 
 
 class GPSPoint:
-    __slots__ = ['database_id', 'latitude', 'longitude', 'northing', 'easting',
-                 'speed', 'h_accuracy', 'timestamp_UTC', 'period_before_seconds',
-                 'distance_before_meters']
+    __slots__ = [
+        "database_id",
+        "latitude",
+        "longitude",
+        "northing",
+        "easting",
+        "speed",
+        "h_accuracy",
+        "timestamp_UTC",
+        "period_before_seconds",
+        "distance_before_meters",
+    ]
 
     def __init__(self, *args, **kwargs):
         # input attributes
-        self.database_id = kwargs['database_id']
-        self.latitude = kwargs['latitude']
-        self.longitude = kwargs['longitude']
-        self.northing = kwargs['northing']
-        self.easting = kwargs['easting']
-        self.speed = kwargs['speed']
-        self.h_accuracy = kwargs['h_accuracy']
-        self.timestamp_UTC = kwargs['timestamp_UTC']
+        self.database_id = kwargs["database_id"]
+        self.latitude = kwargs["latitude"]
+        self.longitude = kwargs["longitude"]
+        self.northing = kwargs["northing"]
+        self.easting = kwargs["easting"]
+        self.speed = kwargs["speed"]
+        self.h_accuracy = kwargs["h_accuracy"]
+        self.timestamp_UTC = kwargs["timestamp_UTC"]
 
         # trip attributes
-        self.period_before_seconds = kwargs.get('period_before_seconds')
-        self.distance_before_meters = kwargs.get('distance_before_meters')
+        self.period_before_seconds = kwargs.get("period_before_seconds")
+        self.distance_before_meters = kwargs.get("distance_before_meters")
 
+    # Calculates the speed at the current point using the duration and distance
+    # from the previous point
     @property
     def implied_speed(self):
         if self.distance_before_meters is not None and self.period_before_seconds:
             return self.distance_before_meters / self.period_before_seconds
-    
+
+    @property
+    def timestamp_epoch(self):
+        return int((self.timestamp_UTC - datetime(1970, 1, 1)).total_seconds())
 
 
 class SubwayEntrance:
-    __slots__ = ['latitude', 'longitude', 'northing', 'easting']
+    __slots__ = ["latitude", "longitude", "northing", "easting"]
 
     def __init__(self, *args, **kwargs):
-        self.latitude = kwargs['latitude']
-        self.longitude = kwargs['longitude']
-        self.northing = kwargs['northing']
-        self.easting = kwargs['easting']        
+        self.latitude = kwargs["latitude"]
+        self.longitude = kwargs["longitude"]
+        self.northing = kwargs["northing"]
+        self.easting = kwargs["easting"]
 
 
 class TripSegment:
-    __slots__ = ['group', 'points', 'period_before_seconds', 'link_to',
-                 'link_type', 'is_cold_start']
+    __slots__ = ["group", "points", "period_before_seconds", "link_to", "link_type", "is_cold_start"]
 
     def __init__(self, *args, **kwargs):
-        self.group = kwargs['group']
-        self.points = kwargs['points']
-        self.period_before_seconds = kwargs['period_before_seconds']
+        self.group = kwargs["group"]
+        self.points = kwargs["points"]
+        self.period_before_seconds = kwargs["period_before_seconds"]
         self.link_to = None
         self.link_type = None
         self.is_cold_start = False
@@ -67,12 +81,15 @@ class TripSegment:
         if self.points:
             return self.points[-1]
 
+    def prepend(self, point):
+        self.points.insert(0, point)
+
 
 class Trip:
-    __slots__ = ['segments', 'labels', 'code']
+    __slots__ = ["segments", "labels", "code"]
 
     def __init__(self, *args, **kwargs):
-        self.segments = kwargs['segments']
+        self.segments = kwargs["segments"]
         self.labels = set()
         self.code = -1
 
@@ -128,11 +145,11 @@ class Trip:
         point2 = self.last_segment.end
         a = point2.easting - point1.easting
         b = point2.northing - point1.northing
-        return math.sqrt(a**2 + b**2)
+        return math.sqrt(a ** 2 + b ** 2)
 
     def cumulative_distance(self):
         seen = False  # skip first point's leading distance
-        distance = 0.
+        distance = 0.0
         for segment in self.segments:
             for point in segment.points:
                 if not seen:
@@ -146,15 +163,14 @@ class Trip:
 
 
 class MissingTrip:
-    __slots__ = ['category', 'last_trip_end', 'next_trip_start',
-                 'distance', 'duration', 'code']
+    __slots__ = ["category", "last_trip_end", "next_trip_start", "distance", "duration", "code"]
 
     def __init__(self, *args, **kwargs):
-        self.category = kwargs['category']
-        self.last_trip_end = kwargs['last_trip_end']
-        self.next_trip_start = kwargs['next_trip_start']
-        self.distance = kwargs['distance']
-        self.duration = kwargs['duration']
+        self.category = kwargs["category"]
+        self.last_trip_end = kwargs["last_trip_end"]
+        self.next_trip_start = kwargs["next_trip_start"]
+        self.distance = kwargs["distance"]
+        self.duration = kwargs["duration"]
         self.code = -1
 
     @property
@@ -164,7 +180,7 @@ class MissingTrip:
     @property
     def end(self):
         return self.next_trip_start
-    
+
     @property
     def avg_speed(self):
         return self.distance / self.duration

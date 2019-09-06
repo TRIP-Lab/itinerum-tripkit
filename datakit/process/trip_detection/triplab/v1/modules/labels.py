@@ -5,7 +5,7 @@
 
 def metro(segments, keys):
     key1, key2 = keys
-    segment1 = segments[key1] 
+    segment1 = segments[key1]
     segment2 = segments[key2]
     segment1[-1]['merge_codes'].append('metro')
     segment2[0]['merge_codes'].append('metro')

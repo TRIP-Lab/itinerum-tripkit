@@ -29,7 +29,6 @@ with open(csv1_fp, 'r', encoding='utf-8-sig') as csv1_f:
         csv1_lookup.setdefault(uuid, {})[start] = end
 
 
-
 csv2_diff_rows = []
 csv2_headers = None
 with open(csv2_fp, 'r') as csv2_f:

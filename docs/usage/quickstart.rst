@@ -2,18 +2,16 @@
 
 Quick Start
 ===========
-The most common workflow is downloading data from the Itinerum web
-platform and running the data through a sequence of scripts to clean
-and process the GPS data. Itinerum-datakit makes this easy by
-loading the `.csv` text data into a type-checked SQLite database. This
-could be easily changed to support other SQL variants such as PostgreSQL,
-SQLite is the default library for portability.
+The most common workflow is downloading data from the Itinerum web platform and running the data through various operations to clean
+and infer usable trip information from GPS data. *Itinerum-datakit* makes this simple by loading the .csv text data into a type-checked 
+SQLite database and then constructing generalized library objects (such as :py:class:`datakit.models.User` and :py:class:`datakit.models.Trip`)
+to represent this data between processing modules. This could be changed to support other SQL variants such as PostgreSQL, but SQLite is 
+chosen as the default library for portability.
 
 
 Load Data
 ---------
-When the configuration has been created (see :ref:`ConfigAnchor`), `.csv` data be loaded to
-the itinerum-datakit cache database as easily as:
+When the configuration has been created (see :ref:`ConfigAnchor`), input .csv data be loaded to the itinerum-datakit cache database as follows:
 
 .. code-block:: python
 
@@ -23,20 +21,23 @@ the itinerum-datakit cache database as easily as:
     itinerum = Itinerum(config=datakit_config)
     itinerum.setup()
 
-Once the data has been loaded to the cache, each surveyed user's data
-is available as a list of :py:class:`User` objects:
+When the data has been loaded to the cache database, each surveyed user's data is available as a list of :py:class:`datakit.models.User` objects:
 
 .. code-block:: python
 
     users = itinerum.load_users()
-    len(users[0].coordinates)
+    for user in users:
+        print(len(user.coordinates))
+
+
+*Note: On first run, .csv data will be imported if the table* :py:class:`user_survey_responses` *does not exist in the cache database.
+It is safe to delete the accompanying .sqlite file to reset the library's cache.*
 
 
 Run Trip Detection on a User
 ----------------------------
-Instead of running trip detection on the whole survey, it is possible to
-focus on a single user in detail. For writing new processing libraries, this
-is often essential.
+Instead of running trip detection on the whole survey, it is possible to focus on a single user in detail.
+For writing new processing libraries, this is often an essential first step.
 
 .. code-block:: python
 
@@ -51,3 +52,16 @@ is often essential.
     trips, summaries = itinerum.process.trip_detection.triplab.algorithm.run(user.coordinates.dicts(),
                                                                              parameters=params)
 
+
+Run Complete Days Summaries on a User
+-------------------------------------
+When trips have been detected for a user, the complete days summary process can be run on individual users.
+This will check to see if a day is "complete" (contains no missing trips), "incomplete", or "inactive". There
+are some additional rules to consider days as complete if there is an inactive day between two complete days and
+it is recommended to review the process source code.
+
+.. code-block:: python
+
+    user = itinerum.load_users(uuid='00000000-0000-0000-0000-000000000000')[0]
+    trip_day_summaries = itinerum.process.complete_days.triplab.counter.run(user.trips, datakit_config.TIMEZONE)
+    itinerum.database.save_trip_day_summaries(user, trip_day_summaries, datakit_config.TIMEZONE)

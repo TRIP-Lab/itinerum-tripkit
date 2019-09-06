@@ -4,8 +4,9 @@
 # run from parent directory
 import os
 import sys
-sys.path[0] = sys.path[0].replace('/extra', '')
-os.chdir(sys.path[0])
+
+sys.path[0] = os.path.abspath(os.path.pardir)
+os.chdir(os.path.pardir)
 
 # begin
 from datakit import Itinerum
@@ -13,7 +14,7 @@ from datakit import Itinerum
 import datakit_config
 
 
-## Edit ./datakit_config.py first!
+# Edit ./datakit_config.py first!
 itinerum = Itinerum(config=datakit_config)
 
 
@@ -24,20 +25,23 @@ itinerum.setup(force=False)
 users = itinerum.load_users()
 
 parameters = {
-    'subway_stations': itinerum.database.load_subway_entrances(),
+    'subway_entrances': itinerum.database.load_subway_entrances(),
     'break_interval_seconds': datakit_config.TRIP_DETECTION_BREAK_INTERVAL_SECONDS,
     'subway_buffer_meters': datakit_config.TRIP_DETECTION_SUBWAY_BUFFER_METERS,
     'cold_start_distance': datakit_config.TRIP_DETECTION_COLD_START_DISTANCE_METERS,
-    'accuracy_cutoff_meters': datakit_config.TRIP_DETECTION_ACCURACY_CUTOFF_METERS    
+    'accuracy_cutoff_meters': datakit_config.TRIP_DETECTION_ACCURACY_CUTOFF_METERS,
 }
 
 all_summaries = []
 for idx, user in enumerate(users, start=1):
     print('Processing user ({}) trips: {}/{}...'.format(user.uuid, idx, len(users)))
-    user.trips, summaries = itinerum.process.trip_detection.triplab.v1.algorithm.run(user.coordinates.dicts(),
-                                                                                     parameters=parameters)
+    parameters['subway_stations'] = parameters['subway_entrances']
+    user.trips, summaries = itinerum.process.trip_detection.triplab.v1.algorithm.run(
+        user.coordinates.dicts(), parameters=parameters
+    )
     if summaries:
         all_summaries.extend(list(summaries.values()))
+    trips = itinerum.process.trip_detection.triplab.v2.algorithm.run(user.coordinates, parameters=parameters)
 
 
 # -- Stage 3: save output in database as cache

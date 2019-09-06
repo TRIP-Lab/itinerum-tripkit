@@ -16,7 +16,7 @@ def filter_accuracy(points, cutoff=30):
             yield p
 
 
-def filter_errorneous_distance(points, check_speed=60):
+def filter_erroneous_distance(points, check_speed=60):
     '''Filter out points with unreasonably fast speeds where next point is closer
        than erroneous point'''
     points, points_copy = itertools.tee(points)
@@ -27,28 +27,30 @@ def filter_errorneous_distance(points, check_speed=60):
         try:
             next_p = next(points_copy)
         except StopIteration:
+            yield p
             return
 
         # do not test first point but save for testing next point
         if not last_p:
             last_p = p
             yield p
+            continue
 
         # find the distance and time passed since last point collected
-        distance_from_last_point = tools.pythagoras((last_p['easting'], last_p['northing']),
-                                                    (p['easting'], p['northing']))
+        distance_from_last_point = tools.pythagoras(
+            (last_p['easting'], last_p['northing']), (p['easting'], p['northing'])
+        )
         seconds_since_last_point = (p['timestamp_UTC'] - last_p['timestamp_UTC']).total_seconds()
 
         # toss the point if the speed is greater than `check_speed` and the distance between
         # the previous and next point is less than the distance from the last point to this one
         if distance_from_last_point and seconds_since_last_point:
             kph_since_last_point = (distance_from_last_point / seconds_since_last_point) * 3.6
-            distance_between_adjacent_points = tools.pythagoras((last_p['easting'], last_p['northing']),
-                                                                (next_p['easting'], next_p['northing']))
-            if ((kph_since_last_point >= check_speed) and 
-                (distance_between_adjacent_points < distance_from_last_point)):
+            distance_between_adjacent_points = tools.pythagoras(
+                (last_p['easting'], last_p['northing']), (next_p['easting'], next_p['northing'])
+            )
+            if (kph_since_last_point >= check_speed) and (distance_between_adjacent_points < distance_from_last_point):
                 continue
-        
         last_p = p
         yield p
 
@@ -128,7 +130,7 @@ def find_metro_transfers(stations, segment_groups, buffer_m):
         if intersect1 and intersect2 and station1 != station2:
             # test that metro trip does not take longer than 80 minutes between stops
             # and that the user is travelling at least 0.1m/s on average
-            interval = ((segment2[0]['timestamp_UTC'] - segment1[-1]['timestamp_UTC']).total_seconds())
+            interval = (segment2[0]['timestamp_UTC'] - segment1[-1]['timestamp_UTC']).total_seconds()
             distance = tools.pythagoras(segment1_end_p, segment2_start_p)
             segment_speed = distance / interval
             if interval < 4800 and segment_speed > 0.1:
@@ -256,7 +258,7 @@ def infer_missing_trips(stations, linked_trips, cold_start_m=750):
             'distance': spatial_gap,
             'break_period': period,
             'note': '',
-            'merge_codes': []
+            'merge_codes': [],
         }
 
         if spatial_gap < 250:
@@ -336,10 +338,9 @@ def merge_trips(trips, missing_trips, stations):
                     'trip': idx + offset,
                     'timestamp_UTC': missing_trips[idx]['next_time'],
                     'note': note,
-                    'merge_codes': trip[0]['merge_codes']
+                    'merge_codes': trip[0]['merge_codes'],
                 }
                 rows.append(p)
-
                 offset += 1
 
         # label complete trips segments
@@ -369,7 +370,7 @@ def merge_trips(trips, missing_trips, stations):
 
 
 def distance_speed(trip_group):
-    trip_distance = 0.
+    trip_distance = 0.0
     last_point = None
 
     # test for the specific case of a single point being attached to a
@@ -393,7 +394,7 @@ def distance_speed(trip_group):
             if p['break_period'] > 0:
                 p['avg_speed'] = p['distance'] / p['break_period']
             else:
-                p['avg_speed'] = trip_group[idx-1]['avg_speed']
+                p['avg_speed'] = trip_group[idx - 1]['avg_speed']
         if p['note'] != 'missing trip - less than 250m':
             last_point = point
     return trip_group
@@ -445,8 +446,9 @@ def summarize(rows):
             for mcode in segment['merge_codes']:
                 merge_codes.add(mcode)
 
-        direct_distance = tools.pythagoras((start_pt['easting'], start_pt['northing']),
-                                           (end_pt['easting'], end_pt['northing']))
+        direct_distance = tools.pythagoras(
+            (start_pt['easting'], start_pt['northing']), (end_pt['easting'], end_pt['northing'])
+        )
 
         if end_pt['trip_distance'] > 250 and c == 103:
             c = 1
@@ -466,7 +468,7 @@ def summarize(rows):
             'end': end_pt['timestamp_UTC'],
             'direct_distance': direct_distance,
             'cumulative_distance': end_pt['trip_distance'],
-            'merge_codes': ', '.join(merge_codes)
+            'merge_codes': ', '.join(merge_codes),
         }
 
         summaries[num] = outrow
@@ -480,11 +482,11 @@ def summarize(rows):
 def run(points, parameters):
     stations = metro_stations_utm(parameters['subway_stations'])
     points = tools.process_utm(points)
-    if not points:
+    if not points or len(points) < 2:
         return None, None
 
     high_accuracy_points = filter_accuracy(points, cutoff=parameters['accuracy_cutoff_meters'])
-    cleaned_points = filter_errorneous_distance(high_accuracy_points, check_speed=60)
+    cleaned_points = filter_erroneous_distance(high_accuracy_points, check_speed=60)
     segment_groups = break_by_timegap(cleaned_points, timegap=parameters['break_interval_seconds'])
     metro_linked_trips = find_metro_transfers(stations, segment_groups, buffer_m=parameters['subway_buffer_meters'])
     velocity_connected_trips = connect_by_velocity(metro_linked_trips)
@@ -493,11 +495,11 @@ def run(points, parameters):
     rows = merge_trips(cleaned_trips, missing_trips, stations)
     trips, summaries = summarize(rows)
 
-    logger.info('-------------------------------')
-    logger.info('V1 - Num. segments: %d', len(segment_groups))
-    logger.info('V1 - Num. subway linked trips: %d', len(metro_linked_trips))
-    logger.info('V1 - Num. velocity linked trips: %d', len(velocity_connected_trips))
-    logger.info('V1 - Num. full-length trips: %d', len(cleaned_trips))
-    logger.info('V1 - Num. missing trips: %d', len(missing_trips))
-    logger.info('V1 - Num. csv rows: %d', len(rows))
+    logger.info("-------------------------------")
+    logger.info("V1 - Num. segments: %d", len(segment_groups))
+    logger.info("V1 - Num. trips (w/ subway links): %d", len(metro_linked_trips))
+    logger.info("V1 - Num. trips (w/ velocity links): %d", len(velocity_connected_trips))
+    logger.info("V1 - Num. full-length trips: %d", len(cleaned_trips))
+    logger.info("V1 - Num. missing trips: %d", len(missing_trips))
+    logger.info("V1 - Num. csv rows: %d", len(rows))
     return trips, summaries

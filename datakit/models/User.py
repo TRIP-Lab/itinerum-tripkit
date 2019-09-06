@@ -3,16 +3,16 @@
 
 
 class User(object):
-    """
+    '''
     :param db_user:     The ``peewee`` survey response for a given user.
-    :ivar list trips:   A user's detected trips. This is only loaded 
+    :ivar list trips:   A user's detected trips. This is only loaded
                         automatically on the ``User`` initialized
                         by :py:meth:`datakit.database.Database.load_user`,
                         this must be called again if trips are detected and
                         saved to the cache.
 
     :vartype trips:     list
-    """
+    '''
 
     def __init__(self, db_user):
         self.uuid = db_user.uuid
@@ -25,4 +25,4 @@ class User(object):
         self.trips = []
 
     def __repr__(self):
-        return '<User uuid={}>'.format(self.uuid)
+        return f"<User uuid={self.uuid}>"

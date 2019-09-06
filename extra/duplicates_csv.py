@@ -1,8 +1,9 @@
 #!/usr/bin/env
 # Kyle Fitzsimmons, 2018
-#
-# A script to clean duplicate rows from .csv data for loading to SQL tables
-# with a UNIQUE column constraint or index
+'''
+A script to clean duplicate rows from .csv data for loading to SQL tables
+with a UNIQUE column constraint or index
+'''
 import csv
 
 # config
@@ -28,4 +29,3 @@ with open(out_csv_fp, 'w') as out_csv_f:
     writer = csv.DictWriter(out_csv_f, fieldnames=headers)
     writer.writeheader()
     writer.writerows(out_rows)
-

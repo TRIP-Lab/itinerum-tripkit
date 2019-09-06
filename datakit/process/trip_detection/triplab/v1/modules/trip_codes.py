@@ -5,5 +5,5 @@ trip_codes = {
     'missing trip - metro': 102,
     'missing trip - less than 250m': 103,
     'single point': 201,
-    'distance too short': 202
+    'distance too short': 202,
 }

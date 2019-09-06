@@ -4,13 +4,23 @@ from datetime import datetime, timedelta
 from geopy import distance
 import pytz
 
+from datakit.models import DaySummary
+
+
+def trips_UTC_to_local(trips, tz):
+    localized_trips = []
+    for trip in trips:
+        trip.start_local = tz.localize(trip.start_UTC)
+        trip.end_local = tz.localize(trip.end_UTC)
+        localized_trips.append(trip)
+    return localized_trips
+
 
 def find_participation_daterange(trips, min_dt):
-    """
-    Determine the time bounds for selecting user trips
-    to remove any trips with inproper timestamps from
-    a user's incorrect system clock.
-    """
+    '''
+    Determine the time bounds for selecting user trips to remove any trips
+    with inproper timestamps from a user's incorrect system clock.
+    '''
     first_date, last_date = None, None
     for trip in trips:
         if trip.start_local > min_dt:
@@ -21,11 +31,10 @@ def find_participation_daterange(trips, min_dt):
 
 
 def group_trips_by_day(first_date, last_date, trips, tz):
-    """
-    Create a preliminary dict which summarizes just the
-    information we care about from trips on every day a
-    user has participated.
-    """
+    '''
+    Create a preliminary dict which summarizes just the information we care about
+    from trips on every day a user has participated.
+    '''
     daily_trip_summaries = {}
     delta = last_date - first_date
     min_dt = tz.localize(datetime.combine(first_date, datetime.min.time()))
@@ -50,30 +59,19 @@ def group_trips_by_day(first_date, last_date, trips, tz):
 
 
 def find_complete_days(daily_trip_summaries):
-    """
-    Create a dictionary to give trip information summarized
-    for a given day as to whether it contains any trips and
-    whether the day is complete (i.e., no missing trips)
-    """
+    '''
+    Create a dictionary to give trip information summarized for a given day as to
+    whether it contains any trips and whether the day is complete (i.e., no missing trips)
+    '''
     daily_summaries = {}
     for date, trip_summaries in daily_trip_summaries.items():
         if not trip_summaries['trip_codes']:
-            daily_summaries[date] = {
-                'has_trips': False,
-                'is_complete': False
-            }
+            daily_summaries[date] = {'has_trips': False, 'is_complete': False}
         # disallow any days with a `missing` labeled trip
         elif [c for c in trip_summaries['trip_codes'] if (c >= 100 and c < 200)]:
-            daily_summaries[date] = {
-                'has_trips': True,
-                'is_complete': False,
-            }
+            daily_summaries[date] = {'has_trips': True, 'is_complete': False}
         else:
-            daily_summaries[date] = {
-                'has_trips': True,
-                'is_complete': True
-            }
-
+            daily_summaries[date] = {'has_trips': True, 'is_complete': True}
 
         daily_summaries[date]['start_point'] = None
         daily_summaries[date]['end_point'] = None
@@ -84,11 +82,10 @@ def find_complete_days(daily_trip_summaries):
 
 
 def add_inactivity_periods(daily_summaries):
-    """
-    Iterate over the daily summaries once forwards and once backwards to 
-    supply inactivity information to adjacent days to the start and end
-    dates.
-    """
+    '''
+    Iterate over the daily summaries once forwards and once backwards to supply inactivity information
+    to adjacent days to the start and end dates.
+    '''
     summary_before = None
     inactive_days = 0
     first_inactive_day = None
@@ -134,10 +131,10 @@ def add_inactivity_periods(daily_summaries):
 
 
 def find_explained_inactivity_periods(daily_summaries, daily_trip_summaries):
-    """
-    Label completely inactive days (no trips) as complete days when
-    there are complete days adjacent (up to 2 day maximum).
-    """
+    '''
+    Label completely inactive days (no trips) as complete days when there are complete days adjacent
+    (up to 2 day maximum).
+    '''
     for date, summary in sorted(daily_summaries.items()):
         no_trip_data = not any([summary['has_trips'], summary['is_complete']])
         if no_trip_data:
@@ -162,30 +159,47 @@ def find_explained_inactivity_periods(daily_summaries, daily_trip_summaries):
                     next_start_coordinate = (next_start_point.latitude, next_start_point.longitude)
                     inactivity_distance = distance.distance(last_end_coordinate, next_start_coordinate).meters
 
-                    if inactivity_distance < 750.:
+                    if inactivity_distance < 750.0:
                         summary['is_complete'] = True
                         summary['inactivity_distance'] = inactivity_distance
     return daily_summaries
 
 
-def trips_UTC_to_local(trips, tz):
-    localized_trips = []
-    for trip in trips:
-        trip.start_local = tz.localize(trip.start_UTC)
-        trip.end_local = tz.localize(trip.end_UTC)
-        localized_trips.append(trip)
-    return localized_trips
+def wrap_for_datakit(timezone, complete_days):
+    datakit_complete_days = []
+    inactive_streak = 0
+    for date, day_summary in complete_days.items():
+        start_point_id = day_summary['start_point'].database_id if day_summary['start_point'] else None
+        end_point_id = day_summary['end_point'].database_id if day_summary['end_point'] else None
+        inactivity_distance = day_summary.get('inactivity_distance')
+        dk_summary = DaySummary(
+            timezone=timezone,
+            date=date,
+            has_trips=day_summary['has_trips'],
+            is_complete=day_summary['is_complete'],
+            start_point_id=start_point_id,
+            end_point_id=end_point_id,
+            inactivity_distance=inactivity_distance,
+        )
+        datakit_complete_days.append(dk_summary)
+    return datakit_complete_days
+
 
 # run above functions in sequence
-def run(trips, tz):
+def run(trips, timezone):
+    if not trips:
+        return None
+    tz = pytz.timezone(timezone)
+
     min_dt = tz.localize(datetime(1999, 6, 1))
     localized_trips = trips_UTC_to_local(trips, tz)
 
     first_date, last_date = find_participation_daterange(trips, min_dt)
     daily_trip_summaries = group_trips_by_day(first_date, last_date, trips, tz)
-    
+
     daily_summaries = find_complete_days(daily_trip_summaries)
     daily_summaries = add_inactivity_periods(daily_summaries)
-    
+
     complete_days = find_explained_inactivity_periods(daily_summaries, daily_trip_summaries)
-    return complete_days
+    datakit_complete_days = wrap_for_datakit(timezone, complete_days)
+    return datakit_complete_days
