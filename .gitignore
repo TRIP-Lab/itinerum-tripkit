@@ -13,3 +13,6 @@ datakit/process/trip_detection/triplab/legacy
 
 !input/.gitkeep
 !output/.gitkeep
+datakit-venv/
+*.pyc
+.vscode/settings.json
