@@ -127,6 +127,9 @@ def add_inactivity_periods(daily_summaries):
             summary['after_is_complete'] = False
         summary_after = summary
 
+    inactivity_streak = latest_streak_max if latest_streak_max else 0
+    for date, summary in daily_summaries.items():
+        summary['inactivity_streak'] = inactivity_streak
     return daily_summaries
 
 
@@ -167,19 +170,19 @@ def find_explained_inactivity_periods(daily_summaries, daily_trip_summaries):
 
 def wrap_for_datakit(timezone, complete_days):
     datakit_complete_days = []
-    inactive_streak = 0
+    inactivity_streak = 0
     for date, day_summary in complete_days.items():
-        start_point_id = day_summary['start_point'].database_id if day_summary['start_point'] else None
-        end_point_id = day_summary['end_point'].database_id if day_summary['end_point'] else None
         inactivity_distance = day_summary.get('inactivity_distance')
         dk_summary = DaySummary(
             timezone=timezone,
             date=date,
             has_trips=day_summary['has_trips'],
             is_complete=day_summary['is_complete'],
-            start_point_id=start_point_id,
-            end_point_id=end_point_id,
+            start_point=day_summary['start_point'],
+            end_point=day_summary['end_point'],
+            consecutive_inactive_days=day_summary['consecutive_inactive_days'],
             inactivity_distance=inactivity_distance,
+            inactivity_streak=day_summary['inactivity_streak']
         )
         datakit_complete_days.append(dk_summary)
     return datakit_complete_days

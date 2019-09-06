@@ -12,20 +12,26 @@ class DaySummary(object):
     :param bool has_trips:                Boolean value to indicate whether a date contains any trips.
     :param bool is_complete:              Boolean value to indicate whether a date with trips is considered
                                           complete or not.
-    :param int start_point_id:            The database ID for the first available GPS coordinate on a localized date.
-    :param int end_point_id:              The database ID for the last available GPS coordinate on a localized date.
+    :param object start_point_id:            The database point for the first available GPS coordinate on a localized date.
+    :param object end_point_id:              The database point for the last available GPS coordinate on a localized date.
     :param float inactivity_distance:     The total distance (m) traveled the two nearest (before and after) complete
                                           activity days.
+    :param int consecutive_inactive_days: The total number of days in the latest inactivity streak (reset on any
+                                          complete day).
+    :param int inactivity_streak:         The longest streak of consecutively inactive days for a user.
     '''
 
-    def __init__(self, timezone, date, has_trips, is_complete, start_point_id, end_point_id, inactivity_distance):
+    def __init__(self, timezone, date, has_trips, is_complete, start_point, end_point,
+                 inactivity_distance, consecutive_inactive_days, inactivity_streak):
         self.timezone = timezone
         self.date = date
         self.has_trips = has_trips
         self.is_complete = is_complete
-        self.start_point_id = start_point_id
-        self.end_point_id = end_point_id
+        self.start_point = start_point
+        self.end_point = end_point
         self.inactivity_distance = inactivity_distance
+        self.consecutive_inactive_days = consecutive_inactive_days
+        self.inactivity_streak = inactivity_streak
 
     def __repr__(self):
         return f"<DaySummary date={self.date.isoformat()} has_trips={self.has_trips} is_complete={self.is_complete}>"

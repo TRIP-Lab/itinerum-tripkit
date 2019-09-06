@@ -14,6 +14,10 @@ from . import utils
 from .database import Coordinate, PromptResponse, CancelledPromptResponse
 
 
+# determine how newlines should be written depend on OS
+NEWLINE_MODE = '' if utils.os_is_windows() else None
+
+
 # geojson object templates--to be deepcopied
 geojson_collection_template = {'type': 'FeatureCollection', 'features': []}
 geojson_linestring_template = {
@@ -330,8 +334,8 @@ def write_trips_csv(cfg, fn_base, trips, extra_fields=None):
     ]
     if extra_fields:
         headers.extend(extra_fields)
-    with open(csv_fp, 'w') as csv_f:
-        writer = csv.DictWriter(csv_f, fieldnames=headers)
+    with open(csv_fp, 'w', newline=NEWLINE_MODE) as csv_f:
+        writer = csv.DictWriter(csv_f, dialect='excel', fieldnames=headers)
         writer.writeheader()
         idx = 1
         for t in trips:
@@ -369,7 +373,7 @@ def write_trip_summaries_csv(cfg, filename, summaries, extra_fields=None):
                           key in `summaries` object)
     '''
     csv_fp = os.path.join(cfg.OUTPUT_DATA_DIR, filename)
-    with open(csv_fp, 'w') as csv_f:
+    with open(csv_fp, 'w', newline=NEWLINE_MODE) as csv_f:
         headers = [
             'uuid',
             'trip_id',
@@ -386,7 +390,7 @@ def write_trip_summaries_csv(cfg, filename, summaries, extra_fields=None):
         ]
         if extra_fields:
             headers.extend(extra_fields)
-        writer = csv.DictWriter(csv_f, fieldnames=headers)
+        writer = csv.DictWriter(csv_f, dialect='excel', fieldnames=headers)
         writer.writeheader()
         writer.writerows(summaries)
 
@@ -395,29 +399,37 @@ def write_complete_days_csv(cfg, filename, trip_day_summaries):
     csv_fp = os.path.join(cfg.OUTPUT_DATA_DIR, filename)
 
     csv_rows = []
-    for uuid, daily_summaries in sorted(trip_day_summaries.items()):
-        for date, summary in sorted(daily_summaries.items()):
-            summary['uuid'] = uuid
-            summary['date_UTC'] = date
-            summary['has_trips'] = int(summary['has_trips'])
-            summary['is_complete'] = int(summary['is_complete'])
-            csv_rows.append(summary)
-
+    for uuid, daily_summaries in trip_day_summaries.items():
+        for s in daily_summaries:
+            record = {
+                'uuid': uuid,
+                'date_UTC': s.date,
+                'has_trips': 1 if s.has_trips else 0,
+                'is_complete': 1 if s.is_complete else 0,
+                'inactivity_distance': s.inactivity_distance,
+                'start_latitude': s.start_point.latitude,
+                'start_longitude': s.start_point.longitude,
+                'end_latitude': s.end_point.latitude,
+                'end_longitude': s.end_point.longitude,
+                'consecutive_inactive_days': s.consecutive_inactive_days,
+                'inactivity_streak': s.inactivity_streak
+            }
+            csv_rows.append(record)
     headers = [
         'uuid',
         'date_UTC',
         'has_trips',
         'is_complete',
-        'consecutive_inactive_days',
-        'inactivity_streak',
         'inactivity_distance',
         'start_latitude',
         'start_longitude',
         'end_latitude',
         'end_longitude',
+        'consecutive_inactive_days',
+        'inactivity_streak'
     ]
-    with open(csv_fp, 'w') as csv_f:
-        writer = csv.DictWriter(csv_f, fieldnames=headers)
+    with open(csv_fp, 'w', newline=NEWLINE_MODE) as csv_f:
+        writer = csv.DictWriter(csv_f, dialect='excel', fieldnames=headers)
         writer.writeheader()
         writer.writerows(csv_rows)
 
@@ -430,11 +442,9 @@ def write_user_summaries_csv(cfg, summaries):
     :param cfg:       Global configuration object
     :param summaries: Iterable of user summaries for row records
     '''
-    headers1 = (
-        ['Survey timezone:', cfg.TIMEZONE]
-        + [None] * 7
-        + ['Semantic locations (duration, seconds)', None, None, 'Commute times (duration, seconds)']
-    )
+    headers1 = ['Survey timezone:', cfg.TIMEZONE] + \
+               [None] * 7 + \
+               ['Semantic locations (duration, seconds)', None, None, 'Commute times (duration, seconds)']
     headers2 = [
         'uuid',
         'start_timestamp_local',
@@ -457,10 +467,10 @@ def write_user_summaries_csv(cfg, summaries):
     ]
     survey_name = cfg.DATABASE_FN.split('.')[0]
     csv_fp = os.path.join(cfg.OUTPUT_DATA_DIR, f'{survey_name}-user_summaries.csv')
-    with open(csv_fp, 'w') as csv_f:
-        writer = csv.writer(csv_f)
+    with open(csv_fp, 'w', newline=NEWLINE_MODE) as csv_f:
+        writer = csv.writer(csv_f, dialect='excel')
         writer.writerow(headers1)
-    with open(csv_fp, 'a') as csv_f:
-        writer = csv.DictWriter(csv_f, fieldnames=headers2)
+    with open(csv_fp, 'a', newline=NEWLINE_MODE) as csv_f:
+        writer = csv.DictWriter(csv_f, dialect='excel', fieldnames=headers2)
         writer.writeheader()
         writer.writerows(summaries)

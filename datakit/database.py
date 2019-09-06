@@ -17,6 +17,7 @@ from peewee import (
 )
 import uuid
 
+from .models.DaySummary import DaySummary
 from .models.Trip import Trip
 from .models.TripPoint import TripPoint
 from .models.User import User
@@ -226,19 +227,33 @@ class Database(object):
         :param user: A database user response record with a populated
                      `detected_trip_day_summaries` relation.
         '''
-        day_summaries = {}
+        last_day_inactive = False
+        consecutive_inactive_days = 0
+        inactivity_streak = 0
+
+        # TODO: this should be returning a library model instead of a dictionary
+        day_summaries = []
         for s in user.detected_trip_day_summaries:
-            day_summaries[s.date] = {
-                'has_trips': s.has_trips,
-                'is_complete': s.is_complete,
-                # 'consecutive_inactive_days': s.consecutive_inactive_days,
-                # 'inactivity_streak': s.inactivity_streak,
-                'inactivity_distance': s.inactivity_distance,
-                'start_latitude': s.start_point.latitude if s.start_point else None,
-                'start_longitude': s.start_point.longitude if s.start_point else None,
-                'end_latitude': s.end_point.latitude if s.start_point else None,
-                'end_longitude': s.end_point.longitude if s.start_point else None,
-            }
+            # append library attributes that are calcuated on-the-fly rather
+            # than being stored in the database
+            if last_day_inactive and not s.has_trips:
+                consecutive_inactive_days += 1
+                inactivity_streak = max(inactivity_streak, consecutive_inactive_days)
+            elif s.has_trips:
+                last_day_inactive = False
+                consecutive_inactive_days = 0
+            elif not s.has_trips:
+                last_day_inactive = True
+
+            day_summaries.append(DaySummary(timezone=s.timezone,
+                                            date=s.date,
+                                            has_trips=s.has_trips,
+                                            is_complete=s.is_complete,
+                                            start_point=s.start_point,
+                                            end_point=s.end_point,
+                                            consecutive_inactive_days=consecutive_inactive_days,
+                                            inactivity_distance=s.inactivity_distance,
+                                            inactivity_streak=inactivity_streak))
         return day_summaries
 
     def load_subway_entrances(self):
@@ -293,6 +308,8 @@ class Database(object):
                 dict_row = row.__dict__
                 dict_row['user_id'] = user.uuid
                 dict_row['timezone'] = timezone
+                dict_row['start_point_id'] = row.start_point.database_id
+                dict_row['end_point_id'] = row.end_point.database_id
                 yield dict_row
 
         if not trip_day_summaries:

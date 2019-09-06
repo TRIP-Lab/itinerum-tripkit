@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # Kyle Fitzsimmons, 2018
 from datetime import date, datetime
+import platform
 import uuid
 
 
@@ -15,6 +16,10 @@ def json_serialize(obj):
         return str(obj)
 
     raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
+
+
+def os_is_windows():
+    return platform.system() == 'Windows'
 
 
 class UserNotFoundError(Exception):
