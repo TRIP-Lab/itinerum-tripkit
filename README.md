@@ -4,9 +4,9 @@
 
 Documentation for library usage: https://itinerum-datakit.readthedocs.io/
 
-This library serves as a bootstrapping framework to process data from the Itinerum platform in a standardized format. It can be used both through Jupyter for exploring data interactively and imported as a module in standalone applications.
+This library serves as a bootstrapping framework to process data from the Itinerum platform and hardward GPS loggers in a standardized format. It can be used both through Jupyter for exploring data interactively and imported as a module in standalone applications.
 
-This repository should mirror the deployed version(s) of the Itinerum platform algorithms within the TRIPLab directories.
+This repository also acts as the development grounds for the version(s) of the Itinerum platform algorithms within the Github TRIPLab repositories. 
 
 ## Setup
 
@@ -23,10 +23,12 @@ Then either:
 
  - Copy the `datakit` directory into other projects as a library (until more complete packaging is available)
 
+For more complete installation information (e.g., on Windows), see the official [itinerum-datakit documentation] (https://itinerum-datakit.readthedocs.io/en/stable/usage/installation.html).
+
 
 ### Loading Subway Stations
 
-Subway station data for trip detection can be loaded similarly. Place a *.csv* file of station entrances with the columns of `x` (or `longitude`) and `y` (or `latitude`). Locations are expected as geographic coordinates only. Edit the `SUBWAY_STATIONS_FP` config parameter to reflect the subway stations *.csv* filepath.
+Subway station data for trip detection can be loaded similarly for all processing modules. Place a *.csv* file of station entrances with the columns of `x` (or `longitude`) and `y` (or `latitude`). Locations are expected as geographic coordinates only. Edit the `SUBWAY_STATIONS_FP` config parameter to reflect the subway stations *.csv* filepath.
 
 #### Example
 
@@ -94,12 +96,6 @@ Trips will be output with the following trip codes to indicate the type of trip:
 | 201       | Single point                        |
 | 202       | Distance too short - less than 250m |
 
-##### Thoughts
-
-The `coordinates`  values should be provided as list of dictionaries instead of database models to provide better compatibility of the detection algorithms across applications. Since a variety of databases and ORMs could be used, it seems simpler to require input data is formatted as dict() than something like a NamedTuple to make the algorithm compatible across SQLAlchemy or Peewee.~~
-
-All supplied values should be provided in their own light-weight class for better object safety, clarity about each object's purpose and ownership, and providing some special helper methods such as trip properties (as seen with https://github.com/SAUSy-Lab/itinerum-trip-breaker). This does have the potential to be much slower than using dictionaries in simple profiling (although using the `__slots__` property may help to improve memory usage), so this may need to be amended in the future. NamedTuple seemed appropriate, however, it seems like performance in Python3 is significantly worse than in older versions and may not be optimized for dot-attributes over indexed lookups (double-check this). Using the class-based approach now, however, may allow for drop-in compatibility with either database ORM. 
-
 #### Map Matching
 
 The instructions that follow use the Multi-Level Djikstra processing pipelines recommended [here](https://github.com/Project-OSRM/osrm-backend/wiki/Running-OSRM) by Project OSRM.
@@ -149,5 +145,4 @@ The instructions that follow use the Multi-Level Djikstra processing pipelines r
    ```
 
 ## Outputs
-
 The aim of this library is to provide easy visualization of Itinerum data to assist in writing trip processing algorthms. Therefore at a minimum, the library provides exporting processed coordinates and traces as .geojson files (TBA: GeoPackage format). With a PostgreSQL backend for caching, PostGIS can be enabled (unimplemented) and a `geom` column generated for directly connection QGIS to the output data. The library should also easily provide methods for easily plotting GPS within Jupyter notebooks.
