@@ -1,4 +1,8 @@
-.. _OutputCompleteDaysPage:
+.. _OutputsPage:
+
+=======
+Outputs
+=======
 
 
 Complete Days
@@ -12,8 +16,8 @@ Special cases:
 
 Notes:
 
-* The output results are grouped by `uuid` and ordered by `date`.
-* Boolean values are represented as 1 (True) or 0 (False).
+* The output results are grouped by ``uuid`` and ordered by ``date``.
+* Boolean values are represented as ``1`` (True) or ``0`` (False).
 
 
 .. tabularcolumns:: |p{6.5cm}|p{8.5cm}|

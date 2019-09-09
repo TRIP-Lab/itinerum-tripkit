@@ -17,7 +17,6 @@ with the library's core methods directly.
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
-   :glob:
 
    usage/installation
    usage/quickstart
@@ -26,7 +25,7 @@ with the library's core methods directly.
    usage/objects
    usage/faq
    contributing/style_guide
-   outputs/*
+   outputs/complete_days
 
 
 Indices and tables
