@@ -28,3 +28,11 @@ after having been processed by a trip detection algorithm.
 
 ..  autoclass:: datakit.models.TripPoint
 	:members:
+
+Day Summary
+-----------
+The :py:class:`DaySummary` object provides the representation of complete trip days after
+processing a user's trips by a complete days detection algorithm.
+
+..  autoclass:: datakit.models.DaySummary
+	:members:

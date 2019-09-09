@@ -4,7 +4,6 @@
 
 class DaySummary(object):
     '''
-    ::
     :param str timezone:                  String representation of the timezone as listed in the IANA tz
                                           database (e.g., America/Montreal).
                                           See: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
