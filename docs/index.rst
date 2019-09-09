@@ -24,8 +24,8 @@ with the library's core methods directly.
    usage/api
    usage/objects
    usage/faq
-   contributing/style_guide
    outputs/complete_days
+   contributing/style_guide
 
 
 Indices and tables

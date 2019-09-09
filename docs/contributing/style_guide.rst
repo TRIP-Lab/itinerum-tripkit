@@ -1,8 +1,12 @@
-.. _StyleGuidePage:
+.. _ContributingPage:
 
-Contributing to the itinerum-datakit
-====================================
+============
+Contributing
+============
 
+
+Style Guide
+===========
 
 Notes
 -----
@@ -10,9 +14,6 @@ Itinerum-datakit is a modular library that is built to be extended. The most com
 (`itinerum-datakit/datakit/process`) for modifying or building new GPS detection algorithms. The process filepath format is:
 `datakit/process/<descriptive-name>/<organization>/library_files.py`. Try to group additions as best as possible within existing directories if
 a one exists, but otherwise it is encouraged to be descriptive. If a suitable name doesn't exist, it's better to create a new directory altogether.
-
-
-Did you know?
 
 
 Pull Commits
