@@ -23,8 +23,8 @@ with the library's core methods directly.
    usage/config
    usage/api
    usage/objects
-   usage/faq
    outputs/complete_days
+   usage/faq
    contributing/style_guide
 
 
