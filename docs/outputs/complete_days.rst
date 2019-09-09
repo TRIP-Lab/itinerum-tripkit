@@ -26,13 +26,13 @@ Notes:
 ``uuid``                        The unique user ID in the survey.
 ``date``                        The date (localized by timezone) for complete day record.
 ``has_trips``                   Boolean to indicate whether date contains any trips.
-``is_complete``					Boolean to indicate if date contains trips and no missing
-								trips.
-``start_latitude``				The latitude of the date's first trip.
-``start_longitude``				The longitude of the date's first trip.
-``end_latitude``				The latitude of the date's last trip.
-``end_longitude``				The longitude of the date's last trip.
-``consecutive_inactive_days``	The current tally of inactive days in a row (reset each
-								complete day).
-``inactivity_streak``			The maximum tally of incomplete days in a row for a user.
+``is_complete``                 Boolean to indicate if date contains trips and no missing
+                                trips.
+``start_latitude``              The latitude of the date's first trip.
+``start_longitude``             The longitude of the date's first trip.
+``end_latitude``                The latitude of the date's last trip.
+``end_longitude``               The longitude of the date's last trip.
+``consecutive_inactive_days``   The current tally of inactive days in a row (reset each
+                                complete day).
+``inactivity_streak``           The maximum tally of incomplete days in a row for a user.
 =============================== =========================================================
