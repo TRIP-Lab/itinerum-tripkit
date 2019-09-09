@@ -401,16 +401,20 @@ def write_complete_days_csv(cfg, filename, trip_day_summaries):
     csv_rows = []
     for uuid, daily_summaries in trip_day_summaries.items():
         for s in daily_summaries:
+            start_lat = s.start_point.latitude if s.start_point else None
+            start_lon = s.start_point.longitude if s.start_point else None
+            end_lat = s.start_point.latitude if s.end_point else None
+            end_lon = s.start_point.longitude if s.end_point else None
             record = {
                 'uuid': uuid,
                 'date_UTC': s.date,
                 'has_trips': 1 if s.has_trips else 0,
                 'is_complete': 1 if s.is_complete else 0,
                 'inactivity_distance': s.inactivity_distance,
-                'start_latitude': s.start_point.latitude,
-                'start_longitude': s.start_point.longitude,
-                'end_latitude': s.end_point.latitude,
-                'end_longitude': s.end_point.longitude,
+                'start_latitude': start_lat,
+                'start_longitude': start_lon,
+                'end_latitude': end_lat,
+                'end_longitude': end_lon,
                 'consecutive_inactive_days': s.consecutive_inactive_days,
                 'inactivity_streak': s.inactivity_streak
             }

@@ -227,33 +227,17 @@ class Database(object):
         :param user: A database user response record with a populated
                      `detected_trip_day_summaries` relation.
         '''
-        last_day_inactive = False
-        consecutive_inactive_days = 0
-        inactivity_streak = 0
-
-        # TODO: this should be returning a library model instead of a dictionary
         day_summaries = []
         for s in user.detected_trip_day_summaries:
-            # append library attributes that are calcuated on-the-fly rather
-            # than being stored in the database
-            if last_day_inactive and not s.has_trips:
-                consecutive_inactive_days += 1
-                inactivity_streak = max(inactivity_streak, consecutive_inactive_days)
-            elif s.has_trips:
-                last_day_inactive = False
-                consecutive_inactive_days = 0
-            elif not s.has_trips:
-                last_day_inactive = True
-
             day_summaries.append(DaySummary(timezone=s.timezone,
                                             date=s.date,
                                             has_trips=s.has_trips,
                                             is_complete=s.is_complete,
                                             start_point=s.start_point,
                                             end_point=s.end_point,
-                                            consecutive_inactive_days=consecutive_inactive_days,
+                                            consecutive_inactive_days=s.consecutive_inactive_days,
                                             inactivity_distance=s.inactivity_distance,
-                                            inactivity_streak=inactivity_streak))
+                                            inactivity_streak=s.inactivity_streak))
         return day_summaries
 
     def load_subway_entrances(self):
@@ -308,8 +292,8 @@ class Database(object):
                 dict_row = row.__dict__
                 dict_row['user_id'] = user.uuid
                 dict_row['timezone'] = timezone
-                dict_row['start_point_id'] = row.start_point.database_id
-                dict_row['end_point_id'] = row.end_point.database_id
+                dict_row['start_point_id'] = row.start_point.database_id if row.start_point else None
+                dict_row['end_point_id'] = row.end_point.database_id if row.end_point else None
                 yield dict_row
 
         if not trip_day_summaries:
@@ -450,6 +434,8 @@ class DetectedTripDaySummary(BaseModel):
     inactivity_distance = FloatField(null=True)
     start_point = ForeignKeyField(DetectedTripCoordinate, null=True)
     end_point = ForeignKeyField(DetectedTripCoordinate, null=True)
+    consecutive_inactive_days = IntegerField(null=True)
+    inactivity_streak = IntegerField(null=True)
 
 
 class SubwayStationEntrance(BaseModel):

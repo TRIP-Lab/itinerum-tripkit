@@ -61,18 +61,6 @@ trip_day_summaries = []
 for idx, user in enumerate(users, start=1):
     print("Processing user ({}) daily counts: {}/{}...".format(user.uuid, idx, len(users)))
 
-    geojson_fn = '{}-datakit'.format(user.uuid)
-    itinerum.io.write_input_geojson(
-        datakit_config,
-        fn_base=geojson_fn,
-        coordinates=user.coordinates,
-        prompts=user.prompt_responses,
-        cancelled_prompts=user.cancelled_prompt_responses,
-    )
-
-    gpkg_fn = '{}-datakit'.format(user.uuid)
-    itinerum.io.write_trips_geopackage(datakit_config, fn_base=gpkg_fn, trips=user.trips)
-
     if user.trips:
         print(f"Running complete days process on {user.uuid}...")
         trip_day_summaries = itinerum.process.complete_days.triplab.counter.run(user.trips, datakit_config.TIMEZONE)

@@ -86,17 +86,17 @@ def add_inactivity_periods(daily_summaries):
     Iterate over the daily summaries once forwards and once backwards to supply inactivity information
     to adjacent days to the start and end dates.
     '''
-    summary_before = None
-    inactive_days = 0
-    first_inactive_day = None
+    inactive_days, summary_before, first_inactive_day = None, None, None
     for date, summary in sorted(daily_summaries.items()):
         no_trip_data = not any([summary['has_trips'], summary['is_complete']])
         if no_trip_data:
+            if not inactive_days:
+                inactive_days = 0
             inactive_days += 1
             if not first_inactive_day:
                 first_inactive_day = date
         else:
-            inactive_days = 0
+            inactive_days = None
             first_inactive_day = None
 
         summary['consecutive_inactive_days'] = inactive_days
@@ -110,26 +110,23 @@ def add_inactivity_periods(daily_summaries):
 
     # add the total inactive day tally to each day within the streak of inactive days
     summary_after = None
-    latest_streak_max = None
+    latest_streak_max = 0
     for date, summary in sorted(daily_summaries.items(), reverse=True):
-        if not latest_streak_max and summary['consecutive_inactive_days']:
-            latest_streak_max = summary['consecutive_inactive_days']
-
-        if latest_streak_max:
+        if summary['consecutive_inactive_days']:
+            latest_streak_max = max(latest_streak_max, summary['consecutive_inactive_days'])
             summary['inactive_day_streak'] = latest_streak_max
 
-        if date == summary['first_inactive_day']:
-            latest_streak_max = None
-
+        # same as lookahead `summary_before` above but labeled after since order is reversed
         if summary_after is not None:
             summary['after_is_complete'] = summary_after['is_complete'] is True
         else:
             summary['after_is_complete'] = False
         summary_after = summary
 
-    inactivity_streak = latest_streak_max if latest_streak_max else 0
+    max_inactivity_streak = latest_streak_max if latest_streak_max else None
     for date, summary in daily_summaries.items():
-        summary['inactivity_streak'] = inactivity_streak
+        summary['max_inactivity_streak'] = max_inactivity_streak
+
     return daily_summaries
 
 
@@ -165,12 +162,27 @@ def find_explained_inactivity_periods(daily_summaries, daily_trip_summaries):
                     if inactivity_distance < 750.0:
                         summary['is_complete'] = True
                         summary['inactivity_distance'] = inactivity_distance
+
+    last_end_coordinate = None
+    calculate_inactivity_distance = False
+    for date, summary in sorted(daily_summaries.items()):
+        if summary['has_trips'] and calculate_inactivity_distance:
+            # get the second point of the first trip since trips have been previously connected
+            next_start_point = daily_trip_summaries[date]['second_points'][0]
+            next_start_coordinate = (next_start_point.latitude, next_start_point.longitude)
+            summary['inactivity_distance'] = distance.distance(last_end_coordinate, next_start_coordinate).meters
+            calculate_inactivity_distance = False
+        if not summary['is_complete']:
+            calculate_inactivity_distance = True
+
+        if summary['has_trips']:
+            last_end_coordinate = (summary['end_point'].latitude, summary['end_point'].longitude)
+
     return daily_summaries
 
 
 def wrap_for_datakit(timezone, complete_days):
     datakit_complete_days = []
-    inactivity_streak = 0
     for date, day_summary in complete_days.items():
         inactivity_distance = day_summary.get('inactivity_distance')
         dk_summary = DaySummary(
@@ -182,7 +194,7 @@ def wrap_for_datakit(timezone, complete_days):
             end_point=day_summary['end_point'],
             consecutive_inactive_days=day_summary['consecutive_inactive_days'],
             inactivity_distance=inactivity_distance,
-            inactivity_streak=day_summary['inactivity_streak']
+            inactivity_streak=day_summary['max_inactivity_streak']
         )
         datakit_complete_days.append(dk_summary)
     return datakit_complete_days
