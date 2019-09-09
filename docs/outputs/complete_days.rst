@@ -11,7 +11,7 @@ The Complete Days/Trip Lab process iterates over the trips by 24-hour cycle (00:
 
 Special cases:
 
-* It is common that a user may legitmately make no trips on a participation day. In the case that there is a day without any trips, but the day prior and after are labeled complete and the distance between the last trip end and the next trip start is <= 750 meters, this day will be labeled "is_complete". Cases with more than 1 day without trips are not considered by this rule.
+* It is common that a user may legitimately make no trips on a participation day. In the case that there is a day without any trips, but the day prior and after are labeled complete and the distance between the last trip end and the next trip start is <= 750 meters, this day will be labeled "is_complete". Cases with more than 1 day without trips are not considered by this rule.
 
 Notes:
 
