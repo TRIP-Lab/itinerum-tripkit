@@ -1,8 +1,5 @@
-.. _OutputsPage:
+.. _OutputCompleteDaysPage:
 
-=======
-Outputs
-=======
 
 Complete Days
 =============
