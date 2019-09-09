@@ -407,10 +407,9 @@ def write_complete_days_csv(cfg, filename, trip_day_summaries):
             end_lon = s.start_point.longitude if s.end_point else None
             record = {
                 'uuid': uuid,
-                'date_UTC': s.date,
+                'date': s.date,
                 'has_trips': 1 if s.has_trips else 0,
                 'is_complete': 1 if s.is_complete else 0,
-                'inactivity_distance': s.inactivity_distance,
                 'start_latitude': start_lat,
                 'start_longitude': start_lon,
                 'end_latitude': end_lat,
@@ -421,10 +420,9 @@ def write_complete_days_csv(cfg, filename, trip_day_summaries):
             csv_rows.append(record)
     headers = [
         'uuid',
-        'date_UTC',
+        'date',
         'has_trips',
         'is_complete',
-        'inactivity_distance',
         'start_latitude',
         'start_longitude',
         'end_latitude',

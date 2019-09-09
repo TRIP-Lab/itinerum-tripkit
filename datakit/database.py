@@ -236,7 +236,6 @@ class Database(object):
                                             start_point=s.start_point,
                                             end_point=s.end_point,
                                             consecutive_inactive_days=s.consecutive_inactive_days,
-                                            inactivity_distance=s.inactivity_distance,
                                             inactivity_streak=s.inactivity_streak))
         return day_summaries
 
@@ -431,7 +430,6 @@ class DetectedTripDaySummary(BaseModel):
     date = DateField()
     has_trips = BooleanField()
     is_complete = BooleanField()
-    inactivity_distance = FloatField(null=True)
     start_point = ForeignKeyField(DetectedTripCoordinate, null=True)
     end_point = ForeignKeyField(DetectedTripCoordinate, null=True)
     consecutive_inactive_days = IntegerField(null=True)

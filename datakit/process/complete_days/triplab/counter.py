@@ -161,22 +161,22 @@ def find_explained_inactivity_periods(daily_summaries, daily_trip_summaries):
 
                     if inactivity_distance < 750.0:
                         summary['is_complete'] = True
-                        summary['inactivity_distance'] = inactivity_distance
+                        # summary['inactivity_distance'] = inactivity_distance
 
-    last_end_coordinate = None
-    calculate_inactivity_distance = False
-    for date, summary in sorted(daily_summaries.items()):
-        if summary['has_trips'] and calculate_inactivity_distance:
-            # get the second point of the first trip since trips have been previously connected
-            next_start_point = daily_trip_summaries[date]['second_points'][0]
-            next_start_coordinate = (next_start_point.latitude, next_start_point.longitude)
-            summary['inactivity_distance'] = distance.distance(last_end_coordinate, next_start_coordinate).meters
-            calculate_inactivity_distance = False
-        if not summary['is_complete']:
-            calculate_inactivity_distance = True
-
-        if summary['has_trips']:
-            last_end_coordinate = (summary['end_point'].latitude, summary['end_point'].longitude)
+    # # NOTE: inactivity distance calculations are disabled, since there doesn't seem to be an obvious way to include it
+    # last_end_coordinate = None
+    # calculate_inactivity_distance = False
+    # for date, summary in sorted(daily_summaries.items()):
+    #     if summary['has_trips'] and calculate_inactivity_distance:
+    #         # get the second point of the first trip since trips have been previously connected
+    #         next_start_point = daily_trip_summaries[date]['second_points'][0]
+    #         next_start_coordinate = (next_start_point.latitude, next_start_point.longitude)
+    #         summary['inactivity_distance'] = distance.distance(last_end_coordinate, next_start_coordinate).meters
+    #         calculate_inactivity_distance = False
+    #     if not summary['is_complete']:
+    #         calculate_inactivity_distance = True
+    #     if summary['has_trips']:
+    #         last_end_coordinate = (summary['end_point'].latitude, summary['end_point'].longitude)
 
     return daily_summaries
 
@@ -184,7 +184,6 @@ def find_explained_inactivity_periods(daily_summaries, daily_trip_summaries):
 def wrap_for_datakit(timezone, complete_days):
     datakit_complete_days = []
     for date, day_summary in complete_days.items():
-        inactivity_distance = day_summary.get('inactivity_distance')
         dk_summary = DaySummary(
             timezone=timezone,
             date=date,
@@ -193,7 +192,6 @@ def wrap_for_datakit(timezone, complete_days):
             start_point=day_summary['start_point'],
             end_point=day_summary['end_point'],
             consecutive_inactive_days=day_summary['consecutive_inactive_days'],
-            inactivity_distance=inactivity_distance,
             inactivity_streak=day_summary['max_inactivity_streak']
         )
         datakit_complete_days.append(dk_summary)
