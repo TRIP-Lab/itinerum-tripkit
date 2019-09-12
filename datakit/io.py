@@ -125,6 +125,14 @@ def _input_cancelled_prompts_features(cancelled_prompts, ignore_keys=None):
 
 
 # geojson file I/O
+def _write_features_to_geojson_f(cfg, filename, features):
+    collection = deepcopy(geojson_collection_template)
+    collection['features'] = features
+    geojson_fp = os.path.join(cfg.OUTPUT_DATA_DIR, filename)
+    with open(geojson_fp, 'w') as geojson_f:
+        geojson_f.write(json.dumps(collection, default=utils.json_serialize))
+
+
 def write_input_geojson(cfg, fn_base, coordinates, prompts, cancelled_prompts):
     '''
     Writes input coordinates, prompts and cancelled prompts data selected from
@@ -138,23 +146,28 @@ def write_input_geojson(cfg, fn_base, coordinates, prompts, cancelled_prompts):
                               file. Usually the result of a database query.
     :param cancelled_prompts: Iterable of database cancelled prompts to write to
                               geojson file. Usually the result of a database query.
+
+    :type fn_base: str
+    :type coordinates: list of :py:class:`datakit.database.Coordinate`
+    :type prompts: list of :py:class:`datakit.database.PromptResponse`
+    :type cancelled_prompts: list of :py:class:`datakit.database.CancelledPromptResponse`
     '''
     ignore_keys = ('id', 'user', 'longitude', 'latitude')
 
     # coordinates point features
     coordinates_features = _input_coordinates_features(coordinates, ignore_keys)
     coordinates_filename = f'{fn_base}_coordinates.geojson'
-    write_features_to_geojson_f(cfg, coordinates_filename, coordinates_features)
+    _write_features_to_geojson_f(cfg, coordinates_filename, coordinates_features)
 
     # prompts point features
     prompts_features = _input_prompts_features(prompts, ignore_keys)
     prompts_filename = f'{fn_base}_prompts.geojson'
-    write_features_to_geojson_f(cfg, prompts_filename, prompts_features)
+    _write_features_to_geojson_f(cfg, prompts_filename, prompts_features)
 
     # cancelled prompts point features
     cancelled_prompts_features = _input_cancelled_prompts_features(cancelled_prompts, ignore_keys)
     cancelled_prompts_filename = f'{fn_base}_cancelled_prompts.geojson'
-    write_features_to_geojson_f(cfg, cancelled_prompts_filename, cancelled_prompts_features)
+    _write_features_to_geojson_f(cfg, cancelled_prompts_filename, cancelled_prompts_features)
 
 
 def write_semantic_locations_geojson(cfg, fn_base, locations):
@@ -172,7 +185,7 @@ def write_semantic_locations_geojson(cfg, fn_base, locations):
     '''
     locations_features = _semantic_locations_features(locations)
     locations_fn = f'{fn_base}_locations.geojson'
-    write_features_to_geojson_f(cfg, locations_fn, locations_features)
+    _write_features_to_geojson_f(cfg, locations_fn, locations_features)
 
 
 def write_trips_geojson(cfg, fn_base, trips):
@@ -192,7 +205,7 @@ def write_trips_geojson(cfg, fn_base, trips):
         linestring = _points_to_geojson_linestring(trip.geojson_coordinates, properties)
         detected_trips_features.append(linestring)
     filename = f'{fn_base}_trips.geojson'
-    write_features_to_geojson_f(cfg, filename, detected_trips_features)
+    _write_features_to_geojson_f(cfg, filename, detected_trips_features)
 
 
 def write_mapmatched_geojson(cfg, fn_base, results):
@@ -234,18 +247,17 @@ def write_mapmatched_geojson(cfg, fn_base, results):
         mapmatched_features.append(linestring)
 
     filename = f'{fn_base}_matched.geojson'
-    write_features_to_geojson_f(cfg, filename, mapmatched_features)
-
-
-def write_features_to_geojson_f(cfg, filename, features):
-    collection = deepcopy(geojson_collection_template)
-    collection['features'] = features
-    geojson_fp = os.path.join(cfg.OUTPUT_DATA_DIR, filename)
-    with open(geojson_fp, 'w') as geojson_f:
-        geojson_f.write(json.dumps(collection, default=utils.json_serialize))
+    _write_features_to_geojson_f(cfg, filename, mapmatched_features)
 
 
 # geopackage file I/O
+def _write_features_to_geopackage_f(cfg, filename, schema, features):
+    geopackage_fp = os.path.join(cfg.OUTPUT_DATA_DIR, filename)
+    with fiona.open(geopackage_fp, 'w', driver='GPKG', schema=schema, crs=fiona.crs.from_epsg(4326)) as geopackage_f:
+        for feature in features:
+            geopackage_f.write(feature)
+
+
 def write_input_geopackage(cfg, fn_base, coordinates, prompts, cancelled_prompts):
     '''
     Writes input coordinates, prompts and cancelled prompts data selected from
@@ -267,19 +279,19 @@ def write_input_geopackage(cfg, fn_base, coordinates, prompts, cancelled_prompts
     coordinates_filename = f'{fn_base}_coordinates.gpkg'
     coordinates_gpkg_schema = _input_gpkg_schema(coordinates.model, ignore_keys)
     coordinates_features = _input_coordinates_features(coordinates, ignore_keys)
-    write_features_to_geopackage_f(cfg, coordinates_filename, coordinates_gpkg_schema, coordinates_features)
+    _write_features_to_geopackage_f(cfg, coordinates_filename, coordinates_gpkg_schema, coordinates_features)
 
     # prompts point features
     prompts_filename = f'{fn_base}_prompts.gpkg'
     prompts_gpkg_schema = _input_gpkg_schema(prompts.model, ignore_keys)
     prompts_features = _input_prompts_features(prompts, ignore_keys)
-    write_features_to_geopackage_f(cfg, prompts_filename, prompts_gpkg_schema, prompts_features)
+    _write_features_to_geopackage_f(cfg, prompts_filename, prompts_gpkg_schema, prompts_features)
 
     # cancelled prompts point features
     cancelled_prompts_filename = f'{fn_base}_cancelled_prompts.gpkg'
     cancelled_prompts_gpkg_schema = _input_gpkg_schema(cancelled_prompts.model, ignore_keys)
     cancelled_prompts_features = _input_cancelled_prompts_features(cancelled_prompts, ignore_keys)
-    write_features_to_geopackage_f(
+    _write_features_to_geopackage_f(
         cfg, cancelled_prompts_filename, cancelled_prompts_gpkg_schema, cancelled_prompts_features
     )
 
@@ -306,13 +318,6 @@ def write_trips_geopackage(cfg, fn_base, trips):
                 'distance': trip.distance,
             }
             feature = _points_to_geojson_linestring(trip.geojson_coordinates, properties)
-            geopackage_f.write(feature)
-
-
-def write_features_to_geopackage_f(cfg, filename, schema, features):
-    geopackage_fp = os.path.join(cfg.OUTPUT_DATA_DIR, filename)
-    with fiona.open(geopackage_fp, 'w', driver='GPKG', schema=schema, crs=fiona.crs.from_epsg(4326)) as geopackage_f:
-        for feature in features:
             geopackage_f.write(feature)
 
 
