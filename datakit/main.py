@@ -99,13 +99,12 @@ class Itinerum(object):
         '''
         Create the cache database tables if the UserSurveyResponse table does not exist.
 
-        :param force:                optionally supply True to force creation
-                                     of a new  cache database
-        :param generate_null_survey: optionally supply True to generate an empty
-                                     survey responses table for coordinates-only data
+        :param force:                Supply True to force creation of a new cache database
+        :param generate_null_survey: Supply True to generate an empty survey responses table
+                                     for coordinates-only data
 
         :type force:                 boolean, optional
-        :type generate_null_survey:  boolean
+        :type generate_null_survey:  boolean, optional
         '''
         if force:
             self.database.drop()
@@ -131,20 +130,20 @@ class Itinerum(object):
         Returns all available users as ``<User>`` objects from the database
         :rtype: list of ``<User>`` objects
 
-        :param uuid:       Optionally supply an individual user's UUID to load
-        :param load_trips: Optionally supply False to disable automatic loading
-                           of trips to User objects on initialization
-        :param limit:      Optionally supply a maximum number of users to load
-        :param start:      Optionally supply a miminum timestamp bounds (inclusive)
-                           for loading user coordinate and prompts data
-        :param end:        Optionally supply a maximum timestamp bounds (inclusive)
-                           for loading user coordinate and prompts data
+        :param uuid:       Supply an individual user's UUID to load
+        :param load_trips: Supply False to disable automatic loading of trips to
+                           py:class:`datakit.models.User` objects on initialization
+        :param limit:      Supply a maximum number of users to load
+        :param start:      Supply a miminum timestamp bounds (inclusive) for loading user
+                           coordinate and prompts data
+        :param end:        Supply a maximum timestamp bounds (inclusive) for loading user
+                           coordinate and prompts data
 
-        :type uuid:        string
-        :type load_trips:  boolean
-        :type limit:       integer
-        :type start:       datetime
-        :type end:         datetime
+        :type uuid:        string, optional
+        :type load_trips:  boolean, optional
+        :type limit:       integer, optional
+        :type start:       datetime, optional
+        :type end:         datetime, optional
         '''
         if uuid:
             uuids = [uuid]
