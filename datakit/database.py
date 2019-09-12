@@ -126,23 +126,20 @@ class Database(object):
                     f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}: bulk inserting {chunk_size} rows ({rows_inserted})..."
                 )
                 cur.executemany(query, chunk)
-                row_ids = range(cur.lastrowid - cur.rowcount + 1, cur.lastrowid + 1)
+                cur.execute('''COMMIT;''')
+                start_row_id = cur.lastrowid - chunk_size + 1
+                row_ids = range(start_row_id, cur.lastrowid + 1)
                 inserted_row_ids.extend(row_ids)
-
-                # commit every 1000 transactions
-                tx_counter += 1
-                if tx_counter == 1000:
-                    cur.execute('''COMMIT;''')
-                    cur.execute('''BEGIN TRANSACTION;''')
-                    tx_counter = 0
+                cur.execute('''BEGIN TRANSACTION;''')
                 # reset chunk
                 chunk = []
         # commit all remaining transactions
         if chunk:
             cur.executemany(query, chunk)
-            row_ids = range(cur.lastrowid + 1, cur.lastrowid + cur.rowcount + 1)
-            inserted_row_ids.extend(row_ids)
             cur.execute('''COMMIT;''')
+            start_row_id = cur.lastrowid - len(chunk) + 1
+            row_ids = range(start_row_id, cur.lastrowid + 1)
+            inserted_row_ids.extend(row_ids)
         conn.commit()
         return inserted_row_ids
 

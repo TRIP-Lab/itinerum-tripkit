@@ -17,7 +17,6 @@ os.chdir(os.path.pardir)
 import ciso8601
 import csv
 from datakit import Itinerum
-import pytz
 
 import datakit_config
 
@@ -25,7 +24,6 @@ import datakit_config
 # initialize example script global variables
 itinerum = Itinerum(config=datakit_config)
 users = itinerum.load_users(limit=5, load_trips=False)
-tz = pytz.timezone('America/Montreal')
 
 # run trip detection days algorithms
 all_summaries = []
@@ -39,7 +37,7 @@ parameters = {
 for idx, user in enumerate(users, start=1):
     print('Processing user ({}) trips: {}/{}...'.format(user.uuid, idx, len(users)))
     user.trips = itinerum.process.trip_detection.triplab.v2.algorithm.run(user.coordinates, parameters=parameters)
-    trip_summaries = itinerum.process.trip_detection.triplab.v2.summarize.run(user, tz)
+    trip_summaries = itinerum.process.trip_detection.triplab.v2.summarize.run(user, datakit_config.TIMEZONE)
     all_summaries.extend(trip_summaries)
 
 
@@ -59,12 +57,8 @@ with open(export_csv, 'w') as csv_f:
         'olon',
         'dlat',
         'dlon',
-        # 'merge_codes',
         'direct_distance',
-        'cumulative_distance',
-        # 'complete_day',
-        # 'first_day',
-        # 'last_day',
+        'cumulative_distance'
     ]
     writer = csv.DictWriter(csv_f, fieldnames=headers)
     writer.writeheader()

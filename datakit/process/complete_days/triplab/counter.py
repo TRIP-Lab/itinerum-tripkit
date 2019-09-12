@@ -199,9 +199,11 @@ def wrap_for_datakit(tz, complete_days):
 
 
 # run above functions in sequence
-def run(trips, tz):
+def run(trips, timezone):
     if not trips:
         return None
+
+    tz = pytz.timezone(timezone)
 
     min_dt = tz.localize(datetime(1999, 6, 1))
     localized_trips = trips_UTC_to_local(trips, tz)

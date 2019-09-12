@@ -6,7 +6,7 @@ import utm
 from .algorithm import distance_m
 
 
-def run(user, tz=None):
+def run(user, timezone=None):
     '''
     Summarizes detected trips information as dictionary records for writing to .csv
     with each trip condensed to a single row.
@@ -18,6 +18,8 @@ def run(user, tz=None):
     :type user: class:`datakit.models.User`
     :type tz: datetime.tzinfo
     '''
+    if timezone:
+        tz = pytz.timezone(timezone)
 
     records = []
     for t in user.trips:
@@ -37,7 +39,7 @@ def run(user, tz=None):
             'direct_distance': distance_m(t.start, t.end),
             'cumulative_distance': t.distance,
         }
-        if tz:
+        if timezone:
             r['start'] = pytz.utc.localize(t.start_UTC).astimezone(tz)
             r['end'] = pytz.utc.localize(t.end_UTC).astimezone(tz)
         records.append(r)
