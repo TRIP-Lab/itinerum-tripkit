@@ -16,10 +16,10 @@ logger = logging.getLogger(__name__)
 
 # cast input data as objects
 def generate_subway_entrances(coordinates):
-    """
+    '''
     Find UTM coordinates for subway stations entrances from lat/lon
     and yield objects.
-    """
+    '''
     entrances = []
     for c in coordinates:
         easting, northing, _, _ = utm.from_latlon(c.latitude, c.longitude)
@@ -28,10 +28,10 @@ def generate_subway_entrances(coordinates):
 
 
 def generate_gps_points(coordinates):
-    """
+    '''
     Find UTM coordinates for user GPS points from lat/lon
     and yield objects.
-    """
+    '''
     for c in coordinates:
         easting, northing, _, _ = utm.from_latlon(c.latitude, c.longitude)
         yield GPSPoint(
@@ -48,21 +48,21 @@ def generate_gps_points(coordinates):
 
 # perform cleaning on points
 def filter_by_accuracy(points, cutoff=30):
-    """
+    '''
     Remove points that have worse reported accuracy than the cutoff value
     in meters.
-    """
+    '''
     for p in points:
         if p.h_accuracy <= cutoff:
             yield p
 
 
 def filter_erroneous_distance(points, check_speed_kph=60):
-    """
+    '''
     Remove points with unreasonably fast speeds where, in a series
     of 3 consecutive points (1, 2, and 3), point 3 is closer to point 1
     than point 2.
-    """
+    '''
 
     # create two copies of the points generator to compare against
     # and advance the copy ahead one point
@@ -100,10 +100,10 @@ def filter_erroneous_distance(points, check_speed_kph=60):
 
 
 def break_points_by_collection_pause(points, max_break_period=360):
-    """
+    '''
     Break into trip segments when time recorded between points is
     greater than the specified break period.
-    """
+    '''
     segments = []
     last_p = None
     for p in points:
@@ -129,9 +129,9 @@ def break_points_by_collection_pause(points, max_break_period=360):
 
 
 def initialize_trips(segments):
-    """
+    '''
     Begin trip contruction by creating a new trip for each segment.
-    """
+    '''
     trips = []
     for idx, segment in enumerate(segments):
         trips.append(Trip(num=idx, segments=[segment]))
@@ -140,10 +140,10 @@ def initialize_trips(segments):
 
 # stitch segments into longer trips if pre-determined conditions are met
 def find_subway_connections(trips, subway_entrances, buffer_m=200):
-    """
+    '''
     Look for segments that can be connected by an explained subway trip update
     the related trip objects.
-    """
+    '''
     connected_trips = []
     last_trip = None
     for trip in trips:
@@ -164,7 +164,7 @@ def find_subway_connections(trips, subway_entrances, buffer_m=200):
             subway_distance = distance_m(end_point, start_point)
             segment_speed = subway_distance / interval.total_seconds()
             if interval.total_seconds() < 4800 and segment_speed > 0.1:  # 80 minutes * seconds, m/s
-                last_trip.link_to(trip, "subway")
+                last_trip.link_to(trip, 'subway')
                 # NOTE: adjust this to `last_trip = last_trip` to connect more
                 # possible subway segments consecutively, however, this can
                 # lead to long transfers being lumped as part of a trip where
@@ -198,7 +198,7 @@ def find_velocity_connections(trips):
         interval = start_point.timestamp_UTC - end_point.timestamp_UTC
         period = int(interval.total_seconds())
         if _is_gte_walking_speed(end_point, start_point, period):
-            last_trip.link_to(trip, "walking")
+            last_trip.link_to(trip, 'walking')
             last_trip = None
         else:
             connected_trips.append(trip)
@@ -207,11 +207,11 @@ def find_velocity_connections(trips):
 
 
 def filter_single_points(trips):
-    """
+    '''
     Remove any isolated GPS points that are not within 20 minutes
     or 150 meters of the previous end point or next trip start point.
     Otherwise, attach them to the soonest trip end.
-    """
+    '''
     max_break_period = 20 * 60  # minutes * seconds
     max_distance_m = 150
 
@@ -260,10 +260,10 @@ def filter_single_points(trips):
 
 
 def infer_missing_trips(trips, subway_entrances, min_trip_m=250, subway_buffer_m=200, cold_start_m=750):
-    """
+    '''
     Determines where the gap between known trips is unexplained and missing
     trip information in the source data can be assumed.
-    """
+    '''
     missing_trips = []
     last_trip = None
     for trip in trips:
@@ -282,7 +282,7 @@ def infer_missing_trips(trips, subway_entrances, min_trip_m=250, subway_buffer_m
         # 1. label any non-zero distance less than min trip lenghth as missing but too short
         if distance_prev_trip and distance_prev_trip < min_trip_m:
             m = MissingTrip(
-                category="lt_min_trip_length",
+                category='lt_min_trip_length',
                 last_trip_end=last_end_point,
                 next_trip_start=start_point,
                 distance=distance_prev_trip,
@@ -295,7 +295,7 @@ def infer_missing_trips(trips, subway_entrances, min_trip_m=250, subway_buffer_m
             start_entrance = points_intersect(subway_entrances, start_point, subway_buffer_m)
             if end_entrance and start_entrance and end_entrance != start_entrance:
                 m = MissingTrip(
-                    category="subway",
+                    category='subway',
                     last_trip_end=last_end_point,
                     next_trip_start=start_point,
                     distance=distance_prev_trip,
@@ -306,14 +306,14 @@ def infer_missing_trips(trips, subway_entrances, min_trip_m=250, subway_buffer_m
             #    prepend the last point of previous trip to start of current trip. This new
             #    point will have the same timestamp as the original first (now second) point
             elif distance_prev_trip <= cold_start_m:
-                logger.debug("test this copy that attributes are not changed simultaneously")
+                logger.debug('test this copy that attributes are not changed simultaneously')
                 cold_start_point = copy.copy(last_end_point)
                 trip.first_segment.is_cold_start = True
                 trip.first_segment.prepend(cold_start_point)
             # 4. all other gaps in the data marked as a general missing trip
             else:
                 m = MissingTrip(
-                    category="general",
+                    category='general',
                     last_trip_end=last_end_point,
                     next_trip_start=start_point,
                     distance=distance_prev_trip,
@@ -325,11 +325,11 @@ def infer_missing_trips(trips, subway_entrances, min_trip_m=250, subway_buffer_m
 
 
 def merge_trips(complete_trips, missing_trips):
-    """
+    '''
     Returns a zipped list of complete and missing trips in the correct timestamp order. If the missing
-    trip previous to a complete trip is labeled as 'too short' (missing category: "lt_min_trip_length"),
+    trip previous to a complete trip is labeled as 'too short' (missing category: 'lt_min_trip_length'),
     then join these trips as one.
-    """
+    '''
     if not missing_trips:
         return complete_trips
 
@@ -337,15 +337,15 @@ def merge_trips(complete_trips, missing_trips):
     missing_trips_gen = iter(missing_trips)
     next_missing_trip = next(missing_trips_gen)
     for trip in complete_trips:
-        # keep track of "too short" missing trips only if they are the last
+        # keep track of 'too short' missing trips only if they are the last
         # missing trip before a complete one
         merge_missing_too_short = None
         if next_missing_trip.start.timestamp_UTC < trip.first_segment.start.timestamp_UTC:
             while next_missing_trip.start.timestamp_UTC < trip.first_segment.start.timestamp_UTC:
-                if next_missing_trip.category == "lt_min_trip_length":
+                if next_missing_trip.category == 'lt_min_trip_length':
                     merge_missing_too_short = next_missing_trip
                 else:
-                    # TODO: Is a "too short" missing trip before a "normal" missing trip
+                    # TODO: Is a 'too short' missing trip before a 'normal' missing trip
                     # a possible scenario? If so, how should this be handled?
                     merge_missing_too_short = None
                     merged.append(next_missing_trip)
@@ -367,26 +367,26 @@ def merge_trips(complete_trips, missing_trips):
                 period_before_seconds=trip.first_segment.period_before_seconds,
             )
             trip.segments.insert(0, missing_segment)
-            trip.add_label("lt_min_trip_length")
+            trip.add_label('lt_min_trip_length')
         merged.append(trip)
     return merged
 
 
 def annotate_trips(trips):
-    """
-    Filters the labels attached to trips by the hierarchy of their relevance (e.g., "missing trips" with
-    too short of a length [actually a trip end] joined to a complete trip should be labelled as "complete"
+    '''
+    Filters the labels attached to trips by the hierarchy of their relevance (e.g., 'missing trips' with
+    too short of a length [actually a trip end] joined to a complete trip should be labelled as 'complete'
     instead of missing). Using the most appropriate label, set the integer trip code from the `trip_codes.py`
     lookup table.
-    """
+    '''
     for trip in trips:
         if isinstance(trip, MissingTrip):
-            if trip.category == "lt_min_trip_length":
-                trip.code = TRIP_CODES["missing trip - less than min. trip length"]
-            elif trip.category == "subway":
-                trip.code = TRIP_CODES["missing trip - subway"]
-            elif trip.category == "general":
-                trip.code = TRIP_CODES["missing trip"]
+            if trip.category == 'lt_min_trip_length':
+                trip.code = TRIP_CODES['missing trip - less than min. trip length']
+            elif trip.category == 'subway':
+                trip.code = TRIP_CODES['missing trip - subway']
+            elif trip.category == 'general':
+                trip.code = TRIP_CODES['missing trip']
         elif isinstance(trip, Trip):
             # add labels for each link where segments have been linked by rules
             for link_type in trip.links.keys():
@@ -394,52 +394,52 @@ def annotate_trips(trips):
 
             # label detected trips consisting of one point
             if len(trip.segments) == 1 and len(trip.segments[0].points) == 1:
-                trip.add_label("single point")
+                trip.add_label('single point')
             elif trip.cumulative_distance == 0:
-                trip.add_label("single point")
+                trip.add_label('single point')
 
             # apply labeling hierarchy to determine final trip code
             if trip.cumulative_distance() < 250:
-                trip.code = TRIP_CODES["distance too short"]
-            elif "lt_min_trip_length" in trip.labels:
-                if "subway" in trip.labels:
-                    trip.code = TRIP_CODES["complete trip - subway"]
-                elif "single point" in trip.labels:
-                    trip.code = TRIP_CODES["single point"]
+                trip.code = TRIP_CODES['distance too short']
+            elif 'lt_min_trip_length' in trip.labels:
+                if 'subway' in trip.labels:
+                    trip.code = TRIP_CODES['complete trip - subway']
+                elif 'single point' in trip.labels:
+                    trip.code = TRIP_CODES['single point']
                 else:
-                    trip.code = TRIP_CODES["complete trip"]
+                    trip.code = TRIP_CODES['complete trip']
             else:
-                if "subway" in trip.labels:
-                    trip.code = TRIP_CODES["complete trip - subway"]
+                if 'subway' in trip.labels:
+                    trip.code = TRIP_CODES['complete trip - subway']
                 elif not trip.labels:
-                    trip.code = TRIP_CODES["complete trip"]
+                    trip.code = TRIP_CODES['complete trip']
         yield trip
 
 
 # helper functions
 def distance_m(point1, point2):
-    """
+    '''
     Returns the distance between two points in meters.
-    """
+    '''
     a = point2.easting - point1.easting
     b = point2.northing - point1.northing
     return math.sqrt(a ** 2 + b ** 2)
 
 
 def points_intersect(points, test_point, buffer_m=200):
-    """
+    '''
     Returns the first point that intersects with buffer (m) of a test point.
-    """
+    '''
     for point in points:
         if distance_m(point, test_point) <= buffer_m:
             return point
 
 
 def wrap_for_datakit(detected_trips):
-    """
+    '''
     Return result as the same type of object (list of TripPoints) as returned
     by `itinerum-datakit/datakit/database.py`.
-    """
+    '''
     datakit_trips = []
     for trip_num, detected_trip in enumerate(detected_trips, start=1):
         if isinstance(detected_trip, Trip):
@@ -493,22 +493,22 @@ def run(coordinates, parameters):
         return []
 
     # process points as structs and cast position from lat/lng to UTM
-    subway_entrances = generate_subway_entrances(parameters["subway_entrances"])
+    subway_entrances = generate_subway_entrances(parameters['subway_entrances'])
     gps_points = generate_gps_points(coordinates)
 
     # clean noisy and duplicate points
-    high_accuracy_points = filter_by_accuracy(gps_points, cutoff=parameters["accuracy_cutoff_meters"])
+    high_accuracy_points = filter_by_accuracy(gps_points, cutoff=parameters['accuracy_cutoff_meters'])
     cleaned_points = filter_erroneous_distance(high_accuracy_points, check_speed_kph=100)
 
     # break trips into atomic trip segments
-    segments = break_points_by_collection_pause(cleaned_points, max_break_period=parameters["break_interval_seconds"])
+    segments = break_points_by_collection_pause(cleaned_points, max_break_period=parameters['break_interval_seconds'])
 
     # start by considering every segment a trip
     initial_trips = initialize_trips(segments)
 
-    # apply rules to reconstitute full trips from segments when possible ("stitching")
+    # apply rules to reconstitute full trips from segments when possible ('stitching')
     subway_linked_trips = find_subway_connections(
-        initial_trips, subway_entrances, buffer_m=parameters["subway_buffer_meters"]
+        initial_trips, subway_entrances, buffer_m=parameters['subway_buffer_meters']
     )
     velocity_linked_trips = find_velocity_connections(subway_linked_trips)
     full_length_trips = filter_single_points(velocity_linked_trips)
@@ -518,8 +518,8 @@ def run(coordinates, parameters):
         full_length_trips,
         subway_entrances,
         min_trip_m=250,
-        subway_buffer_m=parameters["subway_buffer_meters"],
-        cold_start_m=parameters["cold_start_distance"],
+        subway_buffer_m=parameters['subway_buffer_meters'],
+        cold_start_m=parameters['cold_start_distance'],
     )
 
     trips = merge_trips(full_length_trips, missing_trips)

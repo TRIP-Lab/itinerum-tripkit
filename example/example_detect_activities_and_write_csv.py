@@ -60,6 +60,6 @@ with open(export_csv, 'w') as csv_f:
 
 # perform activity detection on all user points
 for idx, user in enumerate(users, start=1):
-    # determine the locations to associate with coordinate activities
+    # determine the locations to associate with coordinates as activities
     locations = create_activity_locations(user)
-    itinerum.process.activities.triplab.detect.run(user.coordinates, tz, locations)
+    itinerum.process.activities.triplab.detect.run(user, tz, locations)

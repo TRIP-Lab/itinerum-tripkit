@@ -147,7 +147,6 @@ class Itinerum(object):
         :type start:       datetime
         :type end:         datetime
         '''
-        return_one = uuid is not None
         if uuid:
             uuids = [uuid]
         else:
@@ -156,10 +155,11 @@ class Itinerum(object):
                 uuids = uuids[:limit]
 
         users = []
-        for idx, uuid in enumerate(uuids, start=1):
+        return_one = uuid is not None
+        for idx, _uuid in enumerate(uuids, start=1):
             logger.info(f"Loading user from database: {idx}/{len(uuids)}...")
 
-            user = self.database.load_user(uuid, start=start, end=end)
+            user = self.database.load_user(_uuid, start=start, end=end)
             if load_trips:
                 user.trips = self.database.load_trips(user, start=start, end=end)
             if return_one:

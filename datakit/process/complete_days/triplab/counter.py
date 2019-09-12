@@ -181,11 +181,11 @@ def find_explained_inactivity_periods(daily_summaries, daily_trip_summaries):
     return daily_summaries
 
 
-def wrap_for_datakit(timezone, complete_days):
+def wrap_for_datakit(tz, complete_days):
     datakit_complete_days = []
     for date, day_summary in complete_days.items():
         dk_summary = DaySummary(
-            timezone=timezone,
+            timezone=tz.zone,
             date=date,
             has_trips=day_summary['has_trips'],
             is_complete=day_summary['is_complete'],
@@ -199,10 +199,9 @@ def wrap_for_datakit(timezone, complete_days):
 
 
 # run above functions in sequence
-def run(trips, timezone):
+def run(trips, tz):
     if not trips:
         return None
-    tz = pytz.timezone(timezone)
 
     min_dt = tz.localize(datetime(1999, 6, 1))
     localized_trips = trips_UTC_to_local(trips, tz)
@@ -214,5 +213,5 @@ def run(trips, timezone):
     daily_summaries = add_inactivity_periods(daily_summaries)
 
     complete_days = find_explained_inactivity_periods(daily_summaries, daily_trip_summaries)
-    datakit_complete_days = wrap_for_datakit(timezone, complete_days)
+    datakit_complete_days = wrap_for_datakit(tz, complete_days)
     return datakit_complete_days
