@@ -9,9 +9,9 @@ output/*
 !input/.gitkeep
 !output/.gitkeep
 docs/_build
-extra/cleaned
-extra/uncleaned
+example/cleaned
+example/uncleaned
+example/diffs
 notebooks/.ipynb_checkpoints
-extra/diffs
 .vscode
 .DS_Store
