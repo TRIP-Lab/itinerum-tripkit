@@ -272,6 +272,11 @@ def write_input_geopackage(cfg, fn_base, coordinates, prompts, cancelled_prompts
                               file. Usually the result of a database query.
     :param cancelled_prompts: Iterable of database cancelled prompts to write to
                               geopackage file. Usually the result of a database query.
+
+    :type fn_base: str
+    :type coordinates: list of :py:class:`datakit.database.Coordinate`
+    :type prompts: list of :py:class:`datakit.database.PromptResponse`
+    :type cancelled_prompts: list of :py:class:`datakit.database.CancelledPromptResponse`
     '''
     ignore_keys = ('id', 'user', 'longitude', 'latitude', 'prompt_uuid')
 
@@ -303,6 +308,9 @@ def write_trips_geopackage(cfg, fn_base, trips):
     :param cfg:     Global configuration object
     :param fn_base: The base filename to prepend to the output geopackage file
     :param trips:   Iterable of database trips to write to geopackage file
+
+    :param fn_base: str
+    :param trips: list of :py:class:`datakit.models.Trip`
     '''
     geopackage_fp = os.path.join(cfg.OUTPUT_DATA_DIR, f'{fn_base}_trips.gpkg')
     schema = {
@@ -329,6 +337,9 @@ def write_trips_csv(cfg, fn_base, trips, extra_fields=None):
     :param cfg:     Global configuration object
     :param fn_base: The base filename to prepend to the output csv file
     :param trips:   Iterable of database trips to write to csv file
+
+    :type fn_base: str
+    :param trips: list of :py:class:`datakit.models.Trip`
     '''
     csv_fp = os.path.join(cfg.OUTPUT_DATA_DIR, f'{fn_base}_trips.csv')
     headers = [
@@ -338,7 +349,7 @@ def write_trips_csv(cfg, fn_base, trips, extra_fields=None):
         'latitude',
         'longitude',
         'h_accuracy',
-        'v_accuracy',
+        # 'v_accuracy',
         'timestamp_UTC',
         'timestamp_epoch',
         'trip_distance',
@@ -383,8 +394,12 @@ def write_trip_summaries_csv(cfg, filename, summaries, extra_fields=None):
     :param cfg:          Global configration object
     :param filename:     The output filename for the output csv file
     :param summaries:    Iterable of trip summaries for row records
-    :param extra_fields: (Optional) Additional columns to append to csv (must have matching
+    :param extra_fields: Additional columns to append to csv (must have matching
                           key in `summaries` object)
+
+    :type filename: str
+    :type summaries: list of dict
+    :type extra_fields: list, optional
     '''
     csv_fp = os.path.join(cfg.OUTPUT_DATA_DIR, filename)
     with open(csv_fp, 'w', newline=NEWLINE_MODE) as csv_f:
