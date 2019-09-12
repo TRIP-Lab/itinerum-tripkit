@@ -25,7 +25,7 @@ class Itinerum(object):
     expected here.
 
     This Itinerum object is the entry API for loading .csv data to
-    an SQLite database (used as scratch), running algorithms on the GPS data,
+    an SQLite database (used as cache), running algorithms on the GPS data,
     and visualizing or exporting the results to GIS-friendly formats.
 
     The Itinerum instance is usually created in your main module

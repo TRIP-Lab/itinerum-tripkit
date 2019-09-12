@@ -125,15 +125,18 @@ def _input_cancelled_prompts_features(cancelled_prompts, ignore_keys=None):
 
 
 # geojson file I/O
-def write_semantic_locations_geonjson(cfg, fn_base, locations):
+def write_semantic_locations_geojson(cfg, fn_base, locations):
     '''
-    Write the semantic locations labeled within the datakit config to a geojson file.
+    Write semantic locations (from config or detected) to a geojson file.
 
     :param cfg:             Global configuration object (eventually this should be
                             supplied upon initialization like :py:class:`CSVParser`)
     :param fn_base:         The base filename to prepend to each output geojson file.
-    :param survey_response: A dictionary object of a user's survey responses containing
+    :param locations:       A dictionary object of a user's survey responses containing
                             columns with semantic location latitude and longitudes.
+
+    :type fn_base: str
+    :type locations: dict
     '''
     locations_features = _semantic_locations_features(locations)
     locations_fn = f'{fn_base}_locations.geojson'
