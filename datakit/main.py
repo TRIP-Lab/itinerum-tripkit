@@ -18,16 +18,15 @@ logger = logging.getLogger(__name__)
 
 class Itinerum(object):
     '''
-    The Itinerum object provides a interface for working with
-    data exported from the Itinerum platform as .csv. The object
-    is passed a `config` object which should be an imported Python
-    file of global variables or class with the same attributes as
+    The vase Itinerum object provides an interface for working with
+    .csv data exported from the Itinerum platform. The object
+    is passed the `config` at initialization which should be an imported
+    Python file of global variables or class with the same attributes as
     expected here.
 
-    The Itinerum object is the entry API for loading .csv data to
-    an SQLite database (used as cache), testing and running algorithms
-    on the GPS data, and visualizing and exporting the results to
-    GIS-friendly formats.
+    This Itinerum object is the entry API for loading .csv data to
+    an SQLite database (used as scratch), running algorithms on the GPS data,
+    and visualizing or exporting the results to GIS-friendly formats.
 
     The Itinerum instance is usually created in your main module
     like this::
@@ -69,7 +68,7 @@ class Itinerum(object):
     @property
     def csv(self):
         '''
-        Gives access to the :py:class:`datakit.csvparser.CSVParser` object
+        Provides access to the :py:class:`datakit.csvparser.CSVParser` object
         initialized with Itinerum object.
         '''
         return self._csv
@@ -77,7 +76,7 @@ class Itinerum(object):
     @property
     def database(self):
         '''
-        Gives access to the cache :py:class:`datakit.database.Database` object
+        Provides access to the cache :py:class:`datakit.database.Database` object
         initialized with Itinerum object.
         '''
         return self._database
@@ -85,14 +84,14 @@ class Itinerum(object):
     @property
     def io(self):
         '''
-        Gives access to the file reading and writing functions.
+        Provides access to the file reading and writing functions.
         '''
         return self._io
 
     @property
     def process(self):
         '''
-        Gives access to the GPS point and trip processing submodules.
+        Provides access to the GPS point and trip processing submodules.
         '''
         return self._process
 
@@ -105,7 +104,7 @@ class Itinerum(object):
         :param generate_null_survey: optionally supply True to generate an empty
                                      survey responses table for coordinates-only data
 
-        :type force:                 boolean
+        :type force:                 boolean, optional
         :type generate_null_survey:  boolean
         '''
         if force:
