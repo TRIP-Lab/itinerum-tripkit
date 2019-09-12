@@ -125,24 +125,6 @@ def _input_cancelled_prompts_features(cancelled_prompts, ignore_keys=None):
 
 
 # geojson file I/O
-def write_semantic_locations_geojson(cfg, fn_base, locations):
-    '''
-    Write semantic locations (from config or detected) to a geojson file.
-
-    :param cfg:             Global configuration object (eventually this should be
-                            supplied upon initialization like :py:class:`CSVParser`)
-    :param fn_base:         The base filename to prepend to each output geojson file.
-    :param locations:       A dictionary object of a user's survey responses containing
-                            columns with semantic location latitude and longitudes.
-
-    :type fn_base: str
-    :type locations: dict
-    '''
-    locations_features = _semantic_locations_features(locations)
-    locations_fn = f'{fn_base}_locations.geojson'
-    write_features_to_geojson_f(cfg, locations_fn, locations_features)
-
-
 def write_input_geojson(cfg, fn_base, coordinates, prompts, cancelled_prompts):
     '''
     Writes input coordinates, prompts and cancelled prompts data selected from
@@ -175,6 +157,24 @@ def write_input_geojson(cfg, fn_base, coordinates, prompts, cancelled_prompts):
     write_features_to_geojson_f(cfg, cancelled_prompts_filename, cancelled_prompts_features)
 
 
+def write_semantic_locations_geojson(cfg, fn_base, locations):
+    '''
+    Write semantic locations (from config or detected) to a geojson file.
+
+    :param cfg:       Global configuration object (eventually this should be supplied through initialization
+                      like :py:class:`CSVParser`)
+    :param fn_base:   The base filename to prepend to each output geojson file.
+    :param locations: A dictionary object of a user's survey responses containing columns with semantic
+                      location latitude and longitudes.
+
+    :type fn_base: str
+    :type locations: dict
+    '''
+    locations_features = _semantic_locations_features(locations)
+    locations_fn = f'{fn_base}_locations.geojson'
+    write_features_to_geojson_f(cfg, locations_fn, locations_features)
+
+
 def write_trips_geojson(cfg, fn_base, trips):
     '''
     Writes detected trips data selected from cache to geojson file.
@@ -182,6 +182,9 @@ def write_trips_geojson(cfg, fn_base, trips):
     :param cfg:     Global configuration object
     :param fn_base: The base filename to prepend to the output geojson file
     :param trips:   Iterable of database trips to write to geojson file
+
+    :type fn_base: str
+    :type trips: list of :py:class:`datakit.models.Trip`
     '''
     detected_trips_features = []
     for trip in trips:
@@ -199,6 +202,9 @@ def write_mapmatched_geojson(cfg, fn_base, results):
     :param cfg:     Global configuration object
     :param fn_base: The base filename to prepend to the output geojson file
     :param results: JSON results from map matching API query
+
+    :type fn_base: str
+    :type result: dict
     '''
     mapmatched_features = []
     # create points features with a confidence for each match (distance in meters)
