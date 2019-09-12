@@ -264,8 +264,11 @@ class Database(object):
         Saves detected trips from processing algorithms to cache database. This
         table will be recreated on each save by default.
 
-        :param user:  A database user response record associate with the saved trip records.
-        :param trips: List of Py:Class:`datakit.models.Trip` from a trip processing algorithm.
+        :param user:  A database user response record associated with the trip records.
+        :param trips: Iterable of detected trips from a trip processing algorithm.
+
+        :type user: :py:class:`datakit.models.User`
+        :type trips: list of :py:class:`datakit.models.Trip`
         '''
         def _trip_row_filter(trip_rows, model_fields):
             row = {}
@@ -305,7 +308,17 @@ class Database(object):
         Saves the daily summaries for detected trip days to cache database. This
         table with be recreated on each save by default.
 
+        :param user:               A database user response record associated with the trip day
+                                   summaries.
         :param trip_day_summaries: List of daily summaries from a daily trip counts algorithm.
+        :param timezone:           The tz database timezone name for the location that was used to
+                                   localize the complete days detection.
+        :param overwrite:          Provide `False` to keep existing summaries for user in database.
+
+        :type user: :py:class:`datakit.models.User`
+        :type trip_day_summaries: list of :py:class:`datakit.models.DaySummary`
+        :type timezone: str
+        :type overwrite: boolean, optional
         '''
 
         def _row_filter(rows, model_fields):
