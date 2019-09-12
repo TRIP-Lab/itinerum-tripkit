@@ -11,8 +11,8 @@ class DaySummary(object):
     :param bool has_trips:                Boolean value to indicate whether a date contains any trips.
     :param bool is_complete:              Boolean value to indicate whether a date with trips is considered
                                           complete or not.
-    :param object start_point_id:            The database point for the first available GPS coordinate on a localized date.
-    :param object end_point_id:              The database point for the last available GPS coordinate on a localized date.
+    :param object start_point:            The database point for the first available GPS coordinate on a localized date.
+    :param object end_point:              The database point for the last available GPS coordinate on a localized date.
     :param int consecutive_inactive_days: The total number of days in the latest inactivity streak (reset on any
                                           complete day).
     :param int inactivity_streak:         The longest streak of consecutively inactive days for a user.

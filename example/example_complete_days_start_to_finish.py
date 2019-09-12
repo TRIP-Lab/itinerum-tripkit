@@ -15,7 +15,7 @@ from datakit import Itinerum
 import datakit_config
 
 
-## Edit ./datakit_config.py first!
+# Edit ./datakit_config.py first!
 itinerum = Itinerum(config=datakit_config)
 
 
@@ -23,13 +23,8 @@ itinerum = Itinerum(config=datakit_config)
 itinerum.setup(force=False)
 
 # -- Stage 2: perform trip detection via library algorithms
-users = itinerum.load_users(load_trips=False)
-
-# Special for example: make sure all user trips are cleared before starting since
-# trips are written to database in a loop and calling overwrite each iteration would
-# cause issues
-for user in users:
-    itinerum.database.save_trips(user, trips=[])
+users = itinerum.load_users(limit=10, load_trips=False)
+itinerum.database.clear_trips()
 
 parameters = {
     'subway_entrances': itinerum.database.load_subway_entrances(),
@@ -54,9 +49,7 @@ print("Writing remaining detected trip data to the database...")
 for user, trips in results.items():
     itinerum.database.save_trips(user, trips, overwrite=False)
 
-
 # -- Stage 3: Count complete days without missing trip information
-users = itinerum.load_users()
 trip_day_summaries = []
 for idx, user in enumerate(users, start=1):
     print("Processing user ({}) daily counts: {}/{}...".format(user.uuid, idx, len(users)))

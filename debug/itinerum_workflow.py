@@ -22,7 +22,6 @@ STAGE_5 = True
 itinerum = Itinerum(config=datakit_config)
 itinerum.setup(force=STAGE_1)
 
-# users = itinerum.load_users(uuid="3c4096a7-b8db-44aa-933a-b62608345681")
 users = itinerum.load_users()
 if not isinstance(users, list):
     users = [users]

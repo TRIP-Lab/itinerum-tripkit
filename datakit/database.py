@@ -102,6 +102,7 @@ class Database(object):
         query = f'''INSERT INTO {table_name} ({columns_str}) VALUES ({values_str});'''
         tx_counter = 0
         rows_inserted = 0
+        inserted_row_ids = []
         cur.execute('''BEGIN TRANSACTION;''')
         for row in rows:
             if not row:
@@ -125,6 +126,8 @@ class Database(object):
                     f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}: bulk inserting {chunk_size} rows ({rows_inserted})..."
                 )
                 cur.executemany(query, chunk)
+                row_ids = range(cur.lastrowid - cur.rowcount + 1, cur.lastrowid + 1)
+                inserted_row_ids.extend(row_ids)
 
                 # commit every 1000 transactions
                 tx_counter += 1
@@ -137,8 +140,11 @@ class Database(object):
         # commit all remaining transactions
         if chunk:
             cur.executemany(query, chunk)
+            row_ids = range(cur.lastrowid + 1, cur.lastrowid + cur.rowcount + 1)
+            inserted_row_ids.extend(row_ids)
             cur.execute('''COMMIT;''')
         conn.commit()
+        return inserted_row_ids
 
     def count_users(self):
         '''
@@ -189,6 +195,17 @@ class Database(object):
                 DetectedTripDaySummary.date <= end.date
             )
         return user
+
+    def clear_trips(self, user=None):
+        '''
+        Clears the detected trip points table or for an individual user.
+
+        :param user: (Optional) Delete trips for particular user only.
+        '''
+        if user:
+            self.delete_user_from_table(DetectedTripCoordinate, user)
+        else:
+            DetectedTripCoordinate.delete().execute()
 
     def load_trips(self, user, start=None, end=None):
         '''
@@ -276,7 +293,15 @@ class Database(object):
             self.delete_user_from_table(DetectedTripCoordinate, user)
 
         model_fields = set(DetectedTripCoordinate._meta.sorted_field_names)
-        self.bulk_insert(DetectedTripCoordinate, _trip_row_filter(trips, model_fields))
+        db_row_ids = self.bulk_insert(DetectedTripCoordinate, _trip_row_filter(trips, model_fields))
+
+        # attach data to original user's object with database id
+        idx = 0
+        for trip in trips:
+            for point in trip.points:
+                point.database_id = db_row_ids[idx]
+                idx += 1
+        user.trips = trips
 
     def save_trip_day_summaries(self, user, trip_day_summaries, timezone, overwrite=True):
         '''
