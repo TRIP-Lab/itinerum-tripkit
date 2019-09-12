@@ -91,13 +91,13 @@ class Itinerum(object):
     @property
     def process(self):
         '''
-        Provides access to the GPS point and trip processing submodules.
+        Provides access to the GPS point and trip processing algorithm submodules.
         '''
         return self._process
 
     def setup(self, force=False, generate_null_survey=False):
         '''
-        Create the cache database tables if the UserSurveyResponse table does not exist.
+        Create the cache database tables if the ``UserSurveyResponse`` table does not exist.
 
         :param force:                Supply True to force creation of a new cache database
         :param generate_null_survey: Supply True to generate an empty survey responses table
