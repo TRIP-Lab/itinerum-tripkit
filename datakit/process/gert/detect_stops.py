@@ -104,7 +104,7 @@ def summarize_stops(labeled_coordinates):
             num_points = len(durations)
             avg_delta_heading = calc.average(delta_headings)
             avg_speed = calc.average(speeds)
-            
+
             # # Debug statements
             # print(c.latitude, c.longitude, c.distance_m, c.duration_s, c.bearing, c.speed_ms)
             # print("total duration:", total_duration)
@@ -125,7 +125,9 @@ def summarize_stops(labeled_coordinates):
 
             if trip_rule_1 and trip_rule_2:
                 print("HELLO FROM detect_stops.py")
-                import sys; sys.exit()
+                import sys
+
+                sys.exit()
 
         last_status = c.status
 

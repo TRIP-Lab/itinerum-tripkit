@@ -32,7 +32,7 @@ def _coordinates_row_filter(row):
         'point_type': None,
         'mode_detected': None,
         'timestamp_UTC': timestamp_UTC,
-        'timestamp_epoch': timestamp_epoch
+        'timestamp_epoch': timestamp_epoch,
     }
     return db_row
 
@@ -50,9 +50,26 @@ class QstarzCSVParser(object):
         self.db = database
         self._migrator = SqliteMigrator(database.db)
         self.coordinates_csv = self._fetch_csv_fn(csv_input_dir, not_contains='_summary.csv')
-        self.headers = ['point_id', 'id', 'route_id', 'lon', 'lat', 'object_id', 'uuid',
-                        'type', 'lat_direction', 'lon_direction', 'uuid', 'date', 'start_time',
-                        'sec_point', 'route_id_2', 'uuid_2', 'order', 'time']
+        self.headers = [
+            'point_id',
+            'id',
+            'route_id',
+            'lon',
+            'lat',
+            'object_id',
+            'uuid',
+            'type',
+            'lat_direction',
+            'lon_direction',
+            'uuid',
+            'date',
+            'start_time',
+            'sec_point',
+            'route_id_2',
+            'uuid_2',
+            'order',
+            'time',
+        ]
         # attach common functions
         self.load_subway_stations = _load_subway_stations
 

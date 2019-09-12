@@ -444,7 +444,7 @@ def write_complete_days_csv(cfg, filename, trip_day_summaries):
                 'end_latitude': end_lat,
                 'end_longitude': end_lon,
                 'consecutive_inactive_days': s.consecutive_inactive_days,
-                'inactivity_streak': s.inactivity_streak
+                'inactivity_streak': s.inactivity_streak,
             }
             csv_rows.append(record)
     headers = [
@@ -457,7 +457,7 @@ def write_complete_days_csv(cfg, filename, trip_day_summaries):
         'end_latitude',
         'end_longitude',
         'consecutive_inactive_days',
-        'inactivity_streak'
+        'inactivity_streak',
     ]
     with open(csv_fp, 'w', newline=NEWLINE_MODE) as csv_f:
         writer = csv.DictWriter(csv_f, dialect='excel', fieldnames=headers)
@@ -473,9 +473,11 @@ def write_user_summaries_csv(cfg, summaries):
     :param cfg:       Global configuration object
     :param summaries: Iterable of user summaries for row records
     '''
-    headers1 = ['Survey timezone:', cfg.TIMEZONE] + \
-               [None] * 7 + \
-               ['Semantic locations (duration, seconds)', None, None, 'Commute times (duration, seconds)']
+    headers1 = (
+        ['Survey timezone:', cfg.TIMEZONE]
+        + [None] * 7
+        + ['Semantic locations (duration, seconds)', None, None, 'Commute times (duration, seconds)']
+    )
     headers2 = [
         'uuid',
         'start_timestamp_local',

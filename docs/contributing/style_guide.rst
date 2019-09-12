@@ -18,8 +18,11 @@ a one exists, but otherwise it is encouraged to be descriptive. If a suitable na
 
 Pull Commits
 ------------
-Python black_ is used to format all library code into a consistent format. Note that two options are used: line limit of 120 characters (-l 120)
-and skip string normalization (-S, explained below).::
+Python black_ is used to format all library code into a consistent format. Note that two options are used:
+
+* line limit of 120 characters (-l 120)
+* skip string normalization (-S, explained below)
+::
 
 $ black -l 120 -S -t py37 datakit
 

@@ -15,9 +15,9 @@ def calculate_distance(coordinate1, coordinate2):
     dlon = math.radians(coordinate2.longitude - coordinate1.longitude)
     lat1 = math.radians(coordinate1.latitude)
     lat2 = math.radians(coordinate2.latitude)
-    a = math.sin(dlat / 2) * math.sin(dlat / 2) + \
-        math.sin(dlon / 2) * math.sin(dlon / 2) * \
-        math.cos(lat1) * math.cos(lat2)
+    a1 = math.sin(dlat / 2) * math.sin(dlat / 2) + math.sin(dlon / 2) * math.sin(dlon / 2)
+    a2 = math.cos(lat1) * math.cos(lat2)
+    a = a1 * a2
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
     return 6371 * c * 1000
 

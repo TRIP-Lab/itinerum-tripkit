@@ -8,10 +8,7 @@ from datetime import datetime
 import logging
 import os
 
-from ..database import (
-    SubwayStationEntrance,
-    UserSurveyResponse
-)
+from ..database import SubwayStationEntrance, UserSurveyResponse
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -58,6 +55,7 @@ def _load_subway_stations(subway_stations_csv_fp):
 
         for row in reader:
             SubwayStationEntrance.create(latitude=float(row['latitude']), longitude=float(row['longitude']))
+
 
 def _generate_null_survey(input_dir, coordinates_csv_fn, uuid_column='uuid', headers=None):
     '''

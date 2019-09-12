@@ -61,23 +61,20 @@ class Itinerum(object):
         if self.config.INPUT_DATA_TYPE == 'qstarz':
             return QstarzCSVParser(self._database, self.config.INPUT_DATA_DIR)
         raise Exception(
-            f"Input data type not recognized: {self.config.INPUT_DATA_TYPE} "
-            f"Valid options: itinerum, qstarz"
+            f"Input data type not recognized: {self.config.INPUT_DATA_TYPE} Valid options: itinerum, qstarz"
         )
 
     @property
     def csv(self):
         '''
-        Provides access to the :py:class:`datakit.csvparser.CSVParser` object
-        initialized with Itinerum object.
+        Provides access to the :py:class:`datakit.csvparser` objects.
         '''
         return self._csv
 
     @property
     def database(self):
         '''
-        Provides access to the cache :py:class:`datakit.database.Database` object
-        initialized with Itinerum object.
+        Provides access to the cache :py:class:`datakit.database.Database` object.
         '''
         return self._database
 

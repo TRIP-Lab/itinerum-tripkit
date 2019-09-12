@@ -82,9 +82,11 @@ class Database(object):
         Bulk insert an iterable of dictionaries into a supplied Peewee model by ``chunk_size``.
 
         :param Model:      Peewee database model of target table for inserts.
-        :param rows:       Iterable list or generator of dictionaries matching
-                           table model for bulk insert.
-        :param chunk_size: `Optional.` Number of rows to insert per transaction.
+        :param rows:       Iterable of dictionaries matching table model for bulk insert.
+        :param chunk_size: Number of rows to insert per transaction.
+
+        :type chunk_size:  int, optional
+        :type rows:        list
         '''
         # Note: Peewee runs into "TOO MANY SQL VARIABLES" limits across systems with similar
         # versions of Python. The alternative below is to write the bulk insert operations using
@@ -243,14 +245,18 @@ class Database(object):
         '''
         day_summaries = []
         for s in user.detected_trip_day_summaries:
-            day_summaries.append(DaySummary(timezone=s.timezone,
-                                            date=s.date,
-                                            has_trips=s.has_trips,
-                                            is_complete=s.is_complete,
-                                            start_point=s.start_point,
-                                            end_point=s.end_point,
-                                            consecutive_inactive_days=s.consecutive_inactive_days,
-                                            inactivity_streak=s.inactivity_streak))
+            day_summaries.append(
+                DaySummary(
+                    timezone=s.timezone,
+                    date=s.date,
+                    has_trips=s.has_trips,
+                    is_complete=s.is_complete,
+                    start_point=s.start_point,
+                    end_point=s.end_point,
+                    consecutive_inactive_days=s.consecutive_inactive_days,
+                    inactivity_streak=s.inactivity_streak,
+                )
+            )
         return day_summaries
 
     def load_subway_entrances(self):
@@ -270,6 +276,7 @@ class Database(object):
         :type user: :py:class:`datakit.models.User`
         :type trips: list of :py:class:`datakit.models.Trip`
         '''
+
         def _trip_row_filter(trip_rows, model_fields):
             row = {}
             for trip in trip_rows:

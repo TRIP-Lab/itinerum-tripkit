@@ -12,8 +12,17 @@ class GertCoordinate(object):
     """
 
     # explicitly state slots to control against adding unknown attributes to the object
-    __slots__ = ['uuid', 'latitude', 'longitude', 'timestamp_UTC', 'duration_s', 'distance_m', 'bearing',
-                 'delta_heading', 'status']
+    __slots__ = [
+        'uuid',
+        'latitude',
+        'longitude',
+        'timestamp_UTC',
+        'duration_s',
+        'distance_m',
+        'bearing',
+        'delta_heading',
+        'status',
+    ]
 
     def __init__(self, c):
         self.uuid = c.user
@@ -22,7 +31,7 @@ class GertCoordinate(object):
         self.timestamp_UTC = datetime.fromisoformat(c.timestamp_UTC)
         # attributes to be later calculated based upon previous point
         self.duration_s = 0
-        self.distance_m = 0.
+        self.distance_m = 0.0
         self.bearing = 0
         self.delta_heading = 0
         self.status = None
@@ -31,9 +40,17 @@ class GertCoordinate(object):
     def speed_ms(self):
         if self.distance_m:
             return self.distance_m / self.duration_s
-        return 0.
+        return 0.0
 
     def DEBUG_csv_row(self):
-        values = [self.uuid, self.latitude, self.longitude, self.timestamp_UTC.isoformat(), self.duration_s,
-                  self.distance_m, self.bearing, self.delta_heading]
+        values = [
+            self.uuid,
+            self.latitude,
+            self.longitude,
+            self.timestamp_UTC.isoformat(),
+            self.duration_s,
+            self.distance_m,
+            self.bearing,
+            self.delta_heading,
+        ]
         return [str(v) for v in values]

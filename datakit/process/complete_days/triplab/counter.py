@@ -192,7 +192,7 @@ def wrap_for_datakit(tz, complete_days):
             start_point=day_summary['start_point'],
             end_point=day_summary['end_point'],
             consecutive_inactive_days=day_summary['consecutive_inactive_days'],
-            inactivity_streak=day_summary['max_inactivity_streak']
+            inactivity_streak=day_summary['max_inactivity_streak'],
         )
         datakit_complete_days.append(dk_summary)
     return datakit_complete_days

@@ -18,8 +18,17 @@ class DaySummary(object):
     :param int inactivity_streak:         The longest streak of consecutively inactive days for a user.
     '''
 
-    def __init__(self, timezone, date, has_trips, is_complete, start_point, end_point,
-                 consecutive_inactive_days, inactivity_streak):
+    def __init__(
+        self,
+        timezone,
+        date,
+        has_trips,
+        is_complete,
+        start_point,
+        end_point,
+        consecutive_inactive_days,
+        inactivity_streak,
+    ):
         self.timezone = timezone
         self.date = date
         self.has_trips = has_trips
