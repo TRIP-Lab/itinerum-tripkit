@@ -127,8 +127,7 @@ class Itinerum(object):
 
     def load_users(self, uuid=None, load_trips=True, limit=None, start=None, end=None):
         '''
-        Returns all available users as ``<User>`` objects from the database
-        :rtype: list of ``<User>`` objects
+        Returns all available users as py:class:`datakit.models.User` objects from the database
 
         :param uuid:       Supply an individual user's UUID to load
         :param load_trips: Supply False to disable automatic loading of trips to
@@ -144,6 +143,8 @@ class Itinerum(object):
         :type limit:       integer, optional
         :type start:       datetime, optional
         :type end:         datetime, optional
+
+        :rtype: list of py:class:`User`
         '''
         if uuid:
             uuids = [uuid]
