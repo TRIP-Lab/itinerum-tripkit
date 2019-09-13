@@ -3,10 +3,10 @@
 
 
 # filename for the itinerum-cli database
-DATABASE_FN = 'cfse.sqlite'
+DATABASE_FN = 'itinerum.sqlite'
 
 # path of raw data directory exported from Itinerum platform or Qstarz
-INPUT_DATA_DIR = './input/cfse-csv'
+INPUT_DATA_DIR = './input/itinerum-csv'
 # types: "itinerum" or "qstarz"
 INPUT_DATA_TYPE = 'itinerum'
 
@@ -33,10 +33,7 @@ SEMANTIC_LOCATIONS = {
 }
 SEMANTIC_LOCATION_PROXIMITY_M = 50
 
-# # map matcher API URLs (development)
-# MAP_MATCHING_BIKING_API_URL = 'https://osrmserver.com/osrm/match/v1/biking/'
-# MAP_MATCHING_DRIVING_API_URL = 'https://osrmserver.com/osrm/match/v1/driving/'
-# MAP_MATCHING_WALKING_API_URL = 'https://osrmserver.com/osrm/match/v1/walking/'
-MAP_MATCHING_BIKING_API_URL = 'https://mapper.triplab.ca/osrm/match/v1/biking/'
-MAP_MATCHING_DRIVING_API_URL = 'https://mapper.triplab.ca/osrm/match/v1/driving/'
-MAP_MATCHING_WALKING_API_URL = 'https://mapper.triplab.ca/osrm/match/v1/walking/'
+# map matcher API URLs (development)
+MAP_MATCHING_BIKING_API_URL = 'https://osrmserver.com/osrm/match/v1/biking/'
+MAP_MATCHING_DRIVING_API_URL = 'https://osrmserver.com/osrm/match/v1/driving/'
+MAP_MATCHING_WALKING_API_URL = 'https://osrmserver.com/osrm/match/v1/walking/'
