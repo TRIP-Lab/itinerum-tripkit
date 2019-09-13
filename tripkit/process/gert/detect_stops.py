@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 # Based upon GERT 1.2 (2016-06-03): GIS-based Episode Reconstruction Toolkit
-# Ported to itinerum-datakit by Kyle Fitzsimmons, 2019
+# Ported to itinerum-tripkit by Kyle Fitzsimmons, 2019
 from .utils import calc
 
 
@@ -153,18 +153,18 @@ def summarize_stops(labeled_coordinates):
 #     firstline = True
 
 #     for i in range(2, len(filterlist)):
-#         f_datakit = filterlist[i]
-#         f = f_datakit.DEBUG_csv_row()
-#         future = GPSLine(f_datakit.delta_heading, f_datakit.speed_ms, f_datakit.duration_s)
+#         f_tripkit = filterlist[i]
+#         f = f_tripkit.DEBUG_csv_row()
+#         future = GPSLine(f_tripkit.delta_heading, f_tripkit.speed_ms, f_tripkit.duration_s)
 
 #         if firstline:
-#             p_datakit = filterlist[i - 2]
-#             p = p_datakit.DEBUG_csv_row()
-#             past = GPSLine(p_datakit.delta_heading, p_datakit.speed_ms, p_datakit.duration_s, status='stop')
+#             p_tripkit = filterlist[i - 2]
+#             p = p_tripkit.DEBUG_csv_row()
+#             past = GPSLine(p_tripkit.delta_heading, p_tripkit.speed_ms, p_tripkit.duration_s, status='stop')
 
-#             c_datakit = filterlist[i - 1]
-#             c = c_datakit.DEBUG_csv_row()
-#             current = GPSLine(c_datakit.delta_heading, c_datakit.speed_ms, c_datakit.duration_s)
+#             c_tripkit = filterlist[i - 1]
+#             c = c_tripkit.DEBUG_csv_row()
+#             current = GPSLine(c_tripkit.delta_heading, c_tripkit.speed_ms, c_tripkit.duration_s)
 #             firstline = False
 
 #         # Minimum speed was determined based on various experiments, which

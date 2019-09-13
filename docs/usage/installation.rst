@@ -1,21 +1,21 @@
 Installation
 ============
 
-The ``itinerum-datakit`` can be installed as a library using pip or the included `setup.py` file, or can be included in
-as an included dependency in your own project by cloning: http://github.com/TRIP-Lab/itinerum-datakit and copying the ``datakit`` directory.
+The ``itinerum-tripkit`` can be installed as a library using pip or the included `setup.py` file, or can be included in
+as an included dependency in your own project by cloning: http://github.com/TRIP-Lab/itinerum-tripkit and copying the ``tripkit`` directory.
 
 
 Virtual Environments
 --------------------
-It is recommended to use venv_ to keep the datakit dependency versions isolated from system packages.
+It is recommended to use venv_ to keep the tripkit dependency versions isolated from system packages.
 
 Linux & MacOS
 +++++++++++++
 ::
 
-    $ python3 -m venv datakit-venv
-    $ chmod +x datakit-ven/bin/activate
-    $ source ./datakit-ven/bin/activate
+    $ python3 -m venv tripkit-venv
+    $ chmod +x tripkit-ven/bin/activate
+    $ source ./tripkit-ven/bin/activate
 
 Windows
 +++++++
@@ -25,8 +25,8 @@ With PowerShell, `Set-ExecutionPolicy Unrestricted -Force` may be required to al
 script to run. If you update the permissions, the PowerShell prompt must also be restarted.:
 ::
 
-    PS C:\Code\itinerum-datakit> python -m venv datakit-venv
-    PS C:\Code\itinerum-datakit> .\datakit-venv\Scripts\Activate.ps1
+    PS C:\Code\itinerum-tripkit> python -m venv tripkit-venv
+    PS C:\Code\itinerum-tripkit> .\tripkit-venv\Scripts\Activate.ps1
 
 
 Dependencies
@@ -36,7 +36,7 @@ Linux & MacOS
 
 Project dependencies can be installed with pip::
 
-    (datakit-venv) $ pip install -r requirements.txt
+    (tripkit-venv) $ pip install -r requirements.txt
 
 
 Windows
@@ -55,7 +55,7 @@ Compiled Python Packages
 On Windows, some packages may fail to install without their pre-existing build dependencies. Compiled wheel versions can be
 downloaded from various mirrors (i.e., https://www.lfd.uci.edu/~gohlke/pythonlibs), copied to the local directory and installed with pip directly.::
 
-    (datakit-venv) PS C:\Code\itinerum-datakit> pip install .\Fiona-1.8.6-cp37-cp37m-win_amd64.whl
+    (tripkit-venv) PS C:\Code\itinerum-tripkit> pip install .\Fiona-1.8.6-cp37-cp37m-win_amd64.whl
 
 Compiled packages to install:
 

@@ -56,7 +56,7 @@ def tally_stay_times(locations, trip):
     Count the time spent at known locations by tallying the intervals between labeled points.
 
     :param dict locations:       Dictionary of semantic locations with name and list of [lat, lon]
-    :param `py:class:Trip` trip: An itinerum-datakit trip object
+    :param `py:class:Trip` trip: An itinerum-tripkit trip object
     '''
     stay_times = {}
     last_p = None
@@ -73,7 +73,7 @@ def tally_commute(trip):
     '''
     Count the time spent commuting between either home and work or home and study.
 
-    :param `py:class:Trip` trip: An itinerum-datakit trip object
+    :param `py:class:Trip` trip: An itinerum-tripkit trip object
     '''
     commute_times = {'work': 0.0, 'study': 0.0}
     if trip.start.label == 'home':

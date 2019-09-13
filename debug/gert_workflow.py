@@ -8,8 +8,8 @@ sys.path[0] = os.path.abspath(os.path.pardir)
 os.chdir(os.path.pardir)
 
 # begin
-from datakit import Itinerum
-import datakit_config
+from tripkit import Itinerum
+import tripkit_config
 
 STAGE_1 = True
 STAGE_2 = True
@@ -19,7 +19,7 @@ STAGE_5 = True
 
 
 # 1: import .csv's from Itinerum or QStarz to scratch database and load user objects
-itinerum = Itinerum(config=datakit_config)
+itinerum = Itinerum(config=tripkit_config)
 itinerum.setup(force=STAGE_1)
 
 users = itinerum.load_users()

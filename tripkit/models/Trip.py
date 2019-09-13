@@ -10,7 +10,7 @@ class Trip(object):
     :param int trip_code: The integer code representing the detected trip type.
 
     :ivar points:         The timestamp-ordered points comprising this ``Trip``.
-    :vartype points:      list of :py:class:`datakit.models.TripPoint`
+    :vartype points:      list of :py:class:`tripkit.models.TripPoint`
     '''
 
     def __init__(self, num, trip_code):

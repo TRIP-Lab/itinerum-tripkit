@@ -10,12 +10,12 @@ os.chdir(os.path.pardir)
 
 # begin
 from datetime import datetime
-from datakit import Itinerum
+from tripkit import Itinerum
 
-import datakit_config
+import tripkit_config
 
 
-itinerum = Itinerum(config=datakit_config)
+itinerum = Itinerum(config=tripkit_config)
 itinerum.setup(force=False)
 users = itinerum.load_users()
 
@@ -23,10 +23,10 @@ uuids = []
 all_trips1, all_trips2 = [], []
 parameters = {
     'subway_stations': itinerum.database.load_subway_entrances(),
-    'break_interval_seconds': datakit_config.TRIP_DETECTION_BREAK_INTERVAL_SECONDS,
-    'subway_buffer_meters': datakit_config.TRIP_DETECTION_SUBWAY_BUFFER_METERS,
-    'cold_start_distance': datakit_config.TRIP_DETECTION_COLD_START_DISTANCE_METERS,
-    'accuracy_cutoff_meters': datakit_config.TRIP_DETECTION_ACCURACY_CUTOFF_METERS,
+    'break_interval_seconds': tripkit_config.TRIP_DETECTION_BREAK_INTERVAL_SECONDS,
+    'subway_buffer_meters': tripkit_config.TRIP_DETECTION_SUBWAY_BUFFER_METERS,
+    'cold_start_distance': tripkit_config.TRIP_DETECTION_COLD_START_DISTANCE_METERS,
+    'accuracy_cutoff_meters': tripkit_config.TRIP_DETECTION_ACCURACY_CUTOFF_METERS,
 }
 for test_user in sorted(users, key=lambda u: str(u.uuid).lower()):
     # updated version of tripbreaker to compare

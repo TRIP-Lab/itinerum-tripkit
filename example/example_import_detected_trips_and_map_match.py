@@ -10,12 +10,12 @@ os.chdir(os.path.pardir)
 # begin
 from datetime import datetime
 
-from datakit import Itinerum
-import datakit_config
+from tripkit import Itinerum
+import tripkit_config
 
 
-# Edit ./datakit_config.py and populate trip detection coordinates in cache db first!
-itinerum = Itinerum(config=datakit_config)
+# Edit ./tripkit_config.py and populate trip detection coordinates in cache db first!
+itinerum = Itinerum(config=tripkit_config)
 
 
 # -- Stage 1: load platform data to cache
@@ -29,14 +29,14 @@ user = itinerum.database.load_user(
 
 
 # perform mapmatching using OSRM API
-map_matcher = itinerum.process.map_match.osrm(datakit_config)
+map_matcher = itinerum.process.map_match.osrm(tripkit_config)
 mapmatched_results = map_matcher.match(coordinates=user.coordinates, matcher='DRIVING')
 
 
 # -- Stage 3: write input and output data to geojsons
 # write user coordinates to geojson as points
 itinerum.io.write_input_geojson(
-    cfg=datakit_config,
+    cfg=tripkit_config,
     fn_base=user.uuid,
     coordinates=user.coordinates,
     prompts=user.prompt_responses,
@@ -44,7 +44,7 @@ itinerum.io.write_input_geojson(
 )
 
 # write user detected trip points and links as linestrings to geojson
-itinerum.io.write_trips_geojson(cfg=datakit_config, fn_base=user.uuid, trips=user.trips)
+itinerum.io.write_trips_geojson(cfg=tripkit_config, fn_base=user.uuid, trips=user.trips)
 
 # write map matching points and matched links as linestrings to geojson
-itinerum.io.write_mapmatched_geojson(cfg=datakit_config, fn_base=user.uuid, results=mapmatched_results)
+itinerum.io.write_mapmatched_geojson(cfg=tripkit_config, fn_base=user.uuid, results=mapmatched_results)

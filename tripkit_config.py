@@ -3,12 +3,12 @@
 
 
 # filename for the itinerum-cli database
-DATABASE_FN = 'gert.sqlite'
+DATABASE_FN = 'cfse.sqlite'
 
 # path of raw data directory exported from Itinerum platform or Qstarz
-INPUT_DATA_DIR = './input/gert-output-gpm-modified/2178_20150507'
+INPUT_DATA_DIR = './input/cfse-csv'
 # types: "itinerum" or "qstarz"
-INPUT_DATA_TYPE = 'qstarz'
+INPUT_DATA_TYPE = 'itinerum'
 
 # path of subway station entrances .csv for trip detection
 SUBWAY_STATIONS_FP = './input/subway_stations/mtl_stations.csv'
@@ -33,7 +33,10 @@ SEMANTIC_LOCATIONS = {
 }
 SEMANTIC_LOCATION_PROXIMITY_M = 50
 
-# map matcher API URLs (development)
-MAP_MATCHING_BIKING_API_URL = 'https://osrmserver.com/osrm/match/v1/biking/'
-MAP_MATCHING_DRIVING_API_URL = 'https://osrmserver.com/osrm/match/v1/driving/'
-MAP_MATCHING_WALKING_API_URL = 'https://osrmserver.com/osrm/match/v1/walking/'
+# # map matcher API URLs (development)
+# MAP_MATCHING_BIKING_API_URL = 'https://osrmserver.com/osrm/match/v1/biking/'
+# MAP_MATCHING_DRIVING_API_URL = 'https://osrmserver.com/osrm/match/v1/driving/'
+# MAP_MATCHING_WALKING_API_URL = 'https://osrmserver.com/osrm/match/v1/walking/'
+MAP_MATCHING_BIKING_API_URL = 'https://mapper.triplab.ca/osrm/match/v1/biking/'
+MAP_MATCHING_DRIVING_API_URL = 'https://mapper.triplab.ca/osrm/match/v1/driving/'
+MAP_MATCHING_WALKING_API_URL = 'https://mapper.triplab.ca/osrm/match/v1/walking/'

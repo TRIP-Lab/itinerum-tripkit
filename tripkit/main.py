@@ -31,10 +31,10 @@ class Itinerum(object):
     The Itinerum instance is usually created in your main module
     like this::
 
-        from datakit import Itinerum
-        import datakit_config
+        from tripkit import Itinerum
+        import tripkit_config
 
-        itinerum = Itinerum(config=datakit_config)
+        itinerum = Itinerum(config=tripkit_config)
         itinerum.setup()
 
     :param config: An imported Python file of global variables or
@@ -67,14 +67,14 @@ class Itinerum(object):
     @property
     def csv(self):
         '''
-        Provides access to the :py:class:`datakit.csvparser` objects.
+        Provides access to the :py:class:`tripkit.csvparser` objects.
         '''
         return self._csv
 
     @property
     def database(self):
         '''
-        Provides access to the cache :py:class:`datakit.database.Database` object.
+        Provides access to the cache :py:class:`tripkit.database.Database` object.
         '''
         return self._database
 
@@ -124,11 +124,11 @@ class Itinerum(object):
 
     def load_users(self, uuid=None, load_trips=True, limit=None, start=None, end=None):
         '''
-        Returns all available users as :py:class:`datakit.models.User` objects from the database
+        Returns all available users as :py:class:`tripkit.models.User` objects from the database
 
         :param uuid:       Supply an individual user's UUID to load
         :param load_trips: Supply False to disable automatic loading of trips to
-                           py:class:`datakit.models.User` objects on initialization
+                           py:class:`tripkit.models.User` objects on initialization
         :param limit:      Supply a maximum number of users to load
         :param start:      Supply a miminum timestamp bounds (inclusive) for loading user
                            coordinate and prompts data
@@ -141,7 +141,7 @@ class Itinerum(object):
         :type start:       datetime, optional
         :type end:         datetime, optional
 
-        :rtype: list of :py:class:`datakit.models.User`
+        :rtype: list of :py:class:`tripkit.models.User`
         '''
         if uuid:
             uuids = [uuid]

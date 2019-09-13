@@ -1,16 +1,16 @@
 Configuration
 =============
 
-Itinerum-datakit is configured by a global configuration object that is passed to
+Itinerum-tripkit is configured by a global configuration object that is passed to
 the class at initialization. This can be created either as a Python file of 
-global variables that is imported or defined as a bare class Config object and named ``datakit_config``.
+global variables that is imported or defined as a bare class Config object and named ``tripkit_config``.
 
 
 ..  _ConfigAnchor:
 
 Generating the Configuration
 ----------------------------
-The following parameters are accepted by itinerum-datakit.
+The following parameters are accepted by itinerum-tripkit.
 
 
 .. tabularcolumns:: |p{6.5cm}|p{8.5cm}|

@@ -10,12 +10,12 @@ os.chdir(os.path.pardir)
 # begin
 from datetime import datetime
 
-from datakit import Itinerum
-import datakit_config
+from tripkit import Itinerum
+import tripkit_config
 
 
-# Edit ./datakit_config.py first!
-itinerum = Itinerum(config=datakit_config)
+# Edit ./tripkit_config.py first!
+itinerum = Itinerum(config=tripkit_config)
 
 
 # -- Stage 1: load platform data to cache if surveys responses table does not exist
@@ -25,10 +25,10 @@ users = itinerum.load_users(limit=10, load_trips=False)
 # -- Stage 2: perform trip detection via library algorithms
 parameters = {
     'subway_entrances': itinerum.database.load_subway_entrances(),
-    'break_interval_seconds': datakit_config.TRIP_DETECTION_BREAK_INTERVAL_SECONDS,
-    'subway_buffer_meters': datakit_config.TRIP_DETECTION_SUBWAY_BUFFER_METERS,
-    'cold_start_distance': datakit_config.TRIP_DETECTION_COLD_START_DISTANCE_METERS,
-    'accuracy_cutoff_meters': datakit_config.TRIP_DETECTION_ACCURACY_CUTOFF_METERS,
+    'break_interval_seconds': tripkit_config.TRIP_DETECTION_BREAK_INTERVAL_SECONDS,
+    'subway_buffer_meters': tripkit_config.TRIP_DETECTION_SUBWAY_BUFFER_METERS,
+    'cold_start_distance': tripkit_config.TRIP_DETECTION_COLD_START_DISTANCE_METERS,
+    'accuracy_cutoff_meters': tripkit_config.TRIP_DETECTION_ACCURACY_CUTOFF_METERS,
 }
 
 for idx, user in enumerate(users, start=1):
@@ -43,13 +43,13 @@ for idx, user in enumerate(users, start=1):
 
     if user.trips:
         print(f"Running complete days process on {user.uuid}...")
-        summaries = itinerum.process.complete_days.triplab.counter.run(user.trips, datakit_config.TIMEZONE)
-        itinerum.database.save_trip_day_summaries(user, summaries, datakit_config.TIMEZONE)
+        summaries = itinerum.process.complete_days.triplab.counter.run(user.trips, tripkit_config.TIMEZONE)
+        itinerum.database.save_trip_day_summaries(user, summaries, tripkit_config.TIMEZONE)
         trip_day_summaries[user.uuid] = summaries
     else:
         print('No trips available for: {}'.format(user.uuid))
 
 # -- Stage 4: write complete days to .csv
 print("Saving complete day summaries to .csv...")
-csv_name = '{}-datakit-complete_days.csv'.format(datakit_config.DATABASE_FN.split('.')[0])
-itinerum.io.write_complete_days_csv(datakit_config, csv_name, trip_day_summaries)
+csv_name = '{}-tripkit-complete_days.csv'.format(tripkit_config.DATABASE_FN.split('.')[0])
+itinerum.io.write_complete_days_csv(tripkit_config, csv_name, trip_day_summaries)

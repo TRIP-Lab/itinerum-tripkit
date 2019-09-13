@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from geopy import distance
 import pytz
 
-from datakit.models import DaySummary
+from tripkit.models import DaySummary
 
 
 def trips_UTC_to_local(trips, tz):
@@ -181,8 +181,8 @@ def find_explained_inactivity_periods(daily_summaries, daily_trip_summaries):
     return daily_summaries
 
 
-def wrap_for_datakit(tz, complete_days):
-    datakit_complete_days = []
+def wrap_for_tripkit(tz, complete_days):
+    tripkit_complete_days = []
     for date, day_summary in complete_days.items():
         dk_summary = DaySummary(
             timezone=tz.zone,
@@ -194,8 +194,8 @@ def wrap_for_datakit(tz, complete_days):
             consecutive_inactive_days=day_summary['consecutive_inactive_days'],
             inactivity_streak=day_summary['max_inactivity_streak'],
         )
-        datakit_complete_days.append(dk_summary)
-    return datakit_complete_days
+        tripkit_complete_days.append(dk_summary)
+    return tripkit_complete_days
 
 
 # run above functions in sequence
@@ -215,5 +215,5 @@ def run(trips, timezone):
     daily_summaries = add_inactivity_periods(daily_summaries)
 
     complete_days = find_explained_inactivity_periods(daily_summaries, daily_trip_summaries)
-    datakit_complete_days = wrap_for_datakit(tz, complete_days)
-    return datakit_complete_days
+    tripkit_complete_days = wrap_for_tripkit(tz, complete_days)
+    return tripkit_complete_days

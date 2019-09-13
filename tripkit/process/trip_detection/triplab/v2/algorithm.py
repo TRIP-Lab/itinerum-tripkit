@@ -6,7 +6,7 @@ import logging
 import math
 import utm
 
-from datakit.models import Trip as DatakitTrip, TripPoint as DatakitTripPoint
+from tripkit.models import Trip as DatakitTrip, TripPoint as DatakitTripPoint
 from .models import GPSPoint, SubwayEntrance, MissingTrip, TripSegment, Trip
 from .trip_codes import TRIP_CODES
 
@@ -435,12 +435,12 @@ def points_intersect(points, test_point, buffer_m=200):
             return point
 
 
-def wrap_for_datakit(detected_trips):
+def wrap_for_tripkit(detected_trips):
     '''
     Return result as the same type of object (list of TripPoints) as returned
-    by `itinerum-datakit/datakit/database.py`.
+    by `itinerum-tripkit/tripkit/database.py`.
     '''
-    datakit_trips = []
+    tripkit_trips = []
     for trip_num, detected_trip in enumerate(detected_trips, start=1):
         if isinstance(detected_trip, Trip):
             trip = DatakitTrip(num=trip_num, trip_code=detected_trip.code)
@@ -459,7 +459,7 @@ def wrap_for_datakit(detected_trips):
                         timestamp_UTC=point.timestamp_UTC,
                     )
                     trip.points.append(p)
-            datakit_trips.append(trip)
+            tripkit_trips.append(trip)
         elif isinstance(detected_trip, MissingTrip):
             trip = DatakitTrip(num=trip_num, trip_code=detected_trip.code)
             p1 = DatakitTripPoint(
@@ -483,8 +483,8 @@ def wrap_for_datakit(detected_trips):
                 timestamp_UTC=detected_trip.end.timestamp_UTC,
             )
             trip.points = [p1, p2]
-            datakit_trips.append(trip)
-    return datakit_trips
+            tripkit_trips.append(trip)
+    return tripkit_trips
 
 
 # main
@@ -523,7 +523,7 @@ def run(coordinates, parameters):
     )
 
     trips = merge_trips(full_length_trips, missing_trips)
-    datakit_trips = wrap_for_datakit(annotate_trips(trips))
+    tripkit_trips = wrap_for_tripkit(annotate_trips(trips))
 
     logger.info("-------------------------------")
     logger.info("V2 - Num. segments: %d", len(segments))
@@ -531,5 +531,5 @@ def run(coordinates, parameters):
     logger.info("V2 - Num. trips (w/ velocity links): %d", len(velocity_linked_trips))
     logger.info("V2 - Num. full-length trips: %d", len(full_length_trips))
     logger.info("V2 - Num. missing trips: %d", len(missing_trips))
-    logger.info("V2 - Num. point rows: %d", sum([len(t.points) for t in datakit_trips]))
-    return datakit_trips
+    logger.info("V2 - Num. point rows: %d", sum([len(t.points) for t in tripkit_trips]))
+    return tripkit_trips

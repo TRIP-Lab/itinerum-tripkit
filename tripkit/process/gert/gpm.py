@@ -2,7 +2,7 @@
 
 # Based upon GERT 1.2 (2016-06-03): GIS-based Episode Reconstruction Toolkit
 # Stage 1 - GPS Preprocessing Module (gert_1.2/scripts/gpsfilter.py)
-# Ported to itinerum-datakit by Kyle Fitzsimmons, 2019
+# Ported to itinerum-tripkit by Kyle Fitzsimmons, 2019
 '''
 GERT Stage 1: GPS Preprocessing
 

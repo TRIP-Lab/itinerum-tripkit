@@ -7,7 +7,7 @@ class User(object):
     :param db_user:     The ``peewee`` survey response for a given user.
     :ivar list trips:   A user's detected trips. This is only loaded
                         automatically on the ``User`` initialized
-                        by :py:meth:`datakit.database.Database.load_user`,
+                        by :py:meth:`tripkit.database.Database.load_user`,
                         this must be called again if trips are detected and
                         saved to the cache.
 

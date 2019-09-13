@@ -9,14 +9,14 @@ import sys
 sys.path[0] = sys.path[0].replace('/debug', '')
 os.chdir(sys.path[0])
 # begin
-from datakit import Itinerum
-import datakit_config
+from tripkit import Itinerum
+import tripkit_config
 
-from debug.debug_tools import v1_wrap_for_datakit
+from debug.debug_tools import v1_wrap_for_tripkit
 
 
-# Edit ./datakit_config.py first!
-itinerum = Itinerum(config=datakit_config)
+# Edit ./tripkit_config.py first!
+itinerum = Itinerum(config=tripkit_config)
 itinerum.setup(force=False)
 tz = pytz.timezone('America/Montreal')
 start = datetime.datetime(2019, 3, 29, 0, 0, 0, tzinfo=tz)
@@ -25,17 +25,17 @@ users = itinerum.load_users()
 
 parameters = {
     'subway_entrances': itinerum.database.load_subway_entrances(),
-    'break_interval_seconds': datakit_config.TRIP_DETECTION_BREAK_INTERVAL_SECONDS,
-    'subway_buffer_meters': datakit_config.TRIP_DETECTION_SUBWAY_BUFFER_METERS,
-    'cold_start_distance': datakit_config.TRIP_DETECTION_COLD_START_DISTANCE_METERS,
-    'accuracy_cutoff_meters': datakit_config.TRIP_DETECTION_ACCURACY_CUTOFF_METERS
+    'break_interval_seconds': tripkit_config.TRIP_DETECTION_BREAK_INTERVAL_SECONDS,
+    'subway_buffer_meters': tripkit_config.TRIP_DETECTION_SUBWAY_BUFFER_METERS,
+    'cold_start_distance': tripkit_config.TRIP_DETECTION_COLD_START_DISTANCE_METERS,
+    'accuracy_cutoff_meters': tripkit_config.TRIP_DETECTION_ACCURACY_CUTOFF_METERS
 }
 
 all_summaries = []
 for idx, user in enumerate(users, start=1):
     print("Writing user data to file...")
     data_fn = f'{user.uuid}-input'
-    itinerum.io.write_input_geopackage(datakit_config,
+    itinerum.io.write_input_geopackage(tripkit_config,
                                        fn_base=data_fn,
                                        coordinates=user.coordinates,
                                        prompts=user.prompt_responses,
@@ -46,17 +46,17 @@ for idx, user in enumerate(users, start=1):
     user.trips, summaries = itinerum.process.trip_detection.triplab.v1.algorithm.run(user.coordinates.dicts(),
                                                                                      parameters=parameters)
     fn1 = f'{user.uuid}-v1'
-    v1_trips = v1_wrap_for_datakit(user.trips)
-    itinerum.io.write_trips_geopackage(datakit_config, fn_base=fn1, trips=v1_trips)
+    v1_trips = v1_wrap_for_tripkit(user.trips)
+    itinerum.io.write_trips_geopackage(tripkit_config, fn_base=fn1, trips=v1_trips)
     if summaries:
         all_summaries.extend(list(summaries.values()))
 
     trips = itinerum.process.trip_detection.triplab.v2.algorithm.run(user.coordinates, parameters=parameters)
     fn2 = f'{user.uuid}-v2'
-    itinerum.io.write_trips_geopackage(datakit_config, fn_base=fn2, trips=trips)
+    itinerum.io.write_trips_geopackage(tripkit_config, fn_base=fn2, trips=trips)
     import sys; sys.exit()
 
 
 # print('Writing summaries to .csv...')
-# csv_filename = '{}-trip_summaries.csv'.format(datakit_config.DATABASE_FN.split('.')[0])
-# itinerum.io.write_trip_summaries_csv(datakit_config, csv_filename, all_summaries)
+# csv_filename = '{}-trip_summaries.csv'.format(tripkit_config.DATABASE_FN.split('.')[0])
+# itinerum.io.write_trip_summaries_csv(tripkit_config, csv_filename, all_summaries)

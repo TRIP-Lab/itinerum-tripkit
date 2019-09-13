@@ -11,11 +11,11 @@ def run(user, timezone=None):
     Summarizes detected trips information as dictionary records for writing to .csv
     with each trip condensed to a single row.
 
-    :param user: A py:class:`datakit.models.User` object with detected trip information.
+    :param user: A py:class:`tripkit.models.User` object with detected trip information.
     :param tz:   (Optional) A pytz timezone object for localizing the trip start and
                  end times for UTC to the survey region's timezone.
 
-    :type user: class:`datakit.models.User`
+    :type user: class:`tripkit.models.User`
     :type tz: datetime.tzinfo
     '''
     if timezone:

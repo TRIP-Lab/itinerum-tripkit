@@ -31,7 +31,7 @@ deferred_db = SqliteDatabase(None)
 
 class Database(object):
     '''
-    Handles itinerum-datakit interactions with the cached database using peewee. `Note: This
+    Handles itinerum-tripkit interactions with the cached database using peewee. `Note: This
     may soon transition to SQLAlchemy to maintain direct compatibility with the Itinerum API
     code base.`
     '''
@@ -41,7 +41,7 @@ class Database(object):
 
     def create(self):
         '''
-        Creates all the tables necessary for the itinerum-datakit cache database.
+        Creates all the tables necessary for the itinerum-tripkit cache database.
         '''
         self.db.create_tables(
             [
@@ -153,7 +153,7 @@ class Database(object):
 
     def load_user(self, uuid, start=None, end=None):
         '''
-        Loads user by ``uuid`` to an itinerum-datakit :py:class:`User` object.
+        Loads user by ``uuid`` to an itinerum-tripkit :py:class:`User` object.
 
         :param uuid:  A specific user's UUID from within an Itinerum survey.
         :param start: `Optional.` Naive datetime object (set within UTC) for
@@ -286,8 +286,8 @@ class Database(object):
         :param user:  A database user response record associated with the trip records.
         :param trips: Iterable of detected trips from a trip processing algorithm.
 
-        :type user: :py:class:`datakit.models.User`
-        :type trips: list of :py:class:`datakit.models.Trip`
+        :type user: :py:class:`tripkit.models.User`
+        :type trips: list of :py:class:`tripkit.models.Trip`
         '''
 
         def _trip_row_filter(trip_rows, model_fields):
@@ -335,8 +335,8 @@ class Database(object):
                                    localize the complete days detection.
         :param overwrite:          Provide `False` to keep existing summaries for user in database.
 
-        :type user: :py:class:`datakit.models.User`
-        :type trip_day_summaries: list of :py:class:`datakit.models.DaySummary`
+        :type user: :py:class:`tripkit.models.User`
+        :type trip_day_summaries: list of :py:class:`tripkit.models.DaySummary`
         :type timezone: str
         :type overwrite: boolean, optional
         '''

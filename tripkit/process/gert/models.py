@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 # Based upon GERT 1.2 (2016-06-03): GIS-based Episode Reconstruction Toolkit
-# Ported to itinerum-datakit by Kyle Fitzsimmons, 2019
+# Ported to itinerum-tripkit by Kyle Fitzsimmons, 2019
 from datetime import datetime
 
 
 class GertCoordinate(object):
     """
-    GERT processing library object to act like itinerum-datakit Coordinate object with additional properties.
+    GERT processing library object to act like itinerum-tripkit Coordinate object with additional properties.
 
-    :param c: A Py:Class:`datakit.database.Coordinate` object to wrap
+    :param c: A Py:Class:`tripkit.database.Coordinate` object to wrap
     """
 
     # explicitly state slots to control against adding unknown attributes to the object

@@ -3,7 +3,7 @@ __pycache__
 *.sqlite
 *.zip
 itinerum.sqlite-journal
-datakit-venv
+tripkit-venv
 input/*
 output/*
 !input/.gitkeep

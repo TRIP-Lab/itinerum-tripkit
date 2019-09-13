@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # Based upon GERT 1.2 (2016-06-03): GIS-based Episode Reconstruction Toolkit
-# Ported to itinerum-datakit by Kyle Fitzsimmons, 2019
+# Ported to itinerum-tripkit by Kyle Fitzsimmons, 2019
 import math
 
 

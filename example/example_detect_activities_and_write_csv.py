@@ -9,9 +9,9 @@ sys.path[0] = os.path.abspath(os.path.pardir)
 os.chdir(os.path.pardir)
 # begin
 from collections import namedtuple
-from datakit import Itinerum
+from tripkit import Itinerum
 
-import datakit_config
+import tripkit_config
 
 
 def create_activity_locations(user):
@@ -43,7 +43,7 @@ def create_activity_locations(user):
 # NOTE: the ./example_detect_complete_days_and_write_csv.py can pre-populate all
 # data in cache needed to run this example
 
-itinerum = Itinerum(config=datakit_config)
+itinerum = Itinerum(config=tripkit_config)
 users = itinerum.load_users(limit=50)
 
 # perform activity detection on all user points
@@ -51,10 +51,10 @@ dwell_time_summaries = []
 for idx, user in enumerate(users, start=1):
     # determine the locations to associate with coordinates as activities
     locations = create_activity_locations(user)
-    itinerum.io.write_semantic_locations_geojson(datakit_config, fn_base=user.uuid, locations=locations)
+    itinerum.io.write_semantic_locations_geojson(tripkit_config, fn_base=user.uuid, locations=locations)
 
-    summary = itinerum.process.activities.triplab.detect.run(user, locations, timezone=datakit_config.TIMEZONE)
+    summary = itinerum.process.activities.triplab.detect.run(user, locations, timezone=tripkit_config.TIMEZONE)
     if summary:
         dwell_time_summaries.append(summary)
 # write .csv output
-itinerum.io.write_user_summaries_csv(datakit_config, dwell_time_summaries)
+itinerum.io.write_user_summaries_csv(tripkit_config, dwell_time_summaries)

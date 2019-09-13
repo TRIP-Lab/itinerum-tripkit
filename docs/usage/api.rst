@@ -2,22 +2,22 @@
 
 API
 ===
-..  autoclass:: datakit.Itinerum
+..  autoclass:: tripkit.Itinerum
     :members:
 
 
 CSV Parser
 ----------
-..  autoclass:: datakit.csvparser.CSVParser
+..  autoclass:: tripkit.csvparser.CSVParser
     :members:
 
 I/O
 ---
-..  automodule:: datakit.io
+..  automodule:: tripkit.io
 	:members:
 
 Database
 --------
-..  automodule:: datakit.database
+..  automodule:: tripkit.database
 	:members:
 

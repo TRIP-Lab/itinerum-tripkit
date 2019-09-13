@@ -1,8 +1,8 @@
-# itinerum-datakit
+# itinerum-tripkit
 
 [![Python Version](https://img.shields.io/badge/Python-3.6%7C3.7-blue.svg?style=flat-square)]()
 
-Documentation for library usage: https://itinerum-datakit.readthedocs.io/
+Documentation for library usage: https://itinerum-tripkit.readthedocs.io/
 
 This library serves as a bootstrapping framework to process data from the Itinerum platform and hardward GPS loggers in a standardized format. It can be used both through Jupyter for exploring data interactively and imported as a module in standalone applications.
 
@@ -13,17 +13,17 @@ This repository also acts as the development grounds for the version(s) of the I
 ### Quickstart
 
 1. Clone this repository and `pip install -r requirements.txt` ([virtualenv](https://virtualenv.pypa.io/en/stable/) and [virtualenvwrapper](https://virtualenvwrapper.readthedocs.io/en/latest/) are recommended)
-2. Place source data in the `./input` folder (create if necessary) and edit `./datakit/config.py` with the appropriate filepaths.
+2. Place source data in the `./input` folder (create if necessary) and edit `./tripkit/config.py` with the appropriate filepaths.
 
 Then either:
 
- - Start Jupyter in repository directly and get started by `from datakit import Itinerum`
+ - Start Jupyter in repository directly and get started by `from tripkit import Itinerum`
 
    *or*
 
- - Copy the `datakit` directory into other projects as a library (until more complete packaging is available)
+ - Copy the `tripkit` directory into other projects as a library (until more complete packaging is available)
 
-For more complete installation information (e.g., on Windows), see the official [itinerum-datakit documentation] (https://itinerum-datakit.readthedocs.io/en/stable/usage/installation.html).
+For more complete installation information (e.g., on Windows), see the official [itinerum-tripkit documentation] (https://itinerum-tripkit.readthedocs.io/en/stable/usage/installation.html).
 
 
 ### Loading Subway Stations
@@ -35,8 +35,8 @@ Subway station data for trip detection can be loaded similarly for all processin
 *View attributes on a User*
 
 ```python
-import datakit_config
-itinerum = Itinerum(datakit_config)
+import tripkit_config
+itinerum = Itinerum(tripkit_config)
 
 # create a new database and read in .csv data
 itinerum.setup()
@@ -52,8 +52,8 @@ print(test_user.prompt_responses)
 *Run trip detection on a User*
 
 ```python
-import datakit_config
-itinerum = Itinerum(datakit_config)
+import tripkit_config
+itinerum = Itinerum(tripkit_config)
 
 # load user from database by uuid
 user = itinerum.database.load_user('00000000-0000-0000-0000-000000000000')
@@ -61,10 +61,10 @@ user = itinerum.database.load_user('00000000-0000-0000-0000-000000000000')
 # run a provided trip detection algorithm
 parameters = {
     'subway_stations': itinerum.database.load_subway_entrances(),
-    'break_interval_seconds': datakit_config.TRIP_DETECTION_BREAK_INTERVAL_SECONDS,
-    'subway_buffer_meters': datakit_config.TRIP_DETECTION_SUBWAY_BUFFER_METERS,
-    'cold_start_distance': datakit_config.TRIP_DETECTION_COLD_START_DISTANCE_METERS,
-    'accuracy_cutoff_meters': datakit_config.TRIP_DETECTION_ACCURACY_CUTOFF_METERS
+    'break_interval_seconds': tripkit_config.TRIP_DETECTION_BREAK_INTERVAL_SECONDS,
+    'subway_buffer_meters': tripkit_config.TRIP_DETECTION_SUBWAY_BUFFER_METERS,
+    'cold_start_distance': tripkit_config.TRIP_DETECTION_COLD_START_DISTANCE_METERS,
+    'accuracy_cutoff_meters': tripkit_config.TRIP_DETECTION_ACCURACY_CUTOFF_METERS
 }
 trips, summaries = itinerum.process.trip_detection.triplab.algorithm.run(user.coordinates.dicts(), 
                                                                          parameters)
