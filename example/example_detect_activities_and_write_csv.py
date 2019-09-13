@@ -51,9 +51,7 @@ dwell_time_summaries = []
 for idx, user in enumerate(users, start=1):
     # determine the locations to associate with coordinates as activities
     locations = create_activity_locations(user)
-    itinerum.io.write_semantic_locations_geojson(datakit_config,
-                                                 fn_base=user.uuid,
-                                                 locations=locations)
+    itinerum.io.write_semantic_locations_geojson(datakit_config, fn_base=user.uuid, locations=locations)
 
     summary = itinerum.process.activities.triplab.detect.run(user, locations, timezone=datakit_config.TIMEZONE)
     if summary:

@@ -23,9 +23,9 @@ itinerum.setup()
 
 # -- Stage 2: select user data and process points
 # a manually selected trip to perform test map matching on
-user = itinerum.database.load_user('00807c5b-7542-4868-8462-14b79a9fcc9f',
-                                   start=datetime(2017, 11, 29),
-                                   end=datetime(2017, 11, 30))
+user = itinerum.database.load_user(
+    '00807c5b-7542-4868-8462-14b79a9fcc9f', start=datetime(2017, 11, 29), end=datetime(2017, 11, 30)
+)
 
 
 # perform mapmatching using OSRM API

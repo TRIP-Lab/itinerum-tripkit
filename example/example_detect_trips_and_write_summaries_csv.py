@@ -58,7 +58,7 @@ with open(export_csv, 'w') as csv_f:
         'dlat',
         'dlon',
         'direct_distance',
-        'cumulative_distance'
+        'cumulative_distance',
     ]
     writer = csv.DictWriter(csv_f, fieldnames=headers)
     writer.writeheader()

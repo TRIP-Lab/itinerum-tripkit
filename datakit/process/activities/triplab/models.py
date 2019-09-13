@@ -21,7 +21,7 @@ class UserActivity(object):
         active_days = self.complete_days + self.incomplete_days
         if active_days:
             return float(self.num_trips) / active_days
-        return 0.
+        return 0.0
 
     @property
     def avg_trip_distance(self):
