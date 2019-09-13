@@ -184,7 +184,7 @@ def find_explained_inactivity_periods(daily_summaries, daily_trip_summaries):
 def wrap_for_tripkit(tz, complete_days):
     tripkit_complete_days = []
     for date, day_summary in complete_days.items():
-        dk_summary = DaySummary(
+        tk_summary = DaySummary(
             timezone=tz.zone,
             date=date,
             has_trips=day_summary['has_trips'],
@@ -194,7 +194,7 @@ def wrap_for_tripkit(tz, complete_days):
             consecutive_inactive_days=day_summary['consecutive_inactive_days'],
             inactivity_streak=day_summary['max_inactivity_streak'],
         )
-        tripkit_complete_days.append(dk_summary)
+        tripkit_complete_days.append(tk_summary)
     return tripkit_complete_days
 
 

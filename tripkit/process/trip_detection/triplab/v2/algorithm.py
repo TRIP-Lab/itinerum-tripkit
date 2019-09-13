@@ -6,7 +6,7 @@ import logging
 import math
 import utm
 
-from tripkit.models import Trip as DatakitTrip, TripPoint as DatakitTripPoint
+from tripkit.models import Trip as LibraryTrip, TripPoint as LibraryTripPoint
 from .models import GPSPoint, SubwayEntrance, MissingTrip, TripSegment, Trip
 from .trip_codes import TRIP_CODES
 
@@ -443,12 +443,12 @@ def wrap_for_tripkit(detected_trips):
     tripkit_trips = []
     for trip_num, detected_trip in enumerate(detected_trips, start=1):
         if isinstance(detected_trip, Trip):
-            trip = DatakitTrip(num=trip_num, trip_code=detected_trip.code)
+            trip = LibraryTrip(num=trip_num, trip_code=detected_trip.code)
             trip_distance = 0.0
             for segment in detected_trip.segments:
                 for point in segment.points:
                     trip_distance += point.distance_before_meters
-                    p = DatakitTripPoint(
+                    p = LibraryTripPoint(
                         database_id=point.database_id,
                         latitude=point.latitude,
                         longitude=point.longitude,
