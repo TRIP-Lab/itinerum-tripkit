@@ -38,4 +38,6 @@ class MapMatcherAPI(object):
         if not self.urls[matcher].endswith('/'):
             self.urls[matcher] += '/'
         r = requests.post(self.urls[matcher] + latlngs_str, data=parameters)
+        if r.status_code >= 300:
+            raise Exception(f"Map matching request could not be completed - {r.reason} ({r.status_code}) {r.text}")
         return r.json()

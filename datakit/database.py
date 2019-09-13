@@ -167,8 +167,22 @@ class Database(object):
 
         user = User(db_user)
         if start and end:
-            # TODO: add BETWEEN queries here
-            raise NotImplementedError("BETWEEN queries: start and end")
+            user.coordinates = user.coordinates.where(Coordinate.timestamp_UTC >= start,
+                                                      Coordinate.timestamp_UTC <= end)
+            user.prompt_responses = user.prompt_responses.where(PromptResponse.displayed_at_UTC >= start,
+                                                                PromptResponse.displayed_at_UTC <= end)
+            user.cancelled_prompt_responses = user.cancelled_prompt_responses.where(
+                CancelledPromptResponse.displayed_at_UTC >= start,
+                CancelledPromptResponse.displayed_at_UTC <= end,
+            )
+            user.detected_trip_coordinates = user.detected_trip_coordinates.where(
+                DetectedTripCoordinate.timestamp_UTC >= start,
+                DetectedTripCoordinate.timestamp_UTC <= end
+            )
+            user.detected_trip_day_summaries = user.detected_trip_day_summaries.where(
+                DetectedTripDaySummary.date >= start.date,
+                DetectedTripDaySummary.date <= end.date
+            )
         elif start:
             user.coordinates = user.coordinates.where(Coordinate.timestamp_UTC >= start)
             user.prompt_responses = user.prompt_responses.where(PromptResponse.displayed_at_UTC >= start)
