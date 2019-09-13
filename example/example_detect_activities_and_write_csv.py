@@ -7,15 +7,9 @@ import sys
 
 sys.path[0] = os.path.abspath(os.path.pardir)
 os.chdir(os.path.pardir)
-
 # begin
-import ciso8601
 from collections import namedtuple
-import csv
 from datakit import Itinerum
-from datakit.models.Trip import Trip
-from datakit.models.TripPoint import TripPoint
-import pytz
 
 import datakit_config
 
@@ -46,20 +40,23 @@ def create_activity_locations(user):
 
 
 # -- main
-itinerum = Itinerum(config=datakit_config)
-users = itinerum.load_users(load_trips=False, limit=1)
-tz = pytz.timezone('America/Montreal')
+# NOTE: the ./example_detect_complete_days_and_write_csv.py can pre-populate all
+# data in cache needed to run this example
 
-# initialize output file
-csv_name = '{}-activities.csv'.format(datakit_config.DATABASE_FN.split('.')[0])
-export_csv = os.path.join(datakit_config.OUTPUT_DATA_DIR, csv_name)
-with open(export_csv, 'w') as csv_f:
-    headers = ['uuid', 'lat', 'lon', 'start_timestamp', 'end_timestamp', 'activity_type']
-    writer = csv.DictWriter(csv_f, fieldnames=headers)
-    writer.writeheader()
+itinerum = Itinerum(config=datakit_config)
+users = itinerum.load_users(limit=50)
 
 # perform activity detection on all user points
+dwell_time_summaries = []
 for idx, user in enumerate(users, start=1):
     # determine the locations to associate with coordinates as activities
     locations = create_activity_locations(user)
-    itinerum.process.activities.triplab.detect.run(user, tz, locations)
+    itinerum.io.write_semantic_locations_geojson(datakit_config,
+                                                 fn_base=user.uuid,
+                                                 locations=locations)
+
+    summary = itinerum.process.activities.triplab.detect.run(user, locations, timezone=datakit_config.TIMEZONE)
+    if summary:
+        dwell_time_summaries.append(summary)
+# write .csv output
+itinerum.io.write_user_summaries_csv(datakit_config, dwell_time_summaries)

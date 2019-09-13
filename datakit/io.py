@@ -424,9 +424,16 @@ def write_trip_summaries_csv(cfg, filename, summaries, extra_fields=None):
         writer.writerows(summaries)
 
 
-def write_complete_days_csv(cfg, filename, trip_day_summaries):
-    csv_fp = os.path.join(cfg.OUTPUT_DATA_DIR, filename)
+def write_complete_days_csv(cfg, trip_day_summaries):
+    '''
+    Write complete day summaries to .csv with a record per day per user over
+    the duration of their participation in a survey.
 
+    :param trip_day_summaries: Iterable of complete day summaries for each user
+                               enumerated by uuid and date.
+
+    :type trip_day_summaries: list of dict
+    '''
     csv_rows = []
     for uuid, daily_summaries in trip_day_summaries.items():
         for s in daily_summaries:
@@ -459,6 +466,8 @@ def write_complete_days_csv(cfg, filename, trip_day_summaries):
         'consecutive_inactive_days',
         'inactivity_streak',
     ]
+    survey_name = cfg.DATABASE_FN.split('.')[0]
+    csv_fp = os.path.join(cfg.OUTPUT_DATA_DIR, f'{survey_name}-user_summaries.csv')
     with open(csv_fp, 'w', newline=NEWLINE_MODE) as csv_f:
         writer = csv.DictWriter(csv_f, dialect='excel', fieldnames=headers)
         writer.writeheader()
@@ -467,11 +476,13 @@ def write_complete_days_csv(cfg, filename, trip_day_summaries):
 
 def write_user_summaries_csv(cfg, summaries):
     '''
-    Write the user summary data consisting of participation tallies for individual users
-    over the course of a survey.
+    Write the user summary data consisting of complete days and trips tallies with a record
+    per each user.
 
     :param cfg:       Global configuration object
     :param summaries: Iterable of user summaries for row records
+
+    :type summaries: list of dict
     '''
     headers1 = (
         ['Survey timezone:', cfg.TIMEZONE]
@@ -480,23 +491,23 @@ def write_user_summaries_csv(cfg, summaries):
     )
     headers2 = [
         'uuid',
-        'start_timestamp_local',
+        'start_timestamp',
         'start_timestamp_UTC',
-        'end_timestamp_local',
+        'end_timestamp',
         'end_timestamp_UTC',
         'complete_days',
         'incomplete_days',
         'inactive_days',
         'num_trips',
         'trips_per_day',
-        'total_trips_distance',
-        'avg_trip_distance',
-        'total_trips_duration',
-        'stay_time_home',
-        'stay_time_work',
-        'stay_time_study',
-        'commute_time_study',
-        'commute_time_work',
+        'total_trips_distance_m',
+        'avg_trip_distance_m',
+        'total_trips_duration_s',
+        'stay_time_home_s',
+        'stay_time_work_s',
+        'stay_time_study_s',
+        'commute_time_study_s',
+        'commute_time_work_s',
     ]
     survey_name = cfg.DATABASE_FN.split('.')[0]
     csv_fp = os.path.join(cfg.OUTPUT_DATA_DIR, f'{survey_name}-user_summaries.csv')

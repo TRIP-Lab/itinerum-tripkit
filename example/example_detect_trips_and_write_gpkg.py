@@ -16,8 +16,8 @@ import datakit_config
 # Edit ./datakit_config.py first!
 itinerum = Itinerum(config=datakit_config)
 
-# -- Load user trip from database and write as GIS file
-users = itinerum.load_users(limit=1, load_trips=False)
+# -- Load user trip from database and write as GIS-compatible file
+users = itinerum.load_users(load_trips=False)
 
 parameters = {
     'subway_entrances': itinerum.database.load_subway_entrances(),
@@ -28,4 +28,5 @@ parameters = {
 }
 for user in users:
     user.trips = itinerum.process.trip_detection.triplab.v2.algorithm.run(user.coordinates, parameters)
-    itinerum.io.write_trips_geopackage(datakit_config, fn_base=str(user.uuid), trips=user.trips)
+    itinerum.database.save_trips(user, user.trips)
+    itinerum.io.write_trips_geopackage(datakit_config, fn_base=user.uuid, trips=user.trips)

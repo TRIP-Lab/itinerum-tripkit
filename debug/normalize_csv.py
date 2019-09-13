@@ -1,12 +1,10 @@
 #!/usr/bin/env python
 # Kyle Fitzsimmons, 2018
-'''./extras/normalize_csv.py 
+'''./extras/normalize_csv.py
 
 This script is a pre-processing script for normalizing any datetimes with included
-timezone information to UTC format. Working with UTC ultimately requires less
-mental overhead and provides better safety in running algorithms across different
-study areas. The final outputs can then be converted back and reported in the original
-timezones.
+timezone information to UTC format. This script is provided for converting legacy
+data provided in a local timezone instead of the UTC format expected by this library.
 '''
 import csv
 import ciso8601

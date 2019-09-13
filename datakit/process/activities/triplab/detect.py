@@ -4,6 +4,7 @@ import itertools
 import logging
 
 from geopy.distance import distance
+import pytz
 
 from .models import UserActivity
 
@@ -32,6 +33,7 @@ def generate_locations(location_columns, survey_response):
     return locations
 
 
+# check whether two semantic locations could be detected for the same coordinates
 def detect_semantic_location_overlap(uuid, locations, activity_proximity_m):
     for loc1, loc2 in itertools.combinations(locations, 2):
         distance_between_m = distance(locations[loc1], locations[loc2]).meters
@@ -39,13 +41,7 @@ def detect_semantic_location_overlap(uuid, locations, activity_proximity_m):
             logger.warn(f"possible overlap in semantic locations: {uuid} {loc1}-->{loc2} ({distance_between_m} m)")
 
 
-def label_by_proximity(locations, c, activity_proximity_m):
-    for name, location in locations.items():
-        delta_m = distance((c.latitude, c.longitude), (location.latitude, location.longitude)).meters
-        if delta_m <= activity_proximity_m:
-            c.semantic_location = name
-
-
+# label each trip point with its closest semantic location
 def label_trip_points(locations, trip, proximity_m):
     for p in trip.points:
         p.label = None
@@ -92,18 +88,18 @@ def tally_commute(trip):
     return commute_times
 
 
-def run(user, locations=None, proximity_m=50):
-    logger.info(f"Tallying semantic location activity for: {user.uuid}...")
+def run(user, locations=None, proximity_m=50, timezone=None):
+    logger.info(f"Tallying semantic location dwell times for {user.uuid}...")
     if not user.trips:
-        activity = UserActivity(user.uuid, start=None, end=None)
-        return activity.as_dict()
+        logger.info(f"No trips available.")
+        return
 
     if not locations:
-        print("No activity locations to detect.")
+        logger.info("No activity locations provided.")
         return
     detect_semantic_location_overlap(user.uuid, locations, proximity_m)
 
-    activity = UserActivity(user.uuid, start=user.trips[0].start_UTC, end=user.trips[-1].end_UTC)
+    activity = UserActivity(user.uuid, start_time=user.trips[0].start_UTC, end_time=user.trips[-1].end_UTC)
 
     # tally distances and durations for semantic locations and as an aggregate of all trips
     for t in user.trips:
@@ -117,9 +113,9 @@ def run(user, locations=None, proximity_m=50):
             activity.commute_times.setdefault(name, 0)
             activity.commute_times[name] += duration
         if t.trip_code < 100:
+            activity.num_trips += 1
             activity.total_trips_distance += t.distance
             activity.total_trips_duration += (t.end_UTC - t.start_UTC).total_seconds()
-
     # gather complete days statistics
     for day_summary in user.detected_trip_day_summaries:
         if day_summary.has_trips:
@@ -130,4 +126,9 @@ def run(user, locations=None, proximity_m=50):
         else:
             activity.inactive_days += 1
 
-    return activity.as_dict()
+    activity_record = activity.as_dict()
+    if timezone:
+        tz = pytz.timezone(timezone)
+        activity_record['start_timestamp'] = pytz.utc.localize(activity.start_time).astimezone(tz).isoformat()
+        activity_record['end_timestamp'] = pytz.utc.localize(activity.end_time).astimezone(tz).isoformat()
+    return activity_record
