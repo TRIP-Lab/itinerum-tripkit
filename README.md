@@ -4,16 +4,16 @@
 
 Documentation for library usage: https://itinerum-tripkit.readthedocs.io/
 
-This library serves as a bootstrapping framework to process data from the Itinerum platform and hardward GPS loggers in a standardized format. It can be used both through Jupyter for exploring data interactively and imported as a module in standalone applications.
+This library serves as a framework to process data from the Itinerum platform and hardware GPS loggers (e.g., QStarz). It can be used both through Jupyter to explore datasets interactively or imported as a module in standalone scripts and applications.
 
-This repository also acts as the development grounds for the version(s) of the Itinerum platform algorithms within the Github TRIPLab repositories. 
+This repository also serves as the development bed for the Itinerum platform algorithms within the TRIP Lab repositories. 
 
 ## Setup
 
 ### Quickstart
 
-1. Clone this repository and `pip install -r requirements.txt` ([virtualenv](https://virtualenv.pypa.io/en/stable/) and [virtualenvwrapper](https://virtualenvwrapper.readthedocs.io/en/latest/) are recommended)
-2. Place source data in the `./input` folder (create if necessary) and edit `./tripkit/config.py` with the appropriate filepaths.
+1. Clone this repository and `pip install -r requirements.txt` (using a Python [virtual environment](https://docs.python.org/3/library/venv.html) is recommended)
+2. Place source *.csv* data in the `itinerum-tripkit/input` folder (create if necessary) and edit `./tripkit/config.py` to reflect the correct filepaths.
 
 Then either:
 
@@ -21,7 +21,7 @@ Then either:
 
    *or*
 
- - Copy the `tripkit` directory into other projects as a library (until more complete packaging is available)
+ - Copy the `tripkit` directory into other projects as a library (more complete packaging to come)
 
 For more complete installation information (e.g., on Windows), see the official [itinerum-tripkit documentation] (https://itinerum-tripkit.readthedocs.io/en/stable/usage/installation.html).
 
@@ -60,21 +60,18 @@ user = itinerum.database.load_user('00000000-0000-0000-0000-000000000000')
 
 # run a provided trip detection algorithm
 parameters = {
-    'subway_stations': itinerum.database.load_subway_entrances(),
+    'subway_entrances': itinerum.database.load_subway_entrances(),
     'break_interval_seconds': tripkit_config.TRIP_DETECTION_BREAK_INTERVAL_SECONDS,
     'subway_buffer_meters': tripkit_config.TRIP_DETECTION_SUBWAY_BUFFER_METERS,
     'cold_start_distance': tripkit_config.TRIP_DETECTION_COLD_START_DISTANCE_METERS,
     'accuracy_cutoff_meters': tripkit_config.TRIP_DETECTION_ACCURACY_CUTOFF_METERS
 }
-trips, summaries = itinerum.process.trip_detection.triplab.algorithm.run(user.coordinates.dicts(), 
-                                                                         parameters)
+trips = itinerum.process.trip_detection.triplab.v2.algorithm.run(user.coordinates, parameters)
 ```
 
 ## Processing
 
 #### Trip Detection
-
-Trips can be detected using the library on a raw dataset or trips can be manually imported from the web platform by calling the `load_trips_data()` method. Any re-detection of trips or manual import will overwrite the existing trips table.
 
 | Arguments         |                                                              |
 | ----------------- | ------------------------------------------------------------ |
@@ -82,7 +79,7 @@ Trips can be detected using the library on a raw dataset or trips can be manuall
 | `subway_stations` | A list of subway station entrance database objects containing `latitude` and `longitude` attributes |
 | `coordinates`     | A timestamp-ordered list of coordinates as dicts for a specific user. Multiple users should be run in sequence and have their output coordinates concatenated into a single list after if desired. |
 
-#### Outputs
+#### Trip Outputs
 
 Trips will be output with the following trip codes to indicate the type of trip:
 
