@@ -14,7 +14,7 @@ Generating the Configuration
 The following parameters are accepted by **itinerum-tripkit**.
 
 
-.. tabularcolumns:: |p{6.5cm}|p{8.5cm}|
+.. tabularcolumns:: |p{6.5cm}|p{7.5cm}|
 
 ============================================= ===============================================
 ``DATABASE_FN``                               The filename to be used for the cache
@@ -44,7 +44,7 @@ The following parameters are accepted by **itinerum-tripkit**.
 
 **Optional parameters**
 
-.. tabularcolumns:: |p{6.5cm}|p{8.5cm}|
+.. tabularcolumns:: |p{6.5cm}|p{7.5cm}|
 
 ============================================= ===============================================
 ``TIMEZONE``                                  The timezone name as described within the
@@ -70,9 +70,8 @@ Examples
 
 .. code-block:: python
 
-    {
-        'home': ['location_home_lat',
-                'location_home_lon'],
-        'work': ['location_work_lat',
-                'location_work_lon']
+    SEMANTIC_LOCATIONS = {
+        'home': ['location_home_lat', 'location_home_lon'],
+        'work': ['location_work_lat', 'location_work_lon'],
+        'study': ['location_study_lat', 'location_study_lon']
     }
