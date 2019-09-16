@@ -2,16 +2,16 @@
 
 Quick Start
 ===========
-The most common workflow is downloading data from the Itinerum web platform and running the data through various operations to clean
-and infer usable trip information from GPS data. *Itinerum-tripkit* makes this simple by loading the .csv text data into a type-checked 
-SQLite database and then constructing generalized library objects (such as :py:class:`tripkit.models.User` and :py:class:`tripkit.models.Trip`)
-to represent this data between processing modules. This could be changed to support other SQL variants such as PostgreSQL, but SQLite is 
-chosen as the default library for portability.
-
+The most common workflow is downloading data from the Itinerum web platform and running the data through tripkit ``processes`` to clean
+and infer usable trip information from GPS data. The *itinerum-tripkit* library provides simple interfaces to load download *.csv* data into a
+local SQLite database and then providing Python ``class`` objects (such as :py:class:`tripkit.models.User` and :py:class:`tripkit.models.Trip`)
+to represent this data for processing.
 
 Load Data
 ---------
-When the configuration has been created (see :ref:`ConfigAnchor`), input .csv data be loaded to the itinerum-tripkit cache database as follows:
+For any of the inlcuded library processes, a configuration object will be expected (see :ref:`ConfigAnchor`).
+
+Input .csv data be loaded to the itinerum-tripkit cache database as follows:
 
 .. code-block:: python
 
@@ -21,7 +21,7 @@ When the configuration has been created (see :ref:`ConfigAnchor`), input .csv da
     itinerum = Itinerum(config=tripkit_config)
     itinerum.setup()
 
-When the data has been loaded to the cache database, each surveyed user's data is available as a list of :py:class:`tripkit.models.User` objects:
+After data has been loaded to the database, survey users can be loaded as a list of :py:class:`tripkit.models.User` objects:
 
 .. code-block:: python
 
@@ -31,7 +31,7 @@ When the data has been loaded to the cache database, each surveyed user's data i
 
 
 *Note: On first run, .csv data will be imported if the table* :py:class:`user_survey_responses` *does not exist in the cache database.
-It is safe to delete the accompanying .sqlite file to reset the library's cache.*
+It is also safe to delete the accompanying .sqlite file to reset the library's cache.*
 
 
 Run Trip Detection on a User
