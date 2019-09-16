@@ -52,18 +52,8 @@ The following parameters are accepted by **itinerum-tripkit**.
                                               (e.g., America/Montreal)
 
 ``SEMANTIC_LOCATIONS``                        Mapping of semantic locations to *latitude*
-                                              *longitude* columns within survey responses.
-                                              
-                                              Example: 
-
-                                              ::
-                                              {
-                                                  'home': ['location_home_lat',
-                                                           'location_home_lon'],
-                                                  'work': ['location_work_lat',
-                                                           'location_work_lon']
-                                              }
-                                              
+                                              *longitude* columns within survey responses
+                                              (see below for example).
 ``SEMANTIC_LOCATION_PROXIMITY_METERS``        Buffer distance in meters to consider a GPS
                                               point to be at a semantic location.
 ``MAP_MATCHING_BIKING_API_URL``               Endpoint for OSRM bicycle network map
@@ -71,3 +61,18 @@ The following parameters are accepted by **itinerum-tripkit**.
 ``MAP_MATCHING_DRIVING_API_URL``              Endpoint for OSRM car network map maptching.
 ``MAP_MATCHING_WALKING_API_URL``              Endpoint for OSRM foot network map maptching.
 ============================================= ===============================================
+
+
+Examples
+++++++++
+
+**Semantic locations:**
+
+.. code-block:: python
+
+{
+    'home': ['location_home_lat',
+            'location_home_lon'],
+    'work': ['location_work_lat',
+            'location_work_lon']
+}

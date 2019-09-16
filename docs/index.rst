@@ -19,8 +19,8 @@ with the library's core methods directly.
    :caption: Contents:
 
    usage/installation
-   usage/quickstart
    usage/config
+   usage/quickstart
    usage/api
    usage/objects
    outputs/complete_days
