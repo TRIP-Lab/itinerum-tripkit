@@ -1,7 +1,7 @@
 Installation
 ============
 
-The ``itinerum-tripkit`` can be installed as a library using pip or the included `setup.py` file, or can be included in
+The **itinerum-tripkit** can be installed as a library using pip or the included `setup.py` file, or can be included in
 as an included dependency in your own project by cloning: http://github.com/TRIP-Lab/itinerum-tripkit and copying the ``tripkit`` directory.
 
 
@@ -45,10 +45,14 @@ GDAL
 ~~~~
 First the GDAL library must be installed for geospatial operations. If it hasn't already been installed on your system with OSGeo4W or some other means,
 the easiest way is from the gisinternals.com pre-compiled binaries. For your system version (in 2019, likely MSVC 2017 / x64), click "Downloads". From the downloads
-page, the core GDAL library is all that is needed ("gdal-204-1911-64-core.msi"). Install this file and set two Windows environment variables:
-- Append the PATH: C:\Program Files\GDAL
+page, the core GDAL library is all that is needed ("gdal-204-1911-64-core.msi").
+
+Install this file and set two Windows environment variables:
+
+- Append to PATH: C:\Program Files\GDAL
 - Create GDAL_DATA: C:\Program Files\GDAL\gdal-data
-After these variables have been set, close and re-open the terminal (and re-activate the virtual env if using). Next, the Python dependencies can been installed.
+
+After setting these variables, close and re-open the command prompt (re-activate the virtual env if using) and the Python dependencies can be installed.
 
 Compiled Python Packages
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -59,9 +63,9 @@ downloaded from various mirrors (i.e., https://www.lfd.uci.edu/~gohlke/pythonlib
 
 Compiled packages to install:
 
-* https://www.lfd.uci.edu/~gohlke/pythonlibs/#gdal
-* https://www.lfd.uci.edu/~gohlke/pythonlibs/#fiona
-* https://www.lfd.uci.edu/~gohlke/pythonlibs/#scikit-learn
+* GDAL: https://www.lfd.uci.edu/~gohlke/pythonlibs/#gdal
+* Fiona: https://www.lfd.uci.edu/~gohlke/pythonlibs/#fiona
+* Scikit-learn: https://www.lfd.uci.edu/~gohlke/pythonlibs/#scikit-learn
 
 
 Optional Components
@@ -70,9 +74,9 @@ Optional Components
 OSRM
 ++++
 
-The ``itinerum-tripkit`` provides interfaces for submitting map matching queries to an OSRM API and writing results to file.
+The **itinerum-tripkit** provides interfaces for submitting map matching queries to an OSRM API and writing results to file.
 
-The instructions that follow use the Multi-Level Djikstra processing pipelines recommended [here](https://github.com/Project-OSRM/osrm-backend/wiki/Running-OSRM) by Project OSRM.
+The instructions that follow use the `Multi-Level Djikstra processing pipelines` recommended by Project OSRM.
 
 ##### Installing the OSRM API with Docker containers
 
@@ -120,4 +124,5 @@ The instructions that follow use the Multi-Level Djikstra processing pipelines r
 
 
 .. _venv: https://docs.python.org/3/library/venv.html
-.. _`Bulk Inserts`: http://docs.peewee-orm.com/en/latest/peewee/querying.html#bulk-inserts
+.. _Bulk Inserts: http://docs.peewee-orm.com/en/latest/peewee/querying.html#bulk-inserts
+.. _Multi-Level Djikstra processing pipelines:https://github.com/Project-OSRM/osrm-backend/wiki/Running-OSRM
