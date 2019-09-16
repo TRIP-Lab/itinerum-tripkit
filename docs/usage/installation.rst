@@ -70,7 +70,6 @@ Compiled packages to install:
 
 Optional Components
 -------------------
-
 OSRM
 ++++
 
@@ -78,9 +77,10 @@ The **itinerum-tripkit** provides interfaces for submitting map matching queries
 
 The instructions that follow use the `Multi-Level Djikstra processing pipelines` recommended by Project OSRM.
 
-##### Installing the OSRM API with Docker containers
+Installing the OSRM API with Docker containers
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-1. Download an OSM extract for your region, such as for Québec
+1. Download an OSM extract for your region (ex. Québec)
 
 .. code-block:: bash
 
@@ -113,7 +113,7 @@ The instructions that follow use the `Multi-Level Djikstra processing pipelines`
    $ mkdir foot
    $ mv quebec-latest.orsm* foot
 
-3. Run the Docker OSRM routing API on ports 5000-5002
+3. Run the Docker OSRM API containers on ports ``5000-5002`` to reverse proxy for public access
 
 .. code-block:: bash
    $ docker run -d --restart always -p 5000:5000 -v $(pwd)/car:/data osrm/osrm-backend osrm-routed --algorithm MLD --max-matching-size=5000 /data/quebec-latest.osrm

@@ -67,7 +67,7 @@ it is recommended to review the `process source code`_.
     itinerum.database.save_trip_day_summaries(user, trip_day_summaries, tripkit_config.TIMEZONE)
 
 
-Run OSRM Map Match on a Trip
+Run OSRM Map Matching on a Trip
 ----------------------------
 If an OSRM server is available, map matching queries can be passed to the API and the response saved to a GIS-friendly
 format (*.geojson* or *.gpkg*). The API query is limited by URL length, so map matching should be done for a single trip
