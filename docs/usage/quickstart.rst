@@ -70,7 +70,16 @@ it is recommended to review the `process source code`_.
 Run OSRM Map Match on a Trip
 ----------------------------
 If an OSRM server is available, map matching queries can be passed to the API and the response saved to a GIS-friendly
-format (*.geojson* or *.gpkg*).
+format (*.geojson* or *.gpkg*). The API query is limited by URL length, so map matching should be done for a single trip
+and especially long trips may have to be supplied in chunks.
 
+.. code-block:: python
+
+    user = itinerum.database.load_user(
+        '00000000-0000-0000-0000-000000000000', start=datetime(2019, 1, 1), end=datetime(2019, 1, 2)
+    )
+    map_matcher = itinerum.process.map_match.osrm(tripkit_config)
+    mapmatched_results = map_matcher.match(coordinates=user.coordinates, matcher='DRIVING')
+    itinerum.io.write_mapmatched_geojson(cfg=tripkit_config, fn_base=user.uuid, results=mapmatched_results)
 
 .. _process source code: https://github.com/TRIP-Lab/itinerum-tripkit/blob/master/tripkit/process/complete_days/triplab/counter.py
