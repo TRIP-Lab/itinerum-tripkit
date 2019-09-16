@@ -57,11 +57,19 @@ Run Complete Days Summaries on a User
 -------------------------------------
 When trips have been detected for a user, the complete days summary process can be run on individual users.
 This will check to see if a day is "complete" (contains no missing trips), "incomplete", or "inactive". There
-are some additional rules to consider days as complete if there is an inactive day between two complete days and
-it is recommended to review the process source code.
+are additional rules to consider days as "complete" if there is an inactive day between two complete days;
+it is recommended to review the `process source code`_.
 
 .. code-block:: python
 
     user = itinerum.load_users(uuid='00000000-0000-0000-0000-000000000000')[0]
     trip_day_summaries = itinerum.process.complete_days.triplab.counter.run(user.trips, tripkit_config.TIMEZONE)
     itinerum.database.save_trip_day_summaries(user, trip_day_summaries, tripkit_config.TIMEZONE)
+
+
+Run OSRM Map Match on a Trip
+----------------------------
+If an OSRM server is available, map matching queries can be passed to the API and the response saved to a GIS-friendly
+format (*.geojson* or *.gpkg*).
+
+.. _process source code: https://github.com/TRIP-Lab/itinerum-tripkit/blob/master/tripkit/process/complete_days/triplab/counter.py
