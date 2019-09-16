@@ -43,6 +43,7 @@ The following parameters are accepted by **itinerum-tripkit**:
 ============================================= ===============================================
 
 **Optional parameters**
+*These parameters are only needed if their related processes will be run.*
 
 .. tabularcolumns:: |p{6.5cm}|p{6.5cm}|
 
