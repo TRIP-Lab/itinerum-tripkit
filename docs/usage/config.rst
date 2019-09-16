@@ -70,9 +70,9 @@ Examples
 
 .. code-block:: python
 
-{
-    'home': ['location_home_lat',
-            'location_home_lon'],
-    'work': ['location_work_lat',
-            'location_work_lon']
-}
+    {
+        'home': ['location_home_lat',
+                'location_home_lon'],
+        'work': ['location_work_lat',
+                'location_work_lon']
+    }
