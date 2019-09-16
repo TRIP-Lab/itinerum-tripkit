@@ -11,7 +11,7 @@ It is recommended to use venv_ to keep the tripkit dependency versions isolated 
 
 Linux & MacOS
 +++++++++++++
-::
+.. code-block:: bash
 
     $ python3 -m venv tripkit-venv
     $ chmod +x tripkit-ven/bin/activate
@@ -22,8 +22,9 @@ Windows
 
 **PowerShell:**
 With PowerShell, `Set-ExecutionPolicy Unrestricted -Force` may be required to allow the `Activate.ps1` 
-script to run. If you update the permissions, the PowerShell prompt must also be restarted.:
-::
+script to run. If you update the permissions, the PowerShell prompt must also be restarted.
+
+.. code-block:: powershell
 
     PS C:\Code\itinerum-tripkit> python -m venv tripkit-venv
     PS C:\Code\itinerum-tripkit> .\tripkit-venv\Scripts\Activate.ps1
@@ -34,7 +35,9 @@ Dependencies
 Linux & MacOS
 +++++++++++++
 
-Project dependencies can be installed with pip::
+Project dependencies can be installed with pip:
+
+.. code-block:: powershell
 
     (tripkit-venv) $ pip install -r requirements.txt
 
@@ -44,20 +47,22 @@ Windows
 GDAL
 ~~~~
 First the GDAL library must be installed for geospatial operations. If it hasn't already been installed on your system with OSGeo4W or some other means,
-the easiest way is from the gisinternals.com pre-compiled binaries. For your system version (in 2019, likely MSVC 2017 / x64), click "Downloads". From the downloads
-page, the core GDAL library is all that is needed ("gdal-204-1911-64-core.msi").
+the easiest way is from the gisinternals.com pre-compiled binaries. For your system version (likely *MSVC 2017 / x64*), click "Downloads". From the downloads
+page, the core GDAL library is all that is needed (*gdal-204-1911-64-core.msi*).
 
 Install this file and set two Windows environment variables:
 
 - Append to PATH: C:\Program Files\GDAL
 - Create GDAL_DATA: C:\Program Files\GDAL\gdal-data
 
-After setting these variables, close and re-open the command prompt (re-activate the virtual env if using) and the Python dependencies can be installed.
+After setting these variables, close and re-open the command prompt (re-activate the virtual environment if using) and the Python dependencies can be installed.
 
 Compiled Python Packages
 ~~~~~~~~~~~~~~~~~~~~~~~~
 On Windows, some packages may fail to install without their pre-existing build dependencies. Compiled wheel versions can be
-downloaded from various mirrors (i.e., https://www.lfd.uci.edu/~gohlke/pythonlibs), copied to the local directory and installed with pip directly.::
+downloaded from various mirrors, copied to the local directory and installed with pip directly.
+
+.. code-block:: powershell
 
     (tripkit-venv) PS C:\Code\itinerum-tripkit> pip install .\Fiona-1.8.6-cp37-cp37m-win_amd64.whl
 
