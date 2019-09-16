@@ -23,7 +23,7 @@ Then either:
 
  - Copy the `tripkit` directory into other projects as a library (more complete packaging to come)
 
-For more complete installation information (e.g., on Windows), see the official [itinerum-tripkit documentation] (https://itinerum-tripkit.readthedocs.io/en/stable/usage/installation.html).
+For more complete installation information, see the official [itinerum-tripkit documentation](https://itinerum-tripkit.readthedocs.io/en/stable/usage/installation.html).
 
 
 ### Loading Subway Stations
