@@ -72,4 +72,5 @@ Run OSRM Map Match on a Trip
 If an OSRM server is available, map matching queries can be passed to the API and the response saved to a GIS-friendly
 format (*.geojson* or *.gpkg*).
 
+
 .. _process source code: https://github.com/TRIP-Lab/itinerum-tripkit/blob/master/tripkit/process/complete_days/triplab/counter.py
