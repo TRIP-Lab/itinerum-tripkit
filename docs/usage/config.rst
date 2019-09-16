@@ -53,12 +53,17 @@ The following parameters are accepted by **itinerum-tripkit**.
 
 ``SEMANTIC_LOCATIONS``                        Mapping of semantic locations to *latitude*
                                               *longitude* columns within survey responses.
-                                              Example: ``{
+                                              
+                                              Example: 
+
+                                              ::
+                                              {
                                                   'home': ['location_home_lat',
                                                            'location_home_lon'],
                                                   'work': ['location_work_lat',
                                                            'location_work_lon']
-                                              }``
+                                              }
+                                              
 ``SEMANTIC_LOCATION_PROXIMITY_METERS``        Buffer distance in meters to consider a GPS
                                               point to be at a semantic location.
 ``MAP_MATCHING_BIKING_API_URL``               Endpoint for OSRM bicycle network map
