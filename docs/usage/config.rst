@@ -11,10 +11,10 @@ global variables that is imported or defined as a bare class Config object and n
 
 Generating the Configuration
 ----------------------------
-The following parameters are accepted by **itinerum-tripkit**.
+The following parameters are accepted by **itinerum-tripkit**:
 
 
-.. tabularcolumns:: |l|l|
+.. tabularcolumns:: |l|L|
 
 ============================================= ===============================================
 ``DATABASE_FN``                               The filename to be used for the cache
