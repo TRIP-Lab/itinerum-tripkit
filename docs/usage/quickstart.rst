@@ -67,8 +67,29 @@ it is recommended to review the `process source code`_.
     itinerum.database.save_trip_day_summaries(user, trip_day_summaries, tripkit_config.TIMEZONE)
 
 
+Run Semantic Location Activity Detection on a User
+--------------------------------------------------
+If common user locations are available within survey responses or supplied separately (such as from the outputs of a
+clustering process), dwell times from nearby GPS points can be tallied. Note: the ``Coordinate`` model is currently
+created on-the-fly as demonstrated, but this should soon be available as an included library class-object.
+
+.. code-block:: python
+
+    Coordinate = namedtuple('Coordinate', ['latitude', 'longitude'])
+    user = itinerum.load_users(uuid='00000000-0000-0000-0000-000000000000')
+    locations = {
+        'home': Coordinate(latitude=45.5, longitude=-73.5)
+    }
+    itinerum.io.write_semantic_locations_geojson(tripkit_config, fn_base=user.uuid, locations=locations)
+    summary = itinerum.process.activities.triplab.detect.run(user, locations, 
+                                                             proximity_m=tripkit_config.SEMANTIC_LOCATION_PROXIMITY_METERS, 
+                                                             timezone=tripkit_config.TIMEZONE)
+    dwell_time_summaries = [summary]  # usually, multiple users would be summarized for output
+    itinerum.io.write_user_summaries_csv(tripkit_config, dwell_time_summaries)
+
+
 Run OSRM Map Matching on a Trip
-----------------------------
+-------------------------------
 If an OSRM server is available, map matching queries can be passed to the API and the response saved to a GIS-friendly
 format (*.geojson* or *.gpkg*). The API query is limited by URL length, so map matching should be done for a single trip
 and especially long trips may have to be supplied in chunks.
