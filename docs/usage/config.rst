@@ -21,7 +21,11 @@ The following parameters are accepted by itinerum-tripkit.
 ``INPUT_DATA_DIR``                            Directory of the unpacked Itinerum
                                               export .csv files. Usually a subdirectory
                                               of the ``./input`` directory.
+``INPUT_DATA_TYPE``                           Data source: ``itinerum`` or ``qstarz``
 ``OUTPUT_DATA_DIR``                           Output directory to save processed export data.
+``SUBWAY_STATIONS_FP``                        Relative filepath of subway .csv data for
+                                              connecting gaps during trip detection
+                                              algorithms.
 ``TRIP_DETECTION_BREAK_INTERVAL_SECONDS``     Minimum stop time for breaking GPS coordinates
                                               into trips.
 ``TRIP_DETECTION_SUBWAY_BUFFER_METERS``       Buffer in meters for associating a trip end
@@ -35,4 +39,29 @@ The following parameters are accepted by itinerum-tripkit.
                                               algorithms. Greater values indicate worse
                                               accuracy; generally 30-50 is deemed an
                                               acceptable range.
+============================================= ===============================================
+
+**Optional parameters**
+
+.. tabularcolumns:: |p{6.5cm}|p{8.5cm}|
+
+============================================= ===============================================
+``TIMEZONE``                                  The timezone name as described within the
+                                              tzdata database for complete days detection
+                                              (e.g., America/Montreal)
+
+``SEMANTIC_LOCATIONS``                        Mapping of semantic locations to *latitude*
+                                              *longitude* columns within survey responses.
+                                              Example: ``{
+                                                  'home': ['location_home_lat',
+                                                           'location_home_lon'],
+                                                  'work': ['location_work_lat',
+                                                           'location_work_lon']
+                                              }``
+``SEMANTIC_LOCATION_PROXIMITY_METERS``        Buffer distance in meters to consider a GPS
+                                              point to be at a semantic location.
+``MAP_MATCHING_BIKING_API_URL``               Endpoint for OSRM bicycle network map
+                                              maptching.
+``MAP_MATCHING_DRIVING_API_URL``              Endpoint for OSRM car network map maptching.
+``MAP_MATCHING_WALKING_API_URL``              Endpoint for OSRM foot network map maptching.
 ============================================= ===============================================

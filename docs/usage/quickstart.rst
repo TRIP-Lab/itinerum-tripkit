@@ -41,7 +41,7 @@ For writing new processing libraries, this is often an essential first step.
 
 .. code-block:: python
 
-    user = itinerum.load_users(uuid='00000000-0000-0000-0000-000000000000')[0]
+    user = itinerum.load_users(uuid='00000000-0000-0000-0000-000000000000')
     params = {
         'subway_stations': itinerum.database.load_subway_entrances(),
         'break_interval_seconds': tripkit_config.TRIP_DETECTION_BREAK_INTERVAL_SECONDS,
@@ -62,7 +62,7 @@ it is recommended to review the `process source code`_.
 
 .. code-block:: python
 
-    user = itinerum.load_users(uuid='00000000-0000-0000-0000-000000000000')[0]
+    user = itinerum.load_users(uuid='00000000-0000-0000-0000-000000000000')
     trip_day_summaries = itinerum.process.complete_days.triplab.counter.run(user.trips, tripkit_config.TIMEZONE)
     itinerum.database.save_trip_day_summaries(user, trip_day_summaries, tripkit_config.TIMEZONE)
 
@@ -75,9 +75,9 @@ and especially long trips may have to be supplied in chunks.
 
 .. code-block:: python
 
-    user = itinerum.database.load_user(
-        '00000000-0000-0000-0000-000000000000', start=datetime(2019, 1, 1), end=datetime(2019, 1, 2)
-    )
+    user = itinerum.load_users(
+    uuid='00807c5b-7542-4868-8462-14b79a9fcc9f', start=datetime(2017, 11, 29), end=datetime(2017, 11, 30)
+)
     map_matcher = itinerum.process.map_match.osrm(tripkit_config)
     mapmatched_results = map_matcher.match(coordinates=user.coordinates, matcher='DRIVING')
     itinerum.io.write_mapmatched_geojson(cfg=tripkit_config, fn_base=user.uuid, results=mapmatched_results)

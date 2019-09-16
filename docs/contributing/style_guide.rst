@@ -15,6 +15,13 @@ Itinerum-tripkit is a modular library that is built to be extended. The most com
 `tripkit/process/<descriptive-name>/<organization>/library_files.py`. Try to group additions as best as possible within existing directories if
 a one exists, but otherwise it is encouraged to be descriptive. If a suitable name doesn't exist, it's better to create a new directory altogether.
 
+Database
+++++++++
+Library readability is prioritized over absolute execution performance, although both are desired. To keep the Python code base neater, 
+the Peewee ORM is used for database operations. Peewee is used instead of SQLAlchemy to help keep the library compact while providing 
+comparable functionality. The database functions are intended to be SQL database agnostic, however, bulk inserts for initial data loading
+is tightly coupled to SQLite. Additional database engines will require specially handling data import from *.csv*.
+
 
 Pull Commits
 ------------

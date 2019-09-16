@@ -53,7 +53,9 @@ for idx, user in enumerate(users, start=1):
     locations = create_activity_locations(user)
     itinerum.io.write_semantic_locations_geojson(tripkit_config, fn_base=user.uuid, locations=locations)
 
-    summary = itinerum.process.activities.triplab.detect.run(user, locations, timezone=tripkit_config.TIMEZONE)
+    summary = itinerum.process.activities.triplab.detect.run(
+        user, locations, proximity_m=tripkit_config.SEMANTIC_LOCATION_PROXIMITY_METERS, timezone=tripkit_config.TIMEZONE
+    )
     if summary:
         dwell_time_summaries.append(summary)
 # write .csv output
