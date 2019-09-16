@@ -3,7 +3,7 @@
 Quick Start
 ===========
 The most common workflow is downloading data from the Itinerum web platform and running the data through tripkit ``processes`` to clean
-and infer usable trip information from GPS data. The *itinerum-tripkit* library provides simple interfaces to load download *.csv* data into a
+and infer usable trip information from GPS data. The **itinerum-tripkit** library provides simple interfaces to load download *.csv* data into a
 local SQLite database and then providing Python ``class`` objects (such as :py:class:`tripkit.models.User` and :py:class:`tripkit.models.Trip`)
 to represent this data for processing.
 
@@ -11,7 +11,7 @@ Load Data
 ---------
 For any of the inlcuded library processes, a configuration object will be expected (see :ref:`ConfigAnchor`).
 
-Input .csv data be loaded to the itinerum-tripkit cache database as follows:
+Input .csv data be loaded to the **itinerum-tripkit** cache database as follows:
 
 .. code-block:: python
 
