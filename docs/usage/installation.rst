@@ -52,8 +52,8 @@ page, the core GDAL library is all that is needed (*gdal-204-1911-64-core.msi*).
 
 Install this file and set two Windows environment variables:
 
-- Append to PATH: C:\Program Files\GDAL
-- Create GDAL_DATA: C:\Program Files\GDAL\gdal-data
+- Append to PATH: ``C:\Program Files\GDAL``
+- Create GDAL_DATA: ``C:\Program Files\GDAL\gdal-data``
 
 After setting these variables, close and re-open the command prompt (re-activate the virtual environment if using) and the Python dependencies can be installed.
 
