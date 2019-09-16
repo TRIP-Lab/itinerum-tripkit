@@ -13,8 +13,9 @@ Generating the Configuration
 ----------------------------
 The following parameters are accepted by **itinerum-tripkit**:
 
-============================================= ===============================================
-Parameter                                     Description
+
+.. tabularcolumns:: |p{6.5cm}|p{6.5cm}|
+
 ============================================= ===============================================
 ``DATABASE_FN``                               The filename to be used for the cache
                                               SQLite database.
@@ -43,8 +44,8 @@ Parameter                                     Description
 
 **Optional parameters**
 
-============================================= ===============================================
-Parameter                                     Description
+.. tabularcolumns:: |p{6.5cm}|p{6.5cm}|
+
 ============================================= ===============================================
 ``TIMEZONE``                                  The timezone name as described within the
                                               tzdata database for complete days detection
