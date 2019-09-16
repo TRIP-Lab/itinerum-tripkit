@@ -14,7 +14,7 @@ Generating the Configuration
 The following parameters are accepted by **itinerum-tripkit**.
 
 
-.. tabularcolumns:: |p{6.5cm}|p{7.5cm}|
+.. tabularcolumns:: |l|l|
 
 ============================================= ===============================================
 ``DATABASE_FN``                               The filename to be used for the cache
