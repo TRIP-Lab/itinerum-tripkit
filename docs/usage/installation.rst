@@ -21,7 +21,7 @@ Windows
 +++++++
 
 **PowerShell:**
-With PowerShell, `Set-ExecutionPolicy Unrestricted -Force` may be required to allow the `Activate.ps1` 
+With PowerShell, ``Set-ExecutionPolicy Unrestricted -Force`` may be required to allow the ``Activate.ps1`` 
 script to run. If you update the permissions, the PowerShell prompt must also be restarted.
 
 .. code-block:: powershell
