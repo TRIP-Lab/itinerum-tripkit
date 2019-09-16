@@ -93,53 +93,6 @@ Trips will be output with the following trip codes to indicate the type of trip:
 | 201       | Single point                        |
 | 202       | Distance too short - less than 250m |
 
-#### Map Matching
-
-The instructions that follow use the Multi-Level Djikstra processing pipelines recommended [here](https://github.com/Project-OSRM/osrm-backend/wiki/Running-OSRM) by Project OSRM.
-
-##### Installing the OSRM API with Docker containers
-
-1. Download an OSM extract for your region, such as for Québec
-
-   ```bash
-   $ mkdir osrm && cd osrm
-   $ wget http://download.geofabrik.de/north-america/canada/quebec-latest.osm.pbf
-   ```
-
-2. Process the OSM data using the default network profiles included with OSRM:
-
-   ```bash
-   # car
-   $ docker run -t -v $(pwd):/data osrm/osrm-backend osrm-extract -p /opt/car.lua /data/quebec-latest.osm.pbf
-   $ docker run -t -v $(pwd):/data osrm/osrm-backend osrm-partition /data/quebec-latest
-   $ docker run -t -v $(pwd):/data osrm/osrm-backend osrm-customize /data/quebec-latest
-   $ mkdir car
-   $ mv quebec-latest.orsm* car
-   
-   # bike
-   $ docker run -t -v $(pwd):/data osrm/osrm-backend osrm-extract -p /opt/bicycle.lua /data/quebec-latest.osm.pbf
-   $ docker run -t -v $(pwd):/data osrm/osrm-backend osrm-partition /data/quebec-latest
-   $ docker run -t -v $(pwd):/data osrm/osrm-backend osrm-customize /data/quebec-latest
-   $ mkdir bicycle
-   $ mv quebec-latest.orsm* bicycle
-   
-   # walking
-   $ docker run -t -v $(pwd):/data osrm/osrm-backend osrm-extract -p /opt/foot.lua /data/quebec-latest.osm.pbf
-   $ docker run -t -v $(pwd):/data osrm/osrm-backend osrm-partition /data/quebec-latest
-   $ docker run -t -v $(pwd):/data osrm/osrm-backend osrm-customize /data/quebec-latest
-   $ mkdir foot
-   $ mv quebec-latest.orsm* foot
-   ```
-
-3. Run the Docker OSRM routing API on ports 5000-5002
-
-   ```bash
-   $ docker run -d --restart always -p 5000:5000 -v $(pwd)/car:/data osrm/osrm-backend osrm-routed --algorithm MLD --max-matching-size=5000 /data/quebec-latest.osrm
-   
-   $ docker run -d --restart always -p 5001:5000 -v $(pwd)/bicycle:/data osrm/osrm-backend osrm-routed --algorithm MLD --max-matching-size=5000 /data/quebec-latest.osrm
-   
-   $ docker run -d --restart always -p 5002:5000 -v $(pwd)/foot:/data osrm/osrm-backend osrm-routed --algorithm MLD --max-matching-size=5000 /data/quebec-latest.osrm
-   ```
 
 ## Outputs
 The aim of this library is to provide easy visualization of Itinerum data to assist in writing trip processing algorthms. Therefore at a minimum, the library provides exporting processed coordinates and traces as .geojson files (TBA: GeoPackage format). With a PostgreSQL backend for caching, PostGIS can be enabled (unimplemented) and a `geom` column generated for directly connection QGIS to the output data. The library should also easily provide methods for easily plotting GPS within Jupyter notebooks.

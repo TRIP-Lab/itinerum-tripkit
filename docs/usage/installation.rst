@@ -64,5 +64,60 @@ Compiled packages to install:
 * https://www.lfd.uci.edu/~gohlke/pythonlibs/#scikit-learn
 
 
+Optional Components
+-------------------
+
+OSRM
+++++
+
+The ``itinerum-tripkit`` provides interfaces for submitting map matching queries to an OSRM API and writing results to file.
+
+The instructions that follow use the Multi-Level Djikstra processing pipelines recommended [here](https://github.com/Project-OSRM/osrm-backend/wiki/Running-OSRM) by Project OSRM.
+
+##### Installing the OSRM API with Docker containers
+
+1. Download an OSM extract for your region, such as for Québec
+
+.. code-block:: bash
+
+   $ mkdir osrm && cd osrm
+   $ wget http://download.geofabrik.de/north-america/canada/quebec-latest.osm.pbf
+
+
+2. Process the OSM data using the default network profiles included with OSRM:
+
+.. code-block:: bash
+
+   # car
+   $ docker run -t -v $(pwd):/data osrm/osrm-backend osrm-extract -p /opt/car.lua /data/quebec-latest.osm.pbf
+   $ docker run -t -v $(pwd):/data osrm/osrm-backend osrm-partition /data/quebec-latest
+   $ docker run -t -v $(pwd):/data osrm/osrm-backend osrm-customize /data/quebec-latest
+   $ mkdir car
+   $ mv quebec-latest.orsm* car
+   
+   # bike
+   $ docker run -t -v $(pwd):/data osrm/osrm-backend osrm-extract -p /opt/bicycle.lua /data/quebec-latest.osm.pbf
+   $ docker run -t -v $(pwd):/data osrm/osrm-backend osrm-partition /data/quebec-latest
+   $ docker run -t -v $(pwd):/data osrm/osrm-backend osrm-customize /data/quebec-latest
+   $ mkdir bicycle
+   $ mv quebec-latest.orsm* bicycle
+   
+   # walking
+   $ docker run -t -v $(pwd):/data osrm/osrm-backend osrm-extract -p /opt/foot.lua /data/quebec-latest.osm.pbf
+   $ docker run -t -v $(pwd):/data osrm/osrm-backend osrm-partition /data/quebec-latest
+   $ docker run -t -v $(pwd):/data osrm/osrm-backend osrm-customize /data/quebec-latest
+   $ mkdir foot
+   $ mv quebec-latest.orsm* foot
+
+3. Run the Docker OSRM routing API on ports 5000-5002
+
+.. code-block:: bash
+   $ docker run -d --restart always -p 5000:5000 -v $(pwd)/car:/data osrm/osrm-backend osrm-routed --algorithm MLD --max-matching-size=5000 /data/quebec-latest.osrm
+   
+   $ docker run -d --restart always -p 5001:5000 -v $(pwd)/bicycle:/data osrm/osrm-backend osrm-routed --algorithm MLD --max-matching-size=5000 /data/quebec-latest.osrm
+   
+   $ docker run -d --restart always -p 5002:5000 -v $(pwd)/foot:/data osrm/osrm-backend osrm-routed --algorithm MLD --max-matching-size=5000 /data/quebec-latest.osrm
+
+
 .. _venv: https://docs.python.org/3/library/venv.html
 .. _`Bulk Inserts`: http://docs.peewee-orm.com/en/latest/peewee/querying.html#bulk-inserts
