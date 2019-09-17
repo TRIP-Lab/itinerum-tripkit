@@ -23,6 +23,8 @@ import tripkit_config
 
 # initialize example script global variables
 itinerum = Itinerum(config=tripkit_config)
+itinerum.setup()
+
 users = itinerum.load_users(limit=5, load_trips=False)
 
 # run trip detection days algorithms

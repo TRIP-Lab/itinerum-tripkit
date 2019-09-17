@@ -15,6 +15,7 @@ import tripkit_config
 
 # Edit ./tripkit_config.py first!
 itinerum = Itinerum(config=tripkit_config)
+itinerum.setup()
 
 # -- Load user trip from database and write as GIS-compatible file
 users = itinerum.load_users(load_trips=False)

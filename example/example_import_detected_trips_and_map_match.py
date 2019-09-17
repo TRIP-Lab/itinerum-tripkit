@@ -21,14 +21,12 @@ itinerum = Itinerum(config=tripkit_config)
 # -- Stage 1: load platform data to cache
 itinerum.setup()
 
+
 # -- Stage 2: select user data and process points
 # a manually selected trip to perform test map matching on
 user = itinerum.load_users(
     uuid='00807c5b-7542-4868-8462-14b79a9fcc9f', start=datetime(2017, 11, 29), end=datetime(2017, 11, 30)
 )
-
-
-# perform mapmatching using OSRM API
 map_matcher = itinerum.process.map_match.osrm(tripkit_config)
 mapmatched_results = map_matcher.match(coordinates=user.coordinates, matcher='DRIVING')
 
