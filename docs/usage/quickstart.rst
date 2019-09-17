@@ -43,14 +43,14 @@ For writing new processing libraries, this is often an essential first step.
 
     user = itinerum.load_users(uuid='00000000-0000-0000-0000-000000000000')
     params = {
-        'subway_stations': itinerum.database.load_subway_entrances(),
+        'load_subway_entrances': itinerum.database.load_subway_entrances(),
         'break_interval_seconds': tripkit_config.TRIP_DETECTION_BREAK_INTERVAL_SECONDS,
         'subway_buffer_meters': tripkit_config.TRIP_DETECTION_SUBWAY_BUFFER_METERS,
         'cold_start_distance': tripkit_config.TRIP_DETECTION_COLD_START_DISTANCE_METERS,
         'accuracy_cutoff_meters': tripkit_config.TRIP_DETECTION_ACCURACY_CUTOFF_METERS
     }
-    trips, summaries = itinerum.process.trip_detection.triplab.algorithm.run(user.coordinates.dicts(),
-                                                                             parameters=params)
+    trips = itinerum.process.trip_detection.triplab.algorithm.run(user.coordinates,
+                                                                  parameters=params)
 
 
 Run Complete Days Summaries on a User
@@ -63,7 +63,8 @@ it is recommended to review the `process source code`_.
 .. code-block:: python
 
     user = itinerum.load_users(uuid='00000000-0000-0000-0000-000000000000')
-    trip_day_summaries = itinerum.process.complete_days.triplab.counter.run(user.trips, tripkit_config.TIMEZONE)
+    trip_day_summaries = itinerum.process.complete_days.triplab.counter.run(user.trips,
+                                                                            tripkit_config.TIMEZONE)
     itinerum.database.save_trip_day_summaries(user, trip_day_summaries, tripkit_config.TIMEZONE)
 
 
@@ -81,9 +82,8 @@ created on-the-fly as demonstrated, but this should soon be available as an incl
         'home': Coordinate(latitude=45.5, longitude=-73.5)
     }
     itinerum.io.write_semantic_locations_geojson(tripkit_config, fn_base=user.uuid, locations=locations)
-    summary = itinerum.process.activities.triplab.detect.run(user, locations, 
-                                                             proximity_m=tripkit_config.SEMANTIC_LOCATION_PROXIMITY_METERS, 
-                                                             timezone=tripkit_config.TIMEZONE)
+    summary = itinerum.process.activities.triplab.detect.run(
+        user, locations, proximity_m=tripkit_config.SEMANTIC_LOCATION_PROXIMITY_METERS, timezone=tripkit_config.TIMEZONE)
     dwell_time_summaries = [summary]  # usually, multiple users would be summarized for output
     itinerum.io.write_user_summaries_csv(tripkit_config, dwell_time_summaries)
 
