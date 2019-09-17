@@ -461,8 +461,8 @@ def wrap_for_tripkit(detected_trips):
                     trip.points.append(p)
             tripkit_trips.append(trip)
         elif isinstance(detected_trip, MissingTrip):
-            trip = DatakitTrip(num=trip_num, trip_code=detected_trip.code)
-            p1 = DatakitTripPoint(
+            trip = LibraryTrip(num=trip_num, trip_code=detected_trip.code)
+            p1 = LibraryTripPoint(
                 database_id=None,
                 latitude=detected_trip.start.latitude,
                 longitude=detected_trip.start.longitude,
@@ -472,7 +472,7 @@ def wrap_for_tripkit(detected_trips):
                 period_before=0.0,
                 timestamp_UTC=detected_trip.start.timestamp_UTC,
             )
-            p2 = DatakitTripPoint(
+            p2 = LibraryTripPoint(
                 database_id=None,
                 latitude=detected_trip.end.latitude,
                 longitude=detected_trip.end.longitude,

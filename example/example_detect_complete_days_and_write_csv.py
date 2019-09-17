@@ -51,5 +51,4 @@ for idx, user in enumerate(users, start=1):
 
 # -- Stage 4: write complete days to .csv
 print("Saving complete day summaries to .csv...")
-csv_name = '{}-tripkit-complete_days.csv'.format(tripkit_config.DATABASE_FN.split('.')[0])
-itinerum.io.write_complete_days_csv(tripkit_config, csv_name, trip_day_summaries)
+itinerum.io.write_complete_days_csv(tripkit_config, trip_day_summaries)

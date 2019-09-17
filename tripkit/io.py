@@ -467,7 +467,7 @@ def write_complete_days_csv(cfg, trip_day_summaries):
         'inactivity_streak',
     ]
     survey_name = cfg.DATABASE_FN.split('.')[0]
-    csv_fp = os.path.join(cfg.OUTPUT_DATA_DIR, f'{survey_name}-user_summaries.csv')
+    csv_fp = os.path.join(cfg.OUTPUT_DATA_DIR, f'{survey_name}-complete_days.csv')
     with open(csv_fp, 'w', newline=NEWLINE_MODE) as csv_f:
         writer = csv.DictWriter(csv_f, dialect='excel', fieldnames=headers)
         writer.writeheader()
