@@ -44,7 +44,7 @@ def create_activity_locations(user):
 # data in cache needed to run this example
 
 itinerum = Itinerum(config=tripkit_config)
-users = itinerum.load_users(limit=50)
+users = itinerum.load_users(limit=1)
 
 # perform activity detection on all user points
 dwell_time_summaries = []
@@ -56,7 +56,8 @@ for idx, user in enumerate(users, start=1):
     summary = itinerum.process.activities.triplab.detect.run(
         user, locations, proximity_m=tripkit_config.SEMANTIC_LOCATION_PROXIMITY_METERS, timezone=tripkit_config.TIMEZONE
     )
-    if summary:
-        dwell_time_summaries.append(summary)
+    print(summary)
+    # if summary:
+    #     dwell_time_summaries.append(summary)
 # write .csv output
 itinerum.io.write_user_summaries_csv(tripkit_config, dwell_time_summaries)

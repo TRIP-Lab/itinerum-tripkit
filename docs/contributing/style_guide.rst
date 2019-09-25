@@ -22,6 +22,16 @@ the Peewee ORM is used for database operations. Peewee is used instead of SQLAlc
 comparable functionality. The database functions are intended to be SQL database agnostic, however, bulk inserts for initial data loading
 is tightly coupled to SQLite. Additional database engines will require specially handling data import from *.csv*.
 
+Algorithms
+++++++++++
+Included algorithms follow the format of:
+    1. Input user, user.coordinates, user.trips, etc. objects from the database
+    2. Perform processing with a siblings ``models.py`` tightly coupled to the processing script. The methods should be primarily getters/setters
+and helper methods, the core processing should try to occur entirely in the algorithm scripts to help keep the intention of each step obvious.
+    3. Algorithm models should be "wrapped for datakit" which is mapping the algorith's generally more complex model to the library's base
+models for general usage. The base model should be as simple as possible to limit what must be stored in the database; if an attribute like
+duration can be inferred from a `start` and `end` timestamp, this is preferred over storing the value.
+
 
 Pull Commits
 ------------
