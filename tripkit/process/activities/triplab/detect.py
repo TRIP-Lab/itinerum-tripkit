@@ -57,32 +57,12 @@ def label_trip_points(locations, trip, proximity_m):
                 continue
 
 
-def localize(naive_utc, tz):
-    return pytz.utc.localize(naive_utc).astimezone()
-
-
-# get the durations for the trip as either a 1-member (no split at midnight) or a 
-# 2-member (split at midnight) list of tuples --> [(date, duration_s), ...]
-def trip_durations(start, end): 
-    if start.day != end.day:
-        midnight = end.replace(hour=0, minute=0, second=0, microsecond=0)
-        return [
-            (start.date(), (midnight - start).total_seconds()),
-            (end.date(), (end - midnight).total_seconds())
-        ]
-    return [(start.date(), (end - start).total_seconds())]
-
-
-def classify_commute_times(trip, tz):
+def classify_commute(trip):
     '''
     Count the time spent commuting between either home and work or home and study.
 
     :param `py:class:Trip` trip: An itinerum-tripkit trip object
     '''
-    start = localize(trip.start.timestamp_UTC, tz)
-    end = localize(trip.end.timestamp_UTC, tz)
-    durations = trip_durations(start, end)
-
     commute_label = None
     if trip.start.label == 'home':
         if trip.end.label == 'work':
@@ -93,28 +73,28 @@ def classify_commute_times(trip, tz):
         commute_label = 'work'
     elif trip.start.label == 'study' and trip.end.label == 'home':
         commute_label = 'study'
+    return commute_label
 
-    commutes = []
-    for date, duration in durations:
-        commutes.append((date, commute_label, duration))
-    return commutes
-
-
-def classify_dwell_times(trip):
+def classify_dwell(last_trip, trip):
     '''
     Count the time spent at known locations by tallying the intervals between labeled points.
 
-    :param dict locations:       Dictionary of semantic locations with name and list of [lat, lon]
-    :param `py:class:Trip` trip: An itinerum-tripkit trip object
+    :param `py:class:Trip` last_trip: An itinerum-tripkit trip object for the trip immediately prior to the provided `trip`
+    :param `py:class:Trip` trip:      An itinerum-tripkit trip object
     '''
-    dwell_times = {}
-    for p in trip.points:
-        if not last_p:
-            last_p = p
+    # test for semantic location in last 5 points of previous trip and first 5 points of next trip
+    end_location = None
+    for p in last_trip.points[-5:]:
         if p.label:
-            dwell_times.setdefault(p.label, 0)
-            dwell_times[p.label] += (p.timestamp_UTC - last_p.timestamp_UTC).total_seconds()
-    return dwell_times
+            end_location = p.label
+            break
+    start_location = None
+    for p in trip.points[:5]:
+        if p.label:
+            start_location = p.label
+            break
+    if end_location and end_location == start_location:
+        return end_location
 
 
 def classify_stay_times(last_trip, trip):
@@ -132,26 +112,25 @@ def run(user, locations=None, proximity_m=50, timezone=None):
     detect_semantic_location_overlap(user.uuid, locations, proximity_m)
 
     # tally distances and durations for semantic locations by date and as aggregate totals for all trips
-    activity = UserActivity(user.uuid, timezone)
-    tz = pytz.timezone(timezone)
+    activity = UserActivity(user.uuid)
+    # tz = pytz.timezone(timezone)
     last_t = None
+    commutes, dwells = [], []
     for t in user.trips:
         label_trip_points(locations, t, proximity_m)
 
         # classify commute times for trips occuring between semantic locations
-        commute_times = classify_commute_times(t, tz)
-        for date, label, duration in commute_times:
-            activity.add_commute_time(date, label, duration)
+        commute_label = classify_commute(t)
+        activity.add_commute_time(t.start_UTC, t.end_UTC, commute_label)
 
-        # # classify duration points are observed at semantic locations during a portion of a trip
-        # dwell_times = classify_dwell_times(t)
-        # for label, duration in dwell_times.items():
-        #     activity.add_dwell_time(trip_date, label, duration)
+        # classify dwell times for stays at the same semantic location between two consecutive trips
+        if last_t:
+            dwell_label = classify_dwell(last_t, t)
+            activity.add_dwell_time(last_t.end_UTC, t.start_UTC, dwell_label)
+        last_t = t
+        
+        activity.add_trip(t)
 
-        # # classify duration of user at unchanging semantic locations between consecutive trips
-        # if last_t:
-        #     stay_times = classify_stay_times(last_t, t)
-        # last_t = t
 
     # gather total complete days statistics
     for day_summary in user.detected_trip_day_summaries:
@@ -165,5 +144,4 @@ def run(user, locations=None, proximity_m=50, timezone=None):
 
     # activity_record['start_timestamp'] = pytz.utc.localize(activity.start_time).astimezone(tz).isoformat()
     # activity_record['end_timestamp'] = pytz.utc.localize(activity.end_time).astimezone(tz).isoformat()
-    # print(activity_record)
     return activity.as_dict_condensed()

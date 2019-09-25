@@ -143,6 +143,11 @@ class Itinerum(object):
 
         :rtype: list of :py:class:`tripkit.models.User`
         '''
+        survey_responses_table_exists = self.database.db.table_exists(UserSurveyResponse._meta.table_name)
+        if not survey_responses_table_exists:
+            raise Exception("UserSurveyResponse table does not exist in database. Please re-run setup "
+                            "and try again.")
+
         if uuid:
             uuids = [uuid]
         else:
