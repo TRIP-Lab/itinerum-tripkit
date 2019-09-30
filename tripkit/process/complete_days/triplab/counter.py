@@ -208,8 +208,8 @@ def run(trips, timezone):
     min_dt = tz.localize(datetime(1999, 6, 1))
     localized_trips = trips_UTC_to_local(trips, tz)
 
-    first_date, last_date = find_participation_daterange(trips, min_dt)
-    daily_trip_summaries = group_trips_by_day(first_date, last_date, trips, tz)
+    first_date, last_date = find_participation_daterange(localized_trips, min_dt)
+    daily_trip_summaries = group_trips_by_day(first_date, last_date, localized_trips, tz)
 
     daily_summaries = find_complete_days(daily_trip_summaries)
     daily_summaries = add_inactivity_periods(daily_summaries)

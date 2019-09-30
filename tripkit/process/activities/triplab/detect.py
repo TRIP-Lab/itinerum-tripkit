@@ -10,9 +10,9 @@ import itertools
 import logging
 
 from geopy.distance import distance
-import pytz
 
 from .models import UserActivity
+from .utils import localize
 
 
 # logging.basicConfig(level=logging.DEBUG)
@@ -97,11 +97,85 @@ def classify_dwell(last_trip, trip):
         return end_location
 
 
-def classify_stay_times(last_trip, trip):
+def _tally_commutes_all(activity):
+    commutes = {'total': 0}
+    for start_UTC, end_UTC, label in activity.commute_times:
+        duration = (end_UTC - start_UTC).total_seconds()
+        commutes['total'] += duration
+        commutes.setdefault(label, 0)
+        commutes[label] += duration
+    return commutes
+
+
+def _tally_dwells_all(activity):
+    dwells = {'total': 0}
+    for start_UTC, end_UTC, label in activity.dwell_times:
+        duration = (end_UTC - start_UTC).total_seconds()
+        dwells['total'] += duration
+        dwells.setdefault(label, 0)
+        dwells[label] += duration
+    return dwells
+
+
+# returns rows for a .csv summary of activity and complete days
+def summarize_condensed(user_activity, day_summaries, timezone):
+    # aggregate survey tallies
+    tallies = {
+        'uuid': user_activity.uuid,
+        'start_timestamp_UTC': user_activity.first_seen_UTC.isoformat(),
+        'start_timestamp': localize(user_activity.first_seen_UTC, timezone).isoformat(),
+        'end_timestamp_UTC': user_activity.last_seen_UTC.isoformat(),
+        'end_timestamp': localize(user_activity.last_seen_UTC, timezone).isoformat(),
+        'complete_days': 0,
+        'incomplete_days': 0,
+        'inactive_days': 0,
+        'commute_time_work_s': 0,
+        'commute_time_study_s': 0,
+        'dwell_time_home_s': 0,
+        'dwell_time_work_s': 0,
+        'dwell_time_study_s': 0,
+        'num_trips': 0,
+        'total_trips_duration_s': 0,
+        'total_trips_distance_m': 0,        
+        'avg_trips_per_day': 0,
+        'avg_trip_distance_m': 0
+    }
+
+    # tally days by complete or incomplete
+    for summary in day_summaries:
+        if summary.has_trips:
+            if summary.is_complete:
+                tallies['complete_days'] += 1
+            else:
+                tallies['incomplete_days'] += 1
+        else:
+            tallies['inactive_days'] += 1
+
+    # tally commute durations
+    commutes = _tally_commutes_all(user_activity)
+    tallies['commute_time_work_s'] = commutes.get('work')
+    tallies['commute_time_study_s'] = commutes.get('study')
+    # tally dwell durations (time spent staying at a semantic location)
+    dwells = _tally_dwells_all(user_activity)
+    tallies['dwell_time_home_s'] = dwells.get('home')
+    tallies['dwell_time_work_s'] = dwells.get('work')
+    tallies['dwell_time_study_s'] = dwells.get('study')
+    # sums
+    tallies['num_trips'] = len(user_activity.commute_times)
+    tallies['total_trips_duration_s'] = commutes['total']
+    tallies['total_trips_distance_m'] = sum(dist for _, dist in user_activity.distances)
+    # avgs
+    active_days = tallies['complete_days'] + tallies['incomplete_days']
+    tallies['avg_trips_per_day'] = tallies['num_trips'] / active_days
+    tallies['avg_trip_distance_m'] = tallies['total_trips_distance_m'] / tallies['num_trips']
+    return tallies
+
+
+def summarize_full(user_activity, day_summaries, timezone):
     pass
 
 
-def run(user, locations=None, proximity_m=50, timezone=None):
+def run(user, locations=None, proximity_m=50):
     logger.info(f"Tallying semantic location dwell times for {user.uuid}...")
     if not user.trips:
         logger.info(f"No trips available.")
@@ -113,9 +187,7 @@ def run(user, locations=None, proximity_m=50, timezone=None):
 
     # tally distances and durations for semantic locations by date and as aggregate totals for all trips
     activity = UserActivity(user.uuid)
-    # tz = pytz.timezone(timezone)
     last_t = None
-    commutes, dwells = [], []
     for t in user.trips:
         label_trip_points(locations, t, proximity_m)
 
@@ -130,18 +202,4 @@ def run(user, locations=None, proximity_m=50, timezone=None):
         last_t = t
         
         activity.add_trip(t)
-
-
-    # gather total complete days statistics
-    for day_summary in user.detected_trip_day_summaries:
-        if day_summary.has_trips:
-            if day_summary.is_complete:
-                activity.complete_days += 1
-            else:
-                activity.incomplete_days += 1
-        else:
-            activity.inactive_days += 1
-
-    # activity_record['start_timestamp'] = pytz.utc.localize(activity.start_time).astimezone(tz).isoformat()
-    # activity_record['end_timestamp'] = pytz.utc.localize(activity.end_time).astimezone(tz).isoformat()
-    return activity.as_dict_condensed()
+    return activity
