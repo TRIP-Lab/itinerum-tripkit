@@ -406,7 +406,9 @@ def write_trip_summaries_csv(cfg, filename, summaries, extra_fields=None):
         headers = [
             'uuid',
             'trip_id',
+            'start_UTC',
             'start',
+            'end_UTC',
             'end',
             'trip_code',
             'olat',
@@ -474,10 +476,10 @@ def write_complete_days_csv(cfg, trip_day_summaries):
         writer.writerows(csv_rows)
 
 
-def write_user_summaries_csv(cfg, summaries):
+def write_activity_summaries_csv(cfg, summaries):
     '''
-    Write the user summary data consisting of complete days and trips tallies with a record
-    per each user.
+    Write the activity summary data consisting of complete days and trips tallies with a record
+    per each user for a survey.
 
     :param cfg:       Global configuration object
     :param summaries: Iterable of user summaries for row records
@@ -492,9 +494,7 @@ def write_user_summaries_csv(cfg, summaries):
     headers2 = [
         'uuid',
         'start_timestamp',
-        'start_timestamp_UTC',
         'end_timestamp',
-        'end_timestamp_UTC',
         'complete_days',
         'incomplete_days',
         'inactive_days',
@@ -510,7 +510,7 @@ def write_user_summaries_csv(cfg, summaries):
         'commute_time_work_s',
     ]
     survey_name = cfg.DATABASE_FN.split('.')[0]
-    csv_fp = os.path.join(cfg.OUTPUT_DATA_DIR, f'{survey_name}-user_summaries.csv')
+    csv_fp = os.path.join(cfg.OUTPUT_DATA_DIR, f'{survey_name}-activity_summaries.csv')
     with open(csv_fp, 'w', newline=NEWLINE_MODE) as csv_f:
         writer = csv.writer(csv_f, dialect='excel')
         writer.writerow(headers1)
@@ -518,3 +518,40 @@ def write_user_summaries_csv(cfg, summaries):
         writer = csv.DictWriter(csv_f, dialect='excel', fieldnames=headers2)
         writer.writeheader()
         writer.writerows(summaries)
+
+
+def write_activities_daily_csv(cfg, daily_summaries):
+    '''
+    Write the user activity summaries by date with a record for each day that a user
+    participated in a survey.
+
+    :param cfg:             Global configuration object
+    :param daily_summaries: Iterable of user summaries for row records
+
+    :type daily_summaries: list of dict
+    '''
+    survey_name = cfg.DATABASE_FN.split('.')[0]
+    csv_fp = os.path.join(cfg.OUTPUT_DATA_DIR, f'{survey_name}-daily_activity_summaries.csv')
+    headers1 = ['Survey timezone:', cfg.TIMEZONE]
+    headers2 = [
+        'uuid',
+        'date',
+        'start_time',
+        'end_time',
+        'num_trips',
+        'num_points',
+        'trips_distance_m',
+        'trips_duration_s',
+        'dwell_time_home_s',
+        'dwell_time_work_s',
+        'dwell_time_study_s',
+        'commute_time_study_s',
+        'commute_time_work_s',        
+    ]
+    with open(csv_fp, 'w', newline=NEWLINE_MODE) as csv_f:
+        writer = csv.writer(csv_f, dialect='excel')
+        writer.writerow(headers1)
+    with open(csv_fp, 'a', newline=NEWLINE_MODE) as csv_f:
+        writer = csv.DictWriter(csv_f, dialect='excel', fieldnames=headers2)
+        writer.writeheader()        
+        writer.writerows(daily_summaries)

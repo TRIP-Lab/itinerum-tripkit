@@ -47,7 +47,7 @@ itinerum.setup()
 users = itinerum.load_users(limit=1)
 
 # perform activity detection on all user points
-dwell_time_summaries = []
+daily_activity_summaries = []
 for idx, user in enumerate(users, start=1):
     # determine the locations to associate with coordinates as activities
     locations = create_activity_locations(user)
@@ -55,8 +55,8 @@ for idx, user in enumerate(users, start=1):
 
     complete_day_summaries = itinerum.process.complete_days.triplab.counter.run(user.trips, tripkit_config.TIMEZONE)
     activity = itinerum.process.activities.triplab.detect.run(user, locations, tripkit_config.SEMANTIC_LOCATION_PROXIMITY_METERS)
-    activity_summary = itinerum.process.activities.triplab.detect.summarize_condensed(activity, complete_day_summaries, tripkit_config.TIMEZONE)
-    if activity_summary:
-        dwell_time_summaries.append(activity_summary)
+    summaries = itinerum.process.activities.triplab.detect.summarize_full(activity, complete_day_summaries, tripkit_config.TIMEZONE)
+    if summaries:
+        daily_activity_summaries.extend(summaries)
 # write .csv output
-itinerum.io.write_user_summaries_csv(tripkit_config, dwell_time_summaries)
+itinerum.io.write_activities_daily_csv(tripkit_config, daily_activity_summaries)

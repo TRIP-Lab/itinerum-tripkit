@@ -45,23 +45,4 @@ for idx, user in enumerate(users, start=1):
 
 # open the output trips .csv file for writing
 csv_name = '{}-trip_summaries.csv'.format(tripkit_config.DATABASE_FN.split('.')[0])
-export_csv = os.path.join(tripkit_config.OUTPUT_DATA_DIR, csv_name)
-with open(export_csv, 'w') as csv_f:
-    headers = [
-        'uuid',
-        'trip_id',
-        'start_UTC',
-        'start',
-        'end_UTC',
-        'end',
-        'trip_code',
-        'olat',
-        'olon',
-        'dlat',
-        'dlon',
-        'direct_distance',
-        'cumulative_distance',
-    ]
-    writer = csv.DictWriter(csv_f, fieldnames=headers)
-    writer.writeheader()
-    writer.writerows(all_summaries)
+itinerum.io.write_trip_summaries_csv(tripkit_config, csv_name, all_summaries)

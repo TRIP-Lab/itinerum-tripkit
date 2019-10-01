@@ -340,7 +340,7 @@ def merge_trips(complete_trips, missing_trips):
         # keep track of 'too short' missing trips only if they are the last
         # missing trip before a complete one
         merge_missing_too_short = None
-        if next_missing_trip.start.timestamp_UTC < trip.first_segment.start.timestamp_UTC:
+        if next_missing_trip and next_missing_trip.start.timestamp_UTC < trip.first_segment.start.timestamp_UTC:
             while next_missing_trip.start.timestamp_UTC < trip.first_segment.start.timestamp_UTC:
                 if next_missing_trip.category == 'lt_min_trip_length':
                     merge_missing_too_short = next_missing_trip
@@ -352,6 +352,7 @@ def merge_trips(complete_trips, missing_trips):
                 try:
                     next_missing_trip = next(missing_trips_gen)
                 except StopIteration:
+                    next_missing_trip = None
                     break
 
         if merge_missing_too_short:
