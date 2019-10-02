@@ -11,6 +11,7 @@ from . import process
 from .csvparser import ItinerumCSVParser, QstarzCSVParser
 from .database import Database, UserSurveyResponse
 from .database import Coordinate, PromptResponse, CancelledPromptResponse, DetectedTripCoordinate, SubwayStationEntrance
+import tripkit_config as Config
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -43,11 +44,11 @@ class Itinerum(object):
 
     '''
 
-    def __init__(self, config):
-        self.config = config
+    def __init__(self):
+        self.config = Config
 
         self._database = Database()
-        self._database.db.init(config.DATABASE_FN)
+        self._database.db.init(self.config.DATABASE_FN)
         self._csv = self._init_csv_parser()
 
         # attach I/O functions and extensions as objects

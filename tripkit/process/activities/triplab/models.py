@@ -65,7 +65,7 @@ class UserActivity(object):
         if len(split_at_midnight(last_trip_start, last_trip_end)) == 2:
             end_date += timedelta(days=1)
 
-        date_range = [start_date + timedelta(days=i) for i in range((end_date - start_date).days)]
+        date_range = [start_date + timedelta(days=i) for i in range((end_date - start_date).days + 1)]
         by_date = {}
         for d in date_range:
             by_date[d] = {

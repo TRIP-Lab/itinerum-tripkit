@@ -12,9 +12,10 @@ import polyline
 
 from . import utils
 from .database import Coordinate, PromptResponse, CancelledPromptResponse
+import tripkit_config as Config
 
 
-# determine how newlines should be written depend on OS
+# determine how newlines should be written dependent on OS
 NEWLINE_MODE = '' if utils.os_is_windows() else None
 
 
@@ -125,20 +126,19 @@ def _input_cancelled_prompts_features(cancelled_prompts, ignore_keys=None):
 
 
 # geojson file I/O
-def _write_features_to_geojson_f(cfg, filename, features):
+def _write_features_to_geojson_f(filename, features):
     collection = deepcopy(geojson_collection_template)
     collection['features'] = features
-    geojson_fp = os.path.join(cfg.OUTPUT_DATA_DIR, filename)
+    geojson_fp = os.path.join(Config.OUTPUT_DATA_DIR, filename)
     with open(geojson_fp, 'w') as geojson_f:
         geojson_f.write(json.dumps(collection, default=utils.json_serialize))
 
 
-def write_input_geojson(cfg, fn_base, coordinates, prompts, cancelled_prompts):
+def write_input_geojson(fn_base, coordinates, prompts, cancelled_prompts):
     '''
     Writes input coordinates, prompts and cancelled prompts data selected from
     cache to individual geojson files.
 
-    :param cfg:               Global configuration object
     :param fn_base:           The base filename to prepend to each output geojson file.
     :param coordinates:       Iterable of database coordinates to write to geojson
                               file. Usually the result of a database query.
@@ -157,25 +157,23 @@ def write_input_geojson(cfg, fn_base, coordinates, prompts, cancelled_prompts):
     # coordinates point features
     coordinates_features = _input_coordinates_features(coordinates, ignore_keys)
     coordinates_filename = f'{fn_base}_coordinates.geojson'
-    _write_features_to_geojson_f(cfg, coordinates_filename, coordinates_features)
+    _write_features_to_geojson_f(coordinates_filename, coordinates_features)
 
     # prompts point features
     prompts_features = _input_prompts_features(prompts, ignore_keys)
     prompts_filename = f'{fn_base}_prompts.geojson'
-    _write_features_to_geojson_f(cfg, prompts_filename, prompts_features)
+    _write_features_to_geojson_f(prompts_filename, prompts_features)
 
     # cancelled prompts point features
     cancelled_prompts_features = _input_cancelled_prompts_features(cancelled_prompts, ignore_keys)
     cancelled_prompts_filename = f'{fn_base}_cancelled_prompts.geojson'
-    _write_features_to_geojson_f(cfg, cancelled_prompts_filename, cancelled_prompts_features)
+    _write_features_to_geojson_f(cancelled_prompts_filename, cancelled_prompts_features)
 
 
-def write_semantic_locations_geojson(cfg, fn_base, locations):
+def write_semantic_locations_geojson(fn_base, locations):
     '''
     Write semantic locations (from config or detected) to a geojson file.
 
-    :param cfg:       Global configuration object (eventually this should be supplied through initialization
-                      like :py:class:`CSVParser`)
     :param fn_base:   The base filename to prepend to each output geojson file.
     :param locations: A dictionary object of a user's survey responses containing columns with semantic
                       location latitude and longitudes.
@@ -185,14 +183,13 @@ def write_semantic_locations_geojson(cfg, fn_base, locations):
     '''
     locations_features = _semantic_locations_features(locations)
     locations_fn = f'{fn_base}_locations.geojson'
-    _write_features_to_geojson_f(cfg, locations_fn, locations_features)
+    _write_features_to_geojson_f(locations_fn, locations_features)
 
 
-def write_trips_geojson(cfg, fn_base, trips):
+def write_trips_geojson(fn_base, trips):
     '''
     Writes detected trips data selected from cache to geojson file.
 
-    :param cfg:     Global configuration object
     :param fn_base: The base filename to prepend to the output geojson file
     :param trips:   Iterable of database trips to write to geojson file
 
@@ -205,14 +202,13 @@ def write_trips_geojson(cfg, fn_base, trips):
         linestring = _points_to_geojson_linestring(trip.geojson_coordinates, properties)
         detected_trips_features.append(linestring)
     filename = f'{fn_base}_trips.geojson'
-    _write_features_to_geojson_f(cfg, filename, detected_trips_features)
+    _write_features_to_geojson_f(filename, detected_trips_features)
 
 
-def write_mapmatched_geojson(cfg, fn_base, results):
+def write_mapmatched_geojson(fn_base, results):
     '''
     Writes map matching results from API query to geojson file.
 
-    :param cfg:     Global configuration object
     :param fn_base: The base filename to prepend to the output geojson file
     :param results: JSON results from map matching API query
 
@@ -247,24 +243,22 @@ def write_mapmatched_geojson(cfg, fn_base, results):
         mapmatched_features.append(linestring)
 
     filename = f'{fn_base}_matched.geojson'
-    _write_features_to_geojson_f(cfg, filename, mapmatched_features)
+    _write_features_to_geojson_f(filename, mapmatched_features)
 
 
 # geopackage file I/O
-def _write_features_to_geopackage_f(cfg, filename, schema, features):
-    geopackage_fp = os.path.join(cfg.OUTPUT_DATA_DIR, filename)
+def _write_features_to_geopackage_f(filename, schema, features):
+    geopackage_fp = os.path.join(Config.OUTPUT_DATA_DIR, filename)
     with fiona.open(geopackage_fp, 'w', driver='GPKG', schema=schema, crs=fiona.crs.from_epsg(4326)) as geopackage_f:
         for feature in features:
             geopackage_f.write(feature)
 
 
-def write_input_geopackage(cfg, fn_base, coordinates, prompts, cancelled_prompts):
+def write_input_geopackage(fn_base, coordinates, prompts, cancelled_prompts):
     '''
     Writes input coordinates, prompts and cancelled prompts data selected from
     cache to individual geopackage files.
 
-    :param cfg:               Global configuration object (eventually this should be
-                              supplied upon initialization like :py:class:`CSVParser`)
     :param fn_base:           The base filename to prepend to each output geopackage file.
     :param coordinates:       Iterable of database coordinates to write to geopackage
                               file. Usually the result of a database query.
@@ -284,35 +278,32 @@ def write_input_geopackage(cfg, fn_base, coordinates, prompts, cancelled_prompts
     coordinates_filename = f'{fn_base}_coordinates.gpkg'
     coordinates_gpkg_schema = _input_gpkg_schema(coordinates.model, ignore_keys)
     coordinates_features = _input_coordinates_features(coordinates, ignore_keys)
-    _write_features_to_geopackage_f(cfg, coordinates_filename, coordinates_gpkg_schema, coordinates_features)
+    _write_features_to_geopackage_f(coordinates_filename, coordinates_gpkg_schema, coordinates_features)
 
     # prompts point features
     prompts_filename = f'{fn_base}_prompts.gpkg'
     prompts_gpkg_schema = _input_gpkg_schema(prompts.model, ignore_keys)
     prompts_features = _input_prompts_features(prompts, ignore_keys)
-    _write_features_to_geopackage_f(cfg, prompts_filename, prompts_gpkg_schema, prompts_features)
+    _write_features_to_geopackage_f(prompts_filename, prompts_gpkg_schema, prompts_features)
 
     # cancelled prompts point features
     cancelled_prompts_filename = f'{fn_base}_cancelled_prompts.gpkg'
     cancelled_prompts_gpkg_schema = _input_gpkg_schema(cancelled_prompts.model, ignore_keys)
     cancelled_prompts_features = _input_cancelled_prompts_features(cancelled_prompts, ignore_keys)
-    _write_features_to_geopackage_f(
-        cfg, cancelled_prompts_filename, cancelled_prompts_gpkg_schema, cancelled_prompts_features
-    )
+    _write_features_to_geopackage_f(cancelled_prompts_filename, cancelled_prompts_gpkg_schema, cancelled_prompts_features)
 
 
-def write_trips_geopackage(cfg, fn_base, trips):
+def write_trips_geopackage(fn_base, trips):
     '''
     Writes detected trips data to a geopackage file.
 
-    :param cfg:     Global configuration object
     :param fn_base: The base filename to prepend to the output geopackage file
     :param trips:   Iterable of database trips to write to geopackage file
 
     :param fn_base: str
     :param trips: list of :py:class:`tripkit.models.Trip`
     '''
-    geopackage_fp = os.path.join(cfg.OUTPUT_DATA_DIR, f'{fn_base}_trips.gpkg')
+    geopackage_fp = os.path.join(Config.OUTPUT_DATA_DIR, f'{fn_base}_trips.gpkg')
     schema = {
         'geometry': 'LineString',
         'properties': [('start_UTC', 'datetime'), ('end_UTC', 'datetime'), ('trip_code', 'int'), ('distance', 'float')],
@@ -330,18 +321,17 @@ def write_trips_geopackage(cfg, fn_base, trips):
 
 
 # csv file I/0
-def write_trips_csv(cfg, fn_base, trips, extra_fields=None):
+def write_trips_csv(fn_base, trips, extra_fields=None):
     '''
     Write detected trips data to a csv file.
 
-    :param cfg:     Global configuration object
     :param fn_base: The base filename to prepend to the output csv file
     :param trips:   Iterable of database trips to write to csv file
 
     :type fn_base: str
     :param trips: list of :py:class:`tripkit.models.Trip`
     '''
-    csv_fp = os.path.join(cfg.OUTPUT_DATA_DIR, f'{fn_base}_trips.csv')
+    csv_fp = os.path.join(Config.OUTPUT_DATA_DIR, f'{fn_base}_trips.csv')
     headers = [
         'id',
         'uuid',
@@ -387,21 +377,20 @@ def write_trips_csv(cfg, fn_base, trips, extra_fields=None):
                 idx += 1
 
 
-def write_trip_summaries_csv(cfg, filename, summaries, extra_fields=None):
+def write_trip_summaries_csv(fn_base, summaries, extra_fields=None):
     '''
     Write detected trip summary data to csv consisting of a single record for each trip.
 
-    :param cfg:          Global configration object
-    :param filename:     The output filename for the output csv file
+    :param fn_base:      The base filename to prepend to the output csv file
     :param summaries:    Iterable of trip summaries for row records
     :param extra_fields: Additional columns to append to csv (must have matching
-                          key in `summaries` object)
+                         key in `summaries` object)
 
-    :type filename: str
+    :type fn_base: str
     :type summaries: list of dict
     :type extra_fields: list, optional
     '''
-    csv_fp = os.path.join(cfg.OUTPUT_DATA_DIR, filename)
+    csv_fp = os.path.join(Config.OUTPUT_DATA_DIR, f'{fn_base}-trip_summaries.csv')
     with open(csv_fp, 'w', newline=NEWLINE_MODE) as csv_f:
         headers = [
             'uuid',
@@ -426,7 +415,7 @@ def write_trip_summaries_csv(cfg, filename, summaries, extra_fields=None):
         writer.writerows(summaries)
 
 
-def write_complete_days_csv(cfg, trip_day_summaries):
+def write_complete_days_csv(trip_day_summaries):
     '''
     Write complete day summaries to .csv with a record per day per user over
     the duration of their participation in a survey.
@@ -468,26 +457,25 @@ def write_complete_days_csv(cfg, trip_day_summaries):
         'consecutive_inactive_days',
         'inactivity_streak',
     ]
-    survey_name = cfg.DATABASE_FN.split('.')[0]
-    csv_fp = os.path.join(cfg.OUTPUT_DATA_DIR, f'{survey_name}-complete_days.csv')
+    survey_name = Config.DATABASE_FN.split('.')[0]
+    csv_fp = os.path.join(Config.OUTPUT_DATA_DIR, f'{survey_name}-complete_days.csv')
     with open(csv_fp, 'w', newline=NEWLINE_MODE) as csv_f:
         writer = csv.DictWriter(csv_f, dialect='excel', fieldnames=headers)
         writer.writeheader()
         writer.writerows(csv_rows)
 
 
-def write_activity_summaries_csv(cfg, summaries):
+def write_activity_summaries_csv(summaries):
     '''
     Write the activity summary data consisting of complete days and trips tallies with a record
     per each user for a survey.
 
-    :param cfg:       Global configuration object
     :param summaries: Iterable of user summaries for row records
 
     :type summaries: list of dict
     '''
     headers1 = (
-        ['Survey timezone:', cfg.TIMEZONE]
+        ['Survey timezone:', Config.TIMEZONE]
         + [None] * 7
         + ['Semantic locations (duration, seconds)', None, None, 'Commute times (duration, seconds)']
     )
@@ -509,8 +497,8 @@ def write_activity_summaries_csv(cfg, summaries):
         'commute_time_study_s',
         'commute_time_work_s',
     ]
-    survey_name = cfg.DATABASE_FN.split('.')[0]
-    csv_fp = os.path.join(cfg.OUTPUT_DATA_DIR, f'{survey_name}-activity_summaries.csv')
+    survey_name = Config.DATABASE_FN.split('.')[0]
+    csv_fp = os.path.join(Config.OUTPUT_DATA_DIR, f'{survey_name}-activity_summaries.csv')
     with open(csv_fp, 'w', newline=NEWLINE_MODE) as csv_f:
         writer = csv.writer(csv_f, dialect='excel')
         writer.writerow(headers1)
@@ -520,19 +508,18 @@ def write_activity_summaries_csv(cfg, summaries):
         writer.writerows(summaries)
 
 
-def write_activities_daily_csv(cfg, daily_summaries):
+def write_activities_daily_csv(daily_summaries):
     '''
     Write the user activity summaries by date with a record for each day that a user
     participated in a survey.
 
-    :param cfg:             Global configuration object
     :param daily_summaries: Iterable of user summaries for row records
 
     :type daily_summaries: list of dict
     '''
-    survey_name = cfg.DATABASE_FN.split('.')[0]
-    csv_fp = os.path.join(cfg.OUTPUT_DATA_DIR, f'{survey_name}-daily_activity_summaries.csv')
-    headers1 = ['Survey timezone:', cfg.TIMEZONE]
+    survey_name = Config.DATABASE_FN.split('.')[0]
+    csv_fp = os.path.join(Config.OUTPUT_DATA_DIR, f'{survey_name}-daily_activity_summaries.csv')
+    headers1 = ['Survey timezone:', Config.TIMEZONE]
     headers2 = [
         'uuid',
         'date',
