@@ -42,7 +42,7 @@ def create_activity_locations(user):
 # -- main
 # NOTE: the ./example_detect_complete_days_and_write_csv.py can pre-populate all
 # data in cache needed to run this example
-itinerum = Itinerum(config=tripkit_config)
+itinerum = Itinerum()
 itinerum.setup()
 users = itinerum.load_users(limit=1)
 
@@ -51,12 +51,12 @@ daily_activity_summaries = []
 for idx, user in enumerate(users, start=1):
     # determine the locations to associate with coordinates as activities
     locations = create_activity_locations(user)
-    itinerum.io.write_semantic_locations_geojson(tripkit_config, fn_base=user.uuid, locations=locations)
+    itinerum.io.write_semantic_locations_geojson(fn_base=user.uuid, locations=locations)
 
     complete_day_summaries = itinerum.process.complete_days.triplab.counter.run(user.trips, tripkit_config.TIMEZONE)
     activity = itinerum.process.activities.triplab.detect.run(user, locations, tripkit_config.SEMANTIC_LOCATION_PROXIMITY_METERS)
-    summaries = itinerum.process.activities.triplab.detect.summarize_full(activity, complete_day_summaries, tripkit_config.TIMEZONE)
+    summaries = itinerum.process.activities.triplab.detect.summarize_full(activity, tripkit_config.TIMEZONE)
     if summaries:
         daily_activity_summaries.extend(summaries)
 # write .csv output
-itinerum.io.write_activities_daily_csv(tripkit_config, daily_activity_summaries)
+itinerum.io.write_activities_daily_csv(daily_activity_summaries)

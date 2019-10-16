@@ -198,7 +198,13 @@ def write_trips_geojson(fn_base, trips):
     '''
     detected_trips_features = []
     for trip in trips:
-        properties = {'start_UTC': trip.start_UTC, 'end_UTC': trip.end_UTC, 'trip_code': trip.trip_code}
+        properties = {
+            'num': trip.num,
+            'start_UTC': trip.start_UTC,
+            'end_UTC': trip.end_UTC,
+            'distance': trip.distance,
+            'trip_code': trip.trip_code
+        }
         linestring = _points_to_geojson_linestring(trip.geojson_coordinates, properties)
         detected_trips_features.append(linestring)
     filename = f'{fn_base}_trips.geojson'

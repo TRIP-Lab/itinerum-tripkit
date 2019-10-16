@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # Kyle Fitzsimmons, 2015-2018
-# - Algorithm data structures
+#
 # Uses slots to achieve best performance (comparable to dictionary)
 # and provide immutability against add or removing attributes
 from datetime import datetime

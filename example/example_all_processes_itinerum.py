@@ -14,13 +14,12 @@ import tripkit_config
 
 
 # 1. load itinerum data to database
-itinerum = Itinerum(config=tripkit_config)
+itinerum = Itinerum()
 itinerum.setup(force=False)
 
 # 2. write GIS-compatible outputs of input data
-user = itinerum.load_users(uuid='00807c5b-7542-4868-8462-14b79a9fcc9f')
+user = itinerum.load_users(uuid='bcb6958f-7b86-43ce-b8f8-8794e4cb18b6')
 itinerum.io.write_input_geojson(
-    cfg=tripkit_config,
     fn_base=user.uuid,
     coordinates=user.coordinates,
     prompts=user.prompt_responses,
@@ -38,24 +37,27 @@ parameters = {
 user.trips = itinerum.process.trip_detection.triplab.v2.algorithm.run(user.coordinates, parameters=parameters)
 trip_summaries = itinerum.process.trip_detection.triplab.v2.summarize.run(user, tripkit_config.TIMEZONE)
 
-itinerum.database.save_trips(user, user.trips, overwrite=True)
-csv_name = '{}-trip_summaries.csv'.format(tripkit_config.DATABASE_FN.split('.')[0])
-itinerum.io.write_trip_summaries_csv(tripkit_config, csv_name, trip_summaries)
-itinerum.io.write_trips_geojson(cfg=tripkit_config, fn_base=user.uuid, trips=user.trips)
+itinerum.database.save_trips(user, user.trips)
+itinerum.io.write_trips_geojson(fn_base=user.uuid, trips=user.trips)
+itinerum.io.write_trip_summaries_csv(fn_base=user.uuid, summaries=trip_summaries)
 
 # 4. map match one of the detected trips and write GIS-compatible output
+trip1_coordinates = user.trips[0].points
 map_matcher = itinerum.process.map_match.osrm(tripkit_config)
-mapmatched_results = map_matcher.match(coordinates=user.trips[1].points, matcher='DRIVING')
+# mapmatched_results = map_matcher.match(trip1_coordinates, matcher='DRIVING')
 
-itinerum.io.write_mapmatched_geojson(cfg=tripkit_config, fn_base=user.uuid, results=mapmatched_results)
+# itinerum.io.write_mapmatched_geojson(fn_base=user.uuid, results=mapmatched_results)
 
 # 5. detect complete days and write csv
 complete_day_summaries = itinerum.process.complete_days.triplab.counter.run(user.trips, tripkit_config.TIMEZONE)
 
 itinerum.database.save_trip_day_summaries(user, complete_day_summaries, tripkit_config.TIMEZONE)
-itinerum.io.write_complete_days_csv(tripkit_config, {user.uuid: complete_day_summaries})
+itinerum.io.write_complete_days_csv({user.uuid: complete_day_summaries})
 
 # 6. detect activities and write summaries (compact and full)
+
+# This is stopgap approach to create a standardized semantic locations input, this one reads
+# locations from an Itinerum survey
 def create_activity_locations(user):
     Coordinate = namedtuple('Coordinate', ['latitude', 'longitude'])
     locations = {
@@ -75,4 +77,4 @@ def create_activity_locations(user):
 locations = create_activity_locations(user)
 activity = itinerum.process.activities.triplab.detect.run(user, locations, tripkit_config.SEMANTIC_LOCATION_PROXIMITY_METERS)
 activity_summaries_full = itinerum.process.activities.triplab.detect.summarize_full(activity, tripkit_config.TIMEZONE)
-itinerum.io.write_activities_daily_csv(tripkit_config, activity_summaries_full)
+itinerum.io.write_activities_daily_csv(activity_summaries_full)

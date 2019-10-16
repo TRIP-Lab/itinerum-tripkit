@@ -86,7 +86,7 @@ def check_min_stop_time(clusters, min_s):
     Filter to keep only clusters that have meet the minimum stop time criteria.
     '''
     stop_clusters = []
-    for cluster_idx, cluster in enumerate(clusters):
+    for cluster in clusters:
         period_s = cluster[-1].timestamp_epoch - cluster[0].timestamp_epoch
         if period_s >= min_s:
             stop_clusters.append(cluster)

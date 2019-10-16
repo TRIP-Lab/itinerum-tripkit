@@ -2,39 +2,19 @@
 # Kyle Fitzsimmons, 2019
 import csv
 from datetime import datetime
+import json
 import logging
 import os
 from playhouse.migrate import migrate, SqliteMigrator
 import pytz
+import uuid
 
 from .common import _generate_null_survey, _load_subway_stations
 from ..database import Coordinate
+from ..utils import timer
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-
-def _coordinates_row_filter(row):
-    timestamp_UTC = datetime.fromisoformat(f'{row["date"]}T{row["time"]}').replace(tzinfo=pytz.UTC)
-    timestamp_epoch = int(timestamp_UTC.timestamp())
-    db_row = {
-        'user': row['uuid'],
-        'latitude': row['lat'],
-        'longitude': row['lon'],
-        'altitude': None,
-        'speed': None,
-        'direction': None,
-        'h_accuracy': None,
-        'v_accuracy': None,
-        'acceleration_x': None,
-        'acceleration_y': None,
-        'acceleration_z': None,
-        'point_type': None,
-        'mode_detected': None,
-        'timestamp_UTC': timestamp_UTC,
-        'timestamp_epoch': timestamp_epoch,
-    }
-    return db_row
 
 
 # .csv parsing
@@ -42,38 +22,39 @@ class QstarzCSVParser(object):
     '''
     Parses Qstarz csv files and loads to them to a cache database.
 
+    :param config:
     :param database:      Open Peewee connection the cache database
     :param csv_input_dir: Path to the directory containing the input coordinates .csv data
     '''
 
-    def __init__(self, database, csv_input_dir):
+    def __init__(self, config, database):
+        self.config = config
         self.db = database
         self._migrator = SqliteMigrator(database.db)
-        self.coordinates_csv = self._fetch_csv_fn(csv_input_dir, not_contains='_summary.csv')
+        self.coordinates_csv = self._fetch_csv_fn(self.config.INPUT_DATA_DIR, not_contains='_summary.csv')
         self.headers = [
-            'point_id',
-            'id',
-            'route_id',
-            'lon',
-            'lat',
-            'object_id',
-            'uuid',
-            'type',
-            'lat_direction',
-            'lon_direction',
-            'uuid',
             'date',
-            'start_time',
-            'sec_point',
-            'route_id_2',
-            'uuid_2',
-            'order',
             'time',
+            'dow',
+            'longitude',
+            'latitude',
+            'unknown0',
+            'acceleration_x',  # ? verify
+            'acceleration_y',  # ? verify
+            'bad_time',  # ?
+            'unknown1',
+            'unknown2',
+            'user'
         ]
+        self.uuid_lookup = None
+
         # attach common functions
         self.load_subway_stations = _load_subway_stations
+        # intialize survey timezone offset
+        self.tz = pytz.timezone(self.config.TIMEZONE)
 
-    def _fetch_csv_fn(self, input_dir, contains=None, not_contains=None):
+    @staticmethod
+    def _fetch_csv_fn(input_dir, contains=None, not_contains=None):
         '''
         Helper function to return the .csv file in the given input data directory which uniquely matches the given
         **contains** parameter.
@@ -90,18 +71,76 @@ class QstarzCSVParser(object):
                 if not_contains not in fn:
                     return fn
 
-    # read .csv file, apply filter and yield row
     @staticmethod
-    def _row_generator(csv_fp, filter_func=None, headers=None):
+    def _value_or_none(row, key):
+        '''
+        Helper function to return the value stripped of whitespace or `None` for a 0-length string
+        from a .csv cell value.
+        '''
+        v = row.get(key)
+        if v and isinstance(v, str):
+            return v.strip()
+
+    def _coordinates_row_filter(self, row):
+        lat, lon = self._value_or_none(row, 'latitude'), self._value_or_none(row, 'longitude')
+        lat_lon_empty = not lat or not lon or (int(float(lat)) == 0 and int(float(lon)) == 0)
+        if lat_lon_empty:
+            return
+
+        datetime_str = f'{row["date"]} {row["time"]}'
+        timestamp_local = datetime.strptime(datetime_str, r'%m/%d/%Y %I:%M:%S %p').replace(tzinfo=self.tz)
+        timestamp_UTC = timestamp_local.astimezone(pytz.utc)
+        timestamp_epoch = int(timestamp_UTC.timestamp())
+        db_row = {
+            'user': self.uuid_lookup[row['user']],
+            'latitude': lat,
+            'longitude': lon,
+            'altitude': None,
+            'speed': None,
+            'direction': None,
+            'h_accuracy': None,
+            'v_accuracy': None,
+            'acceleration_x': self._value_or_none(row, 'acceleration_x'),
+            'acceleration_y': self._value_or_none(row, 'acceleration_y'),
+            'acceleration_z': None,
+            'point_type': None,
+            'mode_detected': None,
+            'timestamp_UTC': timestamp_UTC,
+            'timestamp_epoch': timestamp_epoch,
+        }
+        return db_row                    
+
+    # read .csv file, apply filter and yield row
+    def _row_generator(self, csv_fp, filter_func=None):
         with open(csv_fp, 'r', encoding='utf-8-sig') as csv_f:
             reader = csv.reader(csv_f)  # use zip() below instead of DictReader for speed
-            if not headers:
-                headers = next(reader)
+            if not self.headers:
+                self.headers = next(reader)
 
             # generate dictionaries to insert and apply row filter if exists
             for row in reader:
-                dict_row = dict(zip(headers, row))
+                dict_row = dict(zip(self.headers, row))
                 yield filter_func(dict_row) if filter_func else dict_row
+
+    def _generate_uuids(self, input_dir):
+        self.uuid_lookup = {}
+        logger.info("Generating UUIDs for non-standard user ids...")
+        lookup_fn = self.config.DATABASE_FN.split('.')[0]
+        lookup_fp = f'{lookup_fn}.json'
+        if os.path.exists(lookup_fp):
+            with open(lookup_fp, 'r') as json_f:
+                self.uuid_lookup = json.load(json_f)
+        else:
+            coordinates_fp = os.path.join(input_dir, self.coordinates_csv)
+            with open(coordinates_fp, 'r', encoding='utf-8-sig') as csv_f:
+                reader = csv.reader(csv_f)
+                user_id_idx = self.headers.index('user')
+                for r in reader:
+                    user_id = r[user_id_idx]
+                    if not user_id in self.uuid_lookup:
+                        self.uuid_lookup[user_id] = str(uuid.uuid4())
+            with open(lookup_fp, 'w') as json_f:
+                json.dump(self.uuid_lookup, json_f)
 
     def generate_null_survey(self, input_dir):
         '''
@@ -109,7 +148,8 @@ class QstarzCSVParser(object):
 
         :param input_dir: Directory containing input .csv data
         '''
-        _generate_null_survey(input_dir, self.coordinates_csv, headers=self.headers)
+        self._generate_uuids(input_dir)
+        _generate_null_survey(input_dir, self.coordinates_csv, id_column='user', uuid_lookup=self.uuid_lookup, headers=self.headers)
 
     def load_export_coordinates(self, input_dir):
         '''
@@ -121,7 +161,6 @@ class QstarzCSVParser(object):
         logger.info("Loading coordinates .csv to db...")
         migrate(self._migrator.drop_index(Coordinate, 'coordinate_user_id'))
         coordinates_fp = os.path.join(input_dir, self.coordinates_csv)
-        # note: duplicate `uuid` is intentional
-        coordinates_rows = self._row_generator(coordinates_fp, _coordinates_row_filter, self.headers)
+        coordinates_rows = self._row_generator(coordinates_fp, self._coordinates_row_filter)
         self.db.bulk_insert(Coordinate, coordinates_rows)
         migrate(self._migrator.add_index('coordinates', ('user_id',), False))

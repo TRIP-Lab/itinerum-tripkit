@@ -57,30 +57,37 @@ def _load_subway_stations(subway_stations_csv_fp):
             SubwayStationEntrance.create(latitude=float(row['latitude']), longitude=float(row['longitude']))
 
 
-def _generate_null_survey(input_dir, coordinates_csv_fn, uuid_column='uuid', headers=None):
+def _generate_null_survey(input_dir, coordinates_csv_fn, id_column='uuid', uuid_lookup=None, headers=None):
     '''
     Generates an empty survey responses table for surveys with only coordinate
     data. Used for populating foreign keys for queries on the child data tables.
     '''
     logger.info("Reading coordinates .csv and populating survey responses with null data in db...")
     coordinates_fp = os.path.join(input_dir, coordinates_csv_fn)
-    uuids = None
-    with open(coordinates_fp, 'r', encoding='utf-8-sig') as csv_f:
-        # much faster than csv.DictReader
-        reader = csv.reader(csv_f)
-        if not headers:
-            headers = [h.lower() for h in next(reader)]
-        uuid_idx = headers.index(uuid_column)
-        uuids = {r[uuid_idx] for r in reader}
+    orig_ids = None
+    if uuid_lookup:
+        orig_ids = list(uuid_lookup.keys())
+    else:
+        with open(coordinates_fp, 'r', encoding='utf-8-sig') as csv_f:
+            # much faster than csv.DictReader
+            reader = csv.reader(csv_f)
+            if not headers:
+                headers = [h.lower() for h in next(reader)]
+            orig_id_idx = headers.index(id_column)
+            orig_ids = {r[orig_id_idx] for r in reader}
+    
 
-    for uuid in uuids:
+    for uuid in orig_ids:
+        if uuid_lookup:
+            orig_id = uuid
+            uuid = uuid_lookup[orig_id]
+
         UserSurveyResponse.create(
             uuid=uuid,
+            orig_id=orig_id,
             created_at_UTC=datetime(2000, 1, 1),
             modified_at_UTC=datetime(2000, 1, 1),
             itinerum_version=-1,
-            location_home_lat=0.0,
-            location_home_lon=0.0,
             member_type=-1,
             model=-1,
             os=-1,

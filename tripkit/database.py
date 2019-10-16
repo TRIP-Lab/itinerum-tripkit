@@ -102,7 +102,6 @@ class Database(object):
         columns_str = ','.join(columns)
         values_str = ','.join(['?'] * len(columns))
         query = f'''INSERT INTO {table_name} ({columns_str}) VALUES ({values_str});'''
-        tx_counter = 0
         rows_inserted = 0
         inserted_row_ids = []
         cur.execute('''BEGIN TRANSACTION;''')
@@ -151,11 +150,21 @@ class Database(object):
         '''
         return UserSurveyResponse.select().count()
 
+    def get_uuid(self, orig_id):
+        '''
+        Returns the database uuid for a user's original id from a non-Itinerum dataset.
+
+        :param orig_id: The original dataset's user id for an individual user.
+        '''
+        user = UserSurveyResponse.get_or_none(orig_id=orig_id)
+        if user:
+            return user.uuid
+
     def load_user(self, uuid, start=None, end=None):
         '''
         Loads user by ``uuid`` to an itinerum-tripkit :py:class:`User` object.
 
-        :param uuid:  A specific user's UUID from within an Itinerum survey.
+        :param uuid:  A individual user's UUID from within an Itinerum survey.
         :param start: `Optional.` Naive datetime object (set within UTC) for
                       selecting a user's coordinates start period.
         :param end:   `Optional.` Naive datetime object (set within UTC) for
@@ -372,11 +381,12 @@ class UserSurveyResponse(BaseModel):
         table_name = 'survey_responses'
 
     uuid = UUIDField(unique=True, primary_key=True)
+    orig_id = TextField()
     created_at_UTC = DateTimeField()
     modified_at_UTC = DateTimeField()
     itinerum_version = CharField()
-    location_home_lat = FloatField()
-    location_home_lon = FloatField()
+    location_home_lat = FloatField(null=True)
+    location_home_lon = FloatField(null=True)
     location_study_lat = FloatField(null=True)
     location_study_lon = FloatField(null=True)
     location_work_lat = FloatField(null=True)
@@ -426,8 +436,8 @@ class Coordinate(BaseModel):
     acceleration_x = FloatField(null=True)
     acceleration_y = FloatField(null=True)
     acceleration_z = FloatField(null=True)
-    point_type = IntegerField(null=True)
-    mode_detected = IntegerField(null=True)
+    point_type = TextField(null=True)
+    mode_detected = TextField(null=True)
     timestamp_UTC = DateTimeField()
     timestamp_epoch = IntegerField()
 
