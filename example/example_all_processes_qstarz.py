@@ -18,7 +18,7 @@ itinerum = Itinerum()
 itinerum.setup(force=False)
 
 # 2. write GIS-compatible outputs of input data
-user = itinerum.load_user_by_orig_id(orig_id=17001)
+user = itinerum.load_user_by_orig_id(orig_id=1)
 # itinerum.io.write_input_geojson(
 #     fn_base=user.uuid,
 #     coordinates=user.coordinates,

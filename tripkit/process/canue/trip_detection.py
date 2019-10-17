@@ -23,10 +23,28 @@ def split_by_time_gap(coordinates, period_s=300):
     return segments
 
 
+def _filter_stop_locations(c, locations):
+    for stop_centroid in locations.values():
+        if geo.calculate_distance_m(c, stop_centroid) <= 100:
+            return None
+    return c
+
 def split_by_stop_locations(time_segments, locations, period_s=300):
-    print(len(time_segments))
     for segment in time_segments:
-        print(len(segment))
+        last_c = None
+        for c in segment:
+            c = _filter_stop_locations(c, locations)
+            if not c:
+                continue
+            if not last_c:
+                last_c = c
+                continue
+
+            diff_s = c.timestamp_epoch - last_c.timestamp_epoch
+            if diff_s >= period_s:
+                print("well hello!")
+            last_c = c
+            
 
 
 def wrap_for_tripkit(segments):

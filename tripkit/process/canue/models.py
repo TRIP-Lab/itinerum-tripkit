@@ -2,6 +2,7 @@
 # Kyle Fitzsimmons, 2019
 import ciso8601
 from datetime import datetime
+import utm
 
 
 class Coordinate(object):
@@ -83,6 +84,10 @@ class Centroid(object):
         self.northing = northing
         self.zone_num = zone_num
         self.zone_letter = zone_letter
+
+    @property
+    def latlon(self):
+        return utm.to_latlon(self.easting, self.northing, self.zone_num, self.zone_letter)
 
 
 class ClusterInfo:

@@ -2,7 +2,6 @@
 # Kyle Fitzsimmons, 2019
 import math
 import networkx
-import utm
 
 from .utils import geo
 
@@ -58,5 +57,5 @@ def run(kmeans_groups, stdev_groups):
         if match:
             idx += 1
             label = f'location_{idx}'
-            locations[label] = utm.to_latlon(match.easting, match.northing, match.zone_num, match.zone_letter)
+            locations[label] = match
     return locations

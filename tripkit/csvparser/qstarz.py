@@ -33,18 +33,26 @@ class QstarzCSVParser(object):
         self._migrator = SqliteMigrator(database.db)
         self.coordinates_csv = self._fetch_csv_fn(self.config.INPUT_DATA_DIR, not_contains='_summary.csv')
         self.headers = [
-            'date',
-            'time',
-            'dow',
-            'longitude',
-            'latitude',
-            'unknown0',
-            'acceleration_x',  # ? verify
-            'acceleration_y',  # ? verify
-            'bad_time',  # ?
-            'unknown1',
-            'unknown2',
-            'user'
+            'INDEX',
+            'TRACK ID',
+            'VALID',
+            'UTC DATE',
+            'UTC TIME',
+            'LOCAL DATE',
+            'LOCAL TIME',
+            'MS',
+            'LATITUDE',
+            'N/S',
+            'LONGITUDE',
+            'E/W',
+            'ALTITUDE',
+            'SPEED',
+            'HEADING',
+            'G-X',
+            'G-Y',
+            'G-Z',
+            'Loc',  # demo data: to be removed from final version
+            'USER',
         ]
         self.uuid_lookup = None
 
@@ -82,27 +90,37 @@ class QstarzCSVParser(object):
             return v.strip()
 
     def _coordinates_row_filter(self, row):
-        lat, lon = self._value_or_none(row, 'latitude'), self._value_or_none(row, 'longitude')
-        lat_lon_empty = not lat or not lon or (int(float(lat)) == 0 and int(float(lon)) == 0)
-        if lat_lon_empty:
+        lat, lon = self._value_or_none(row, 'LATITUDE'), self._value_or_none(row, 'LONGITUDE')
+        if not lat or not lon:
             return
+        lat, lon = float(lat), float(lon)
+        if int(lat) == 0 and int(lon) == 0:
+            return
+        # add sign to negative lat/lons depending on hemisphere
+        if row.get('N/S') == 'S':
+            lat *= -1
+        if row.get('E/W') == 'W':
+            lon *= -1
 
-        datetime_str = f'{row["date"]} {row["time"]}'
-        timestamp_local = datetime.strptime(datetime_str, r'%m/%d/%Y %I:%M:%S %p').replace(tzinfo=self.tz)
-        timestamp_UTC = timestamp_local.astimezone(pytz.utc)
+        year, month, day = row['UTC DATE'].split('/')
+        if len(year) == 2:
+            year = int('20' + year)
+        month, day = int(month), int(day)
+        hour, minute, second = [int(i) for i in row['UTC TIME'].split(':')]
+        timestamp_UTC = datetime(year, month, day, hour, minute, second, tzinfo=pytz.utc)
         timestamp_epoch = int(timestamp_UTC.timestamp())
         db_row = {
-            'user': self.uuid_lookup[row['user']],
+            'user': self.uuid_lookup[row['USER']],
             'latitude': lat,
             'longitude': lon,
-            'altitude': None,
-            'speed': None,
-            'direction': None,
+            'altitude': self._value_or_none(row, 'ALTITUDE'),
+            'speed': self._value_or_none(row, 'SPEED'),
+            'direction': self._value_or_none(row, 'BEARING'),
             'h_accuracy': None,
             'v_accuracy': None,
-            'acceleration_x': self._value_or_none(row, 'acceleration_x'),
-            'acceleration_y': self._value_or_none(row, 'acceleration_y'),
-            'acceleration_z': None,
+            'acceleration_x': self._value_or_none(row, 'G-X'),
+            'acceleration_y': self._value_or_none(row, 'G-Y'),
+            'acceleration_z': self._value_or_none(row, 'G-Z'),
             'point_type': None,
             'mode_detected': None,
             'timestamp_UTC': timestamp_UTC,
@@ -116,6 +134,8 @@ class QstarzCSVParser(object):
             reader = csv.reader(csv_f)  # use zip() below instead of DictReader for speed
             if not self.headers:
                 self.headers = next(reader)
+            else:
+                next(reader)
 
             # generate dictionaries to insert and apply row filter if exists
             for row in reader:
@@ -134,7 +154,7 @@ class QstarzCSVParser(object):
             coordinates_fp = os.path.join(input_dir, self.coordinates_csv)
             with open(coordinates_fp, 'r', encoding='utf-8-sig') as csv_f:
                 reader = csv.reader(csv_f)
-                user_id_idx = self.headers.index('user')
+                user_id_idx = self.headers.index('USER')
                 for r in reader:
                     user_id = r[user_id_idx]
                     if not user_id in self.uuid_lookup:
