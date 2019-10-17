@@ -85,9 +85,23 @@ class Centroid(object):
         self.zone_num = zone_num
         self.zone_letter = zone_letter
 
+        self._latlon = None
+
+    def _update_latlon(self):
+        if not self._latlon:
+            self._latlon = utm.to_latlon(self.easting, self.northing, self.zone_num, self.zone_letter)
+
     @property
-    def latlon(self):
-        return utm.to_latlon(self.easting, self.northing, self.zone_num, self.zone_letter)
+    def lat(self):
+        self._update_latlon()
+        return self._latlon[0]
+    
+    @property
+    def lon(self):
+        self._update_latlon()
+        return self._latlon[1]
+
+
 
 
 class ClusterInfo:

@@ -31,7 +31,7 @@ class QstarzCSVParser(object):
         self.config = config
         self.db = database
         self._migrator = SqliteMigrator(database.db)
-        self.coordinates_csv = self._fetch_csv_fn(self.config.INPUT_DATA_DIR, not_contains='_summary.csv')
+        self.coordinates_csv = self._fetch_csv_fn(self.config.INPUT_DATA_DIR, contains='coordinates.csv')
         self.headers = [
             'INDEX',
             'TRACK ID',
@@ -102,6 +102,7 @@ class QstarzCSVParser(object):
         if row.get('E/W') == 'W':
             lon *= -1
 
+        # format date and time columns into Python datetime (NOTE: QStarz data returns a 2-digit year)
         year, month, day = row['UTC DATE'].split('/')
         if len(year) == 2:
             year = int('20' + year)
@@ -115,7 +116,7 @@ class QstarzCSVParser(object):
             'longitude': lon,
             'altitude': self._value_or_none(row, 'ALTITUDE'),
             'speed': self._value_or_none(row, 'SPEED'),
-            'direction': self._value_or_none(row, 'BEARING'),
+            'direction': self._value_or_none(row, 'HEADING'),
             'h_accuracy': None,
             'v_accuracy': None,
             'acceleration_x': self._value_or_none(row, 'G-X'),

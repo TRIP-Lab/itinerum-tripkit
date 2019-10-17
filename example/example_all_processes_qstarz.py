@@ -51,14 +51,14 @@ delta_heading_stdev_groups = itinerum.process.canue.delta_heading_stdev.run(prep
 with open(f'{user.uuid}-prepared_coordinates.csv', 'w', newline='') as csv_f:
     writer = csv.writer(csv_f)
     writer.writerow(['uuid', 'latitude', 'longitude', 'timestamp_UTC', 'duration_s',
-                    'distance_m', 'bearing', 'delta_heading', 'avg_distance_m', 'avg_delta_heading',
-                    'kmeans_label', 'kmeans_group', 'stdev_label', 'stdev_group'])
+                     'distance_m', 'bearing', 'delta_heading', 'avg_distance_m', 'avg_delta_heading',
+                     'kmeans_label', 'kmeans_group', 'stdev_label', 'stdev_group'])
     writer.writerows([c.csv_row() for c in prepared_coordinates])
 locations = itinerum.process.canue.activity_locations.run(kmeans_groups, delta_heading_stdev_groups)
 itinerum.io.write_semantic_locations_geojson(fn_base=user.uuid, locations=locations)
 
 trips = itinerum.process.canue.trip_detection.run(prepared_coordinates, locations)
-# itinerum.io.write_trips_geojson(fn_base=user.uuid, trips=trips)
+itinerum.io.write_trips_geojson(fn_base=user.uuid, trips=trips)
 import sys; sys.exit()
 
 parameters = {
