@@ -20,6 +20,8 @@ class Coordinate(object):
         'timestamp_UTC',
         'duration_s',
         'distance_m',
+        'altitude',
+        'speed',
         'bearing',
         'delta_heading',
         'easting',
@@ -41,6 +43,8 @@ class Coordinate(object):
         # attributes to be later calculated based upon previous point
         self.duration_s = 0
         self.distance_m = 0.0
+        self.altitude = c.altitude
+        self.speed = c.speed
         self.bearing = 0
         self.delta_heading = 0
         self.easting = None

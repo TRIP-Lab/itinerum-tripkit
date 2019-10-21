@@ -80,7 +80,7 @@ def summarize_stops(labeled_coordinates):
     # NOTE: original updates lat/lon with signs based on N,E,S,W attributes in
     #       .csv row, is this actually necessary? Skipped...attributes do not
     #       exist in Rainham demo dataset
-    segments = []  # replacement for `itinermediatelist` in source
+    segments = []  # replacement for `intermediatelist` in source
     for idx, c in enumerate(labeled_coordinates):
         if last_status != c.cluster_label:
             num_points = len(durations)
