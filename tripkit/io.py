@@ -75,9 +75,9 @@ def _input_gpkg_schema(db_model, ignore_keys=None):
 
 def _semantic_locations_features(locations):
     features = []
-    for label, location in locations.items():
-        properties = {'label': label}
-        point = _point_to_geojson_point((location.lon, location.lat), properties)
+    for location in locations:
+        properties = {'label': location.label}
+        point = _point_to_geojson_point((location.longitude, location.latitude), properties)
         features.append(point)
     return features
 

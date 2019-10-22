@@ -49,6 +49,8 @@ delta_heading_stdev_groups = itinerum.process.canue.delta_heading_stdev.run(prep
 
 
 # coordinates point features
+
+# DEBUG: temp dump to GIS format
 ignore_keys = ('id', 'user', 'longitude', 'latitude', 'direction', 'h_accuracy', 'v_accuracy', 'acceleration_x', 'acceleration_y', 'acceleration_z', 'point_type', 'mode_detected')
 coordinates_features = itinerum.io._input_coordinates_features(prepared_coordinates, ignore_keys)
 coordinates_filename = f'{user.uuid}_prepared_coordinates.geojson'
@@ -82,28 +84,6 @@ itinerum.database.save_trip_day_summaries(user, complete_day_summaries, tripkit_
 itinerum.io.write_complete_days_csv({user.uuid: complete_day_summaries})
 
 # 6. detect activities and write summaries (compact and full)
-
-# # This is stopgap approach to create a standardized semantic locations input, this one reads
-# # locations from an Itinerum survey
-# def create_activity_locations(user):
-#     Coordinate = namedtuple('Coordinate', ['latitude', 'longitude'])
-#     locations = {
-#         'home': Coordinate(latitude=user.survey_response['location_home_lat'],
-#                            longitude=user.survey_response['location_home_lon'])
-#     }
-#     work = Coordinate(latitude=user.survey_response.get('location_work_lat'),
-#                       longitude=user.survey_response.get('location_work_lon'))
-#     if work.latitude and work.longitude:
-#         locations['work'] = work
-#     study = Coordinate(latitude=user.survey_response.get('location_study_lat'),
-#                        longitude=user.survey_response.get('location_study_lon'))
-#     if study.latitude and study.longitude:
-#         locations['study'] = study
-#     return locations
-
-print(locations)
-
-# locations = create_activity_locations(user)
 # activity = itinerum.process.activities.triplab.detect.run(user, locations, tripkit_config.SEMANTIC_LOCATION_PROXIMITY_METERS)
 # activity_summaries_full = itinerum.process.activities.triplab.detect.summarize_full(activity, tripkit_config.TIMEZONE)
 # itinerum.io.write_activities_daily_csv(activity_summaries_full)

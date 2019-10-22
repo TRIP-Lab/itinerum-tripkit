@@ -6,16 +6,18 @@ from .utils import geo
 
 
 def _nearest_location(c, locations, buffer_m=100):
-    for label, centroid in locations.items():
-        if geo.calculate_distance_m(c, centroid) <= buffer_m:
-            return label
+    for location in locations:
+        if geo.calculate_distance_m(c, location) <= buffer_m:
+            return location.label
 
 
 def _common_centroid(stop_points, locations):
     split_stop_label = {sp.stop_label for sp in stop_points}
     assert len(split_stop_label) == 1
     split_stop_label = list(split_stop_label)[0]
-    return locations[split_stop_label]    
+    for location in locations:
+        if location.label == split_stop_label:
+            return location
 
 
 def _truncate_trace(coordinates, location, reverse=False):
