@@ -25,6 +25,12 @@ class Trip(object):
         return 0.0
 
     @property
+    def duration(self):
+        if len(self.points) > 1:
+            return self.points[-1].timestamp_epoch - self.points[0].timestamp_epoch
+        return 0
+
+    @property
     def start_UTC(self):
         if self.points:
             return self.points[0].timestamp_UTC

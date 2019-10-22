@@ -202,6 +202,7 @@ def write_trips_geojson(fn_base, trips):
             'start_UTC': trip.start_UTC,
             'end_UTC': trip.end_UTC,
             'distance': trip.distance,
+            'duration': trip.duration,
             'trip_code': trip.trip_code
         }
         linestring = _points_to_geojson_linestring(trip.geojson_coordinates, properties)

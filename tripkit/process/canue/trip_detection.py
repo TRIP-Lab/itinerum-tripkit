@@ -6,9 +6,16 @@ from .utils import geo
 
 
 def _nearest_location(c, locations, buffer_m=100):
-    for stop_centroid in locations.values():
-        if geo.calculate_distance_m(c, stop_centroid) <= buffer_m:
-            return stop_centroid
+    for label, centroid in locations.items():
+        if geo.calculate_distance_m(c, centroid) <= buffer_m:
+            return label
+
+
+def _common_centroid(stop_points, locations):
+    split_stop_label = {sp.stop_label for sp in stop_points}
+    assert len(split_stop_label) == 1
+    split_stop_label = list(split_stop_label)[0]
+    return locations[split_stop_label]    
 
 
 def _truncate_trace(coordinates, location, reverse=False):
@@ -50,7 +57,33 @@ def split_by_time_gap(coordinates, period_s=300):
             segment = []
         segment.append(c)
         last_c = c
+    if segment:
+        segments.append(segment)
     return segments
+
+
+# determines which points labeled as stop points constitute a valid end of a trip
+# and return points to append to the existing split segment
+def _append_to_split(last_point, stop_points, stop_centroid, period_s):
+    half = round(len(stop_points) / 2)
+    append_candidates = _truncate_trace(stop_points[:half], stop_centroid)
+    append_points = []
+    for ap in append_candidates:
+        if ap.timestamp_epoch - last_point.timestamp_epoch <= period_s:
+            append_points.append(ap)
+    return append_points
+
+
+# determines which points labeled as stop points constitute a valid beginning of a trip
+# and return points to prepend to a new split segment
+def _prepend_to_split(current_point, stop_points, stop_centroid, period_s):
+    half = round(len(stop_points) / 2)
+    prepend_candidates = _truncate_trace(stop_points[half:], stop_centroid, reverse=True)
+    prepend_points = []
+    for pp in prepend_candidates:
+        if current_point.timestamp_epoch - pp.timestamp_epoch <= period_s:
+            prepend_points.append(pp)
+    return prepend_points
 
 
 # Temporarily collect coordinates continuously within test range (60m) of a stop. When a coordinate beyond
@@ -64,9 +97,10 @@ def split_by_stop_locations(segments, locations, period_s=300):
         splits = [ [] ]
         stop_points = []
         for c in segment:
-            stop_location = _nearest_location(c, locations, buffer_m=60)
+            stop_label = _nearest_location(c, locations, buffer_m=60)
             # stop location is detected--point is added to stop points
-            if stop_location:
+            if stop_label:
+                c.stop_label = stop_label
                 stop_points.append(c)
             # stop location not detected, stop points exist from previous iterations--
             #   1. If no points exist in the current split, traverse stop points in reverse time order to find
@@ -76,19 +110,21 @@ def split_by_stop_locations(segments, locations, period_s=300):
             #      a stop with the device running. If this condition is met, disregard the stop points and create a
             #      new segment split.
             elif stop_points:
-                # if not splits[0]:
-                #     last_stop_c = stop_points[-1]
-                #     last_stop_location = _nearest_location(last_stop_c, locations, buffer_m=60)
-                #     if last_stop_location:
-                #         print(len(stop_points), len(_truncate_trace(stop_points, last_stop_location, reverse=True)))
-                #         splits[-1].extend(_truncate_trace(stop_points, last_stop_location, reverse=True))
-                #     else:
-                #         splits[-1].extend(stop_points)
-                # else:
                 diff_s = stop_points[-1].timestamp_epoch - stop_points[0].timestamp_epoch
-                print(diff_s)
                 if diff_s >= period_s:
-                    splits.append([c])
+                    stop_centroid = _common_centroid(stop_points, locations)
+
+                    # append to current split the stop points tracked to the stop location centroid until reached
+                    current_segment = splits[-1]
+                    if current_segment:
+                        last_point = current_segment[-1]
+                        append_points = _append_to_split(last_point, stop_points, stop_centroid, period_s)
+                        splits[-1].extend(append_points)
+
+                    # prepend to new split the stop points backtracked to the stop location centroid until reached
+                    prepend_points = _prepend_to_split(c, stop_points, stop_centroid, period_s)
+                    next_split = prepend_points + [c]
+                    splits.append(next_split)
                 else:
                     splits[-1].extend(stop_points)
                 stop_points = []
@@ -97,8 +133,17 @@ def split_by_stop_locations(segments, locations, period_s=300):
                 splits[-1].append(c)
         # leftover stop points at the end of segments are considered valid
         if stop_points:
-            splits[-1].extend(stop_points)
-            stop_points = []
+            is_last_segment = segment == segments[-1]
+            if not is_last_segment:
+                splits[-1].extend(stop_points)
+                stop_points = []
+            else:
+                stop_centroid = _common_centroid(stop_points, locations)
+                current_segment = splits[-1]
+                if current_segment:
+                    last_point = current_segment[-1]                
+                    append_points = _append_to_split(last_point, stop_points, stop_centroid, period_s)
+                    splits[-1].extend(append_points)                
         split_segments.extend(splits)
     return split_segments
 

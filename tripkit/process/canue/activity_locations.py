@@ -3,6 +3,7 @@
 import math
 import networkx
 
+from tripkit.models import ActivityLocation as TripkitActivityLocation
 from .utils import geo
 
 CENTROID_OVERLAP_M = 150
@@ -33,6 +34,23 @@ def _intersects(point, iterpoints, dist_m=50):
             return test_point
 
 
+def wrap_for_tripkit(locations):
+    tripkit_locations = []
+
+    for label, centroid in locations.items():
+        tripkit_locations.append(TripkitActivityLocation(
+            label=label,
+            latitude=centroid.lat,
+            longitude=centroid.lon,
+            easting=centroid.easting,
+            northing=centroid.northing,
+            zone_num=centroid.zone_num,
+            zone_letter=centroid.zone_letter
+        ))
+    return tripkit_locations
+
+
+
 def run(kmeans_groups, stdev_groups):
     kmeans_centroids = []
     for idx in kmeans_groups['stops']:
@@ -58,4 +76,5 @@ def run(kmeans_groups, stdev_groups):
             idx += 1
             label = f'location_{idx}'
             locations[label] = match
-    return locations
+    tripkit_locations = wrap_for_tripkit(locations)
+    return tripkit_locations

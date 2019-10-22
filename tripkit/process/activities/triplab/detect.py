@@ -219,7 +219,7 @@ def summarize_full(user_activity, timezone):
     return records
 
 
-def run(user, locations=None, proximity_m=50):
+def run(user, locations, proximity_m=50):
     logger.info(f"Tallying semantic location dwell times for {user.uuid}...")
     if not user.trips:
         logger.info(f"No trips available.")

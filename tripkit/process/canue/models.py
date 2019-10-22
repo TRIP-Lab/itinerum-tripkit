@@ -32,7 +32,8 @@ class Coordinate(object):
         'avg_distance_m',
         'avg_delta_heading',
         'kmeans',
-        'stdev'
+        'stdev',
+        'stop_label'
     ]
 
     def __init__(self, c):
@@ -56,6 +57,7 @@ class Coordinate(object):
         self.avg_delta_heading = None
         self.kmeans = None
         self.stdev = None
+        self.stop_label = None
 
     @property
     def speed_ms(self):
