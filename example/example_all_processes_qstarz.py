@@ -48,12 +48,13 @@ kmeans_groups = itinerum.process.canue.kmeans.run(prepared_coordinates)
 # dbscan_groups = itinerum.process.clustering.hdbscan_ts.run(300, prepared_coordinates)
 delta_heading_stdev_groups = itinerum.process.canue.delta_heading_stdev.run(prepared_coordinates)
 
-with open(f'{user.uuid}-prepared_coordinates.csv', 'w', newline='') as csv_f:
-    writer = csv.writer(csv_f)
-    writer.writerow(['uuid', 'latitude', 'longitude', 'timestamp_UTC', 'duration_s',
-                     'distance_m', 'bearing', 'delta_heading', 'avg_distance_m', 'avg_delta_heading',
-                     'kmeans_label', 'kmeans_group', 'stdev_label', 'stdev_group'])
-    writer.writerows([c.csv_row() for c in prepared_coordinates])
+
+# coordinates point features
+ignore_keys = ('id', 'user', 'longitude', 'latitude', 'direction', 'h_accuracy', 'v_accuracy', 'acceleration_x', 'acceleration_y', 'acceleration_z', 'point_type', 'mode_detected')
+coordinates_features = itinerum.io._input_coordinates_features(prepared_coordinates, ignore_keys)
+coordinates_filename = f'{user.uuid}_prepared_coordinates.geojson'
+itinerum.io._write_features_to_geojson_f(coordinates_filename, coordinates_features)
+
 locations = itinerum.process.canue.activity_locations.run(kmeans_groups, delta_heading_stdev_groups)
 itinerum.io.write_semantic_locations_geojson(fn_base=user.uuid, locations=locations)
 
