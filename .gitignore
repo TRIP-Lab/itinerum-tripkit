@@ -15,3 +15,6 @@ example/diffs
 notebooks/.ipynb_checkpoints
 .vscode
 .DS_Store
+debug/CANUEStopDetection/
+*.pickle
+/*.json
