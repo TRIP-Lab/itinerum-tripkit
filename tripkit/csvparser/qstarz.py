@@ -11,7 +11,7 @@ import uuid
 
 from .common import _generate_null_survey, _load_subway_stations
 from ..database import Coordinate
-from ..utils import timer
+from ..utils.misc import timer
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

@@ -9,7 +9,7 @@ class Trip(object):
                           over the duration of their survey participation.
     :param int trip_code: The integer code representing the detected trip type.
 
-    :ivar points:         The timestamp-ordered points comprising this ``Trip``.
+    :ivar points:         The timestamp-ordered points that comprise this ``Trip``.
     :vartype points:      list of :py:class:`tripkit.models.TripPoint`
     '''
 

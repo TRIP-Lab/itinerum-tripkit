@@ -16,7 +16,7 @@ import tripkit_config as Config
 
 
 # determine how newlines should be written dependent on OS
-NEWLINE_MODE = '' if utils.os_is_windows() else None
+NEWLINE_MODE = '' if utils.misc.os_is_windows() else None
 
 
 # geojson object templates--to be deepcopied
@@ -130,7 +130,7 @@ def _write_features_to_geojson_f(filename, features):
     collection['features'] = features
     geojson_fp = os.path.join(Config.OUTPUT_DATA_DIR, filename)
     with open(geojson_fp, 'w') as geojson_f:
-        geojson_f.write(json.dumps(collection, default=utils.json_serialize))
+        geojson_f.write(json.dumps(collection, default=utils.misc.json_serialize))
 
 
 def write_input_geojson(fn_base, coordinates, prompts, cancelled_prompts):

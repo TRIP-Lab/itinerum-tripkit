@@ -26,7 +26,7 @@ import logging
 import utm
 
 from .models import Coordinate
-from .utils import calc, geo
+from tripkit.utils import calc, geo
 
 logger = logging.getLogger(__name__)
 

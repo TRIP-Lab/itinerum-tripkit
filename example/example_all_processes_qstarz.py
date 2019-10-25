@@ -47,16 +47,13 @@ with open(pickle_fp, 'rb') as pickle_f:
 kmeans_groups = itinerum.process.canue.kmeans.run(prepared_coordinates)
 delta_heading_stdev_groups = itinerum.process.canue.delta_heading_stdev.run(prepared_coordinates)
 
-
-# coordinates point features
-
-# DEBUG: temp dump to GIS format
+# DEBUG: temp dump coordinates point features to GIS format
 ignore_keys = ('id', 'user', 'longitude', 'latitude', 'direction', 'h_accuracy', 'v_accuracy', 'acceleration_x', 'acceleration_y', 'acceleration_z', 'point_type', 'mode_detected')
 coordinates_features = itinerum.io._input_coordinates_features(prepared_coordinates, ignore_keys)
 coordinates_filename = f'{user.uuid}_prepared_coordinates.geojson'
 itinerum.io._write_features_to_geojson_f(coordinates_filename, coordinates_features)
 
-locations = itinerum.process.canue.activity_locations.run(kmeans_groups, delta_heading_stdev_groups)
+locations = itinerum.process.activities.canue.detect_locations.run(kmeans_groups, delta_heading_stdev_groups)
 itinerum.io.write_semantic_locations_geojson(fn_base=user.uuid, locations=locations)
 
 # parameters = {
@@ -85,5 +82,6 @@ itinerum.io.write_complete_days_csv({user.uuid: complete_day_summaries})
 
 # 6. detect activities and write summaries (compact and full)
 # activity = itinerum.process.activities.triplab.detect.run(user, locations, tripkit_config.SEMANTIC_LOCATION_PROXIMITY_METERS)
-# activity_summaries_full = itinerum.process.activities.triplab.detect.summarize_full(activity, tripkit_config.TIMEZONE)
-# itinerum.io.write_activities_daily_csv(activity_summaries_full)
+activity = itinerum.process.activities.canue.tally_times.run(user, locations, tripkit_config.SEMANTIC_LOCATION_PROXIMITY_METERS)
+activity_summaries_full = itinerum.process.activities.triplab.summarize.run_full(activity, tripkit_config.TIMEZONE)
+itinerum.io.write_activities_daily_csv(activity_summaries_full)

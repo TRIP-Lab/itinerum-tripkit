@@ -3,7 +3,7 @@
 # Based upon GERT 1.2 (2016-06-03): GIS-based Episode Reconstruction Toolkit
 # Stage 1 - GPS Preprocessing Module (gert_1.2/scripts/detect_stop_trial_20150408.py)
 # Ported to itinerum-tripkit by Kyle Fitzsimmons, 2019
-from .utils import calc
+from tripkit.utils import calc
 
 
 def detect_stop_by_attributes(coordinates):

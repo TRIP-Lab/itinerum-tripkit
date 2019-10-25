@@ -59,8 +59,8 @@ def _load_subway_stations(subway_stations_csv_fp):
 
 def _generate_null_survey(input_dir, coordinates_csv_fn, id_column='uuid', uuid_lookup=None, headers=None):
     '''
-    Generates an empty survey responses table for surveys with only coordinate
-    data. Used for populating foreign keys for queries on the child data tables.
+    Generates an empty survey responses table for surveys with only coordinate data. Used for populating foreign keys
+    for queries on the child data tables.
     '''
     logger.info("Reading coordinates .csv and populating survey responses with null data in db...")
     coordinates_fp = os.path.join(input_dir, coordinates_csv_fn)

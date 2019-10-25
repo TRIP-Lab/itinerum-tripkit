@@ -29,7 +29,6 @@ def _survey_response_row_filter(row):
     for key, value in row.items():
         if value == '':
             row[key] = None
-
     row['travel_mode_work_primary'] = row.pop('travel_mode_work', None)
     row['travel_mode_work_secondary'] = row.pop('travel_mode_alt_work', None)
     row['travel_mode_study_primary'] = row.pop('travel_mode_study', None)
@@ -40,12 +39,11 @@ def _survey_response_row_filter(row):
     trim_columns = set(row.keys()) - set(UserSurveyResponse._meta.sorted_field_names)
     for col in trim_columns:
         del row[col]
-
     return row
 
 
 def _coordinates_row_filter(row):
-    # invalid rows
+    # reject invalid rows
     if not row['timestamp_UTC']:
         return None
 
@@ -129,8 +127,7 @@ class ItinerumCSVParser(object):
         '''
         Loads Itinerum survey responses data to the cache database.
 
-        :param input_dir: The directory containing the `self.survey_responses_csv`
-                          data file.
+        :param input_dir: The directory containing the `self.survey_responses_csv` data file.
         '''
         survey_responses_fp = os.path.join(input_dir, self.survey_responses_csv)
         survey_responses_rows = self._row_generator(survey_responses_fp, _survey_response_row_filter)
@@ -140,8 +137,7 @@ class ItinerumCSVParser(object):
         '''
         Loads Itinerum coordinates data to the cache database.
 
-        :param input_dir: The directory containing the `self.coordinates_csv`
-                          data file.
+        :param input_dir: The directory containing the `self.coordinates_csv` data file.
         '''
         logger.info("Loading coordinates .csv to db...")
         migrate(self._migrator.drop_index(Coordinate, 'coordinate_user_id'))
@@ -152,12 +148,10 @@ class ItinerumCSVParser(object):
 
     def load_export_prompt_responses(self, input_dir):
         '''
-        Loads Itinerum prompt responses data to the cache
-        database. For each .csv row, the data is fetched by column name if
-        it exists and cast to appropriate types as set in the database.
+        Loads Itinerum prompt responses data to the cache database. For each .csv row, the data 
+        is fetched by column name if it exists and cast to appropriate types as set in the database.
 
-        :param input_dir: The directory containing the `self.prompt_responses.csv`
-                          data file.
+        :param input_dir: The directory containing the `self.prompt_responses.csv` data file.
         '''
         logger.info("Loading prompt responses .csv to db...")
         migrate(self._migrator.drop_index(PromptResponse, 'promptresponse_user_id'))
@@ -168,12 +162,10 @@ class ItinerumCSVParser(object):
 
     def load_export_cancelled_prompt_responses(self, input_dir):
         '''
-        Loads Itinerum cancelled prompt responses data to the cache datbase.
-        For each .csv row, the data is fetched by column name if it exists
-        and cast to appropriate types as set in the database.
+        Loads Itinerum cancelled prompt responses data to the cache database. For each .csv row, the data
+        is fetched by column name if it exists and cast to appropriate types as set in the database.
 
-        :param input_dir: The directory containing the `self.cancelled_prompt_responses.csv`
-                          data file.
+        :param input_dir: The directory containing the `self.cancelled_prompt_responses.csv` data file.
         '''
         logger.info("Loading cancelled prompt responses .csv to db...")
         cancelled_prompt_responses_fp = os.path.join(input_dir, self.cancelled_prompt_responses_csv)
@@ -184,12 +176,10 @@ class ItinerumCSVParser(object):
 
     def load_trips(self, trips_csv_fp):
         '''
-        Loads trips processed by the web platform itself. This is mostly useful
-        for comparing current algorithm results against the deployed platform's
-        version.
+        Loads trips processed by the web platform itself. This is mostly useful for comparing current algorithm
+        results against the deployed platform's version.
 
-        :param trips_csv_fp: The full filepath of the downloaded trips `.csv` file
-                             for a survey.
+        :param trips_csv_fp: The full filepath of the downloaded trips `.csv` file for a survey.
         '''
         logger.info("Loading detected trips .csv to db...")
         DetectedTripCoordinate.drop_table()

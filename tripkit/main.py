@@ -12,7 +12,7 @@ from . import process
 from .csvparser import ItinerumCSVParser, QstarzCSVParser
 from .database import Database, UserSurveyResponse
 from .database import Coordinate, PromptResponse, CancelledPromptResponse, DetectedTripCoordinate, SubwayStationEntrance
-from .utils import timer
+from .utils.misc import timer
 import tripkit_config as Config
 
 logging.basicConfig(level=logging.DEBUG)

@@ -59,11 +59,11 @@ class UserActivity(object):
     def group_by_date(self, timezone):
         start_date = localize(self.first_seen_UTC, timezone).date()
         end_date = localize(self.last_seen_UTC, timezone).date()
-        last_trip_start_UTC, last_trip_end_UTC, _ = self.commute_times[-1]
-        last_trip_start = localize(last_trip_start_UTC, timezone)
-        last_trip_end = localize(last_trip_end_UTC, timezone)
-        if len(split_at_midnight(last_trip_start, last_trip_end)) == 2:
-            end_date += timedelta(days=1)
+        # last_trip_start_UTC, last_trip_end_UTC, _ = self.commute_times[-1]
+        # last_trip_start = localize(last_trip_start_UTC, timezone)
+        # last_trip_end = localize(last_trip_end_UTC, timezone)
+        # if len(split_at_midnight(last_trip_start, last_trip_end)) == 2:
+        #     end_date += timedelta(days=1)
 
         date_range = [start_date + timedelta(days=i) for i in range((end_date - start_date).days + 1)]
         by_date = {}

@@ -76,5 +76,5 @@ def create_activity_locations(user):
 
 locations = create_activity_locations(user)
 activity = itinerum.process.activities.triplab.detect.run(user, locations, tripkit_config.SEMANTIC_LOCATION_PROXIMITY_METERS)
-activity_summaries_full = itinerum.process.activities.triplab.detect.summarize_full(activity, tripkit_config.TIMEZONE)
+activity_summaries_full = itinerum.process.activities.triplab.summarize.run_full(activity, tripkit_config.TIMEZONE)
 itinerum.io.write_activities_daily_csv(activity_summaries_full)

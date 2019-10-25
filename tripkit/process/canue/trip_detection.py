@@ -2,12 +2,12 @@
 # Kyle Fitzsimmons, 2019
 from tripkit.models import Trip as LibraryTrip, TripPoint as LibraryTripPoint
 
-from .utils import geo
+from tripkit.utils import geo
 
 
 def _nearest_location(c, locations, buffer_m=100):
     for location in locations:
-        if geo.calculate_distance_m(c, location) <= buffer_m:
+        if geo.distance_m(c, location) <= buffer_m:
             return location.label
 
 
@@ -27,12 +27,13 @@ def _truncate_trace(coordinates, location, reverse=False):
     if reverse:
         coordinates = list(reversed(coordinates))
     for idx, c in enumerate(coordinates):
-        if not last_c and location and geo.calculate_distance_m(c, location) > 200:
-            continue
         if not last_c:
-            last_c = c
+            # only truncate within 200m of stop location
+            skip_c = location and geo.distance_m(c, location) > 200
+            if not skip_c:
+                last_c = c
             continue
-        dist_m = geo.calculate_distance_m(last_c, c)
+        dist_m = geo.distance_m(last_c, c)
         if dist_m < last_dist_m:
             last_dist_m = dist_m
         else:
@@ -154,11 +155,11 @@ def filter_too_short_segments(segments):
     for segment in segments:
         if not segment:
             continue
-        centroid = geo.create_centroid(segment)
+        centroid = geo.centroid(segment)
         
         segment_is_valid = False
         for c in segment:
-            if geo.calculate_distance_m(c, centroid) > 200:
+            if geo.distance_m(c, centroid) > 200:
                 segment_is_valid = True
                 break
         

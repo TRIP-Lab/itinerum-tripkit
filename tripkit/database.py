@@ -21,7 +21,7 @@ from .models.DaySummary import DaySummary
 from .models.Trip import Trip
 from .models.TripPoint import TripPoint
 from .models.User import User
-from .utils import UserNotFoundError
+from .utils.misc import UserNotFoundError
 
 logger = logging.getLogger(__name__)
 
