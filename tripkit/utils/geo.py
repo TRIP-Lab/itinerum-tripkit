@@ -2,17 +2,44 @@
 # Based upon GERT 1.2 (2016-06-03): GIS-based Episode Reconstruction Toolkit
 # Ported to itinerum-tripkit by Kyle Fitzsimmons, 2019
 import math
+import utm
 
-from ..models import Centroid
+
+class Centroid(object):
+    def __init__(self, easting, northing, zone_num, zone_letter):
+        self.easting = easting
+        self.northing = northing
+        self.zone_num = zone_num
+        self.zone_letter = zone_letter
+
+        self._latlon = None
+
+    def _update_latlon(self):
+        if not self._latlon:
+            self._latlon = utm.to_latlon(self.easting, self.northing, self.zone_num, self.zone_letter)
+
+    @property
+    def lat(self):
+        self._update_latlon()
+        return self._latlon[0]
+    
+    @property
+    def lon(self):
+        self._update_latlon()
+        return self._latlon[1]
 
 
-# return the duration in seconds between 2 points
-def calculate_duration(coordinate1, coordinate2):
+def duration(coordinate1, coordinate2):
+    '''
+    Return the duration in seconds between two coordinate records.
+    '''
     return int((coordinate2.timestamp_UTC - coordinate1.timestamp_UTC).total_seconds())
 
 
-# return the distance in meters between 2 points based upon Haversine formula
-def calculate_lat_lon_distance_m(coordinate1, coordinate2):
+def haversine_distance_m(coordinate1, coordinate2):
+    '''
+    Return the Haversine distance between two coordinates.
+    '''
     dlat = math.radians(coordinate2.latitude - coordinate1.latitude)
     dlon = math.radians(coordinate2.longitude - coordinate1.longitude)
     lat1 = math.radians(coordinate1.latitude)
@@ -24,15 +51,19 @@ def calculate_lat_lon_distance_m(coordinate1, coordinate2):
     return 6371 * c * 1000
 
 
-# return the distance between two points in meters.
-def calculate_distance_m(coordinate1, coordinate2):
+def distance_m(coordinate1, coordinate2):
+    '''
+    Return the cartesian distance between two coordinates in meters.
+    '''
     a = coordinate2.easting - coordinate1.easting
     b = coordinate2.northing - coordinate1.northing
     return math.sqrt(a ** 2 + b ** 2)
 
 
-# return the trajectory bearing between 2 points
-def calculate_bearing(coordinate1, coordinate2):
+def bearing(coordinate1, coordinate2):
+    '''
+    Return the trajectory bearing between two coordinates.
+    '''
     lat1 = math.radians(coordinate1.latitude)
     lat2 = math.radians(coordinate2.latitude)
     dlon = math.radians(coordinate2.longitude - coordinate1.longitude)
@@ -42,15 +73,20 @@ def calculate_bearing(coordinate1, coordinate2):
     return (bearing + 360) % 360
 
 
-# return the change in user heading between 2 point bearings
-def calculate_delta_heading(coordinate1, coordinate2):
+def delta_heading(coordinate1, coordinate2):
+    '''
+    Return the change in user heading between two coordinate bearings.
+    '''
     delta1 = abs(coordinate1.bearing - coordinate2.bearing)
     delta2 = 360 - delta1
     return min([delta1, delta2])
 
 
 # return the centroid from a group of points with easting and northing attributes.
-def create_centroid(coordinates):
+def centroid(coordinates):
+    '''
+    Return the centroid from a group of points with easting and northing attributes.
+    '''
     x, y = [], []
     zone_nums, zone_letters = set(), set()
     for c in coordinates:
@@ -60,7 +96,7 @@ def create_centroid(coordinates):
         zone_letters.add(c.zone_letter)
     centroid_x = sum(x) / len(x)
     centroid_y = sum(y) / len(y)
-    assert len(zone_nums) == 1
+    assert len(zone_nums) == 1  # asserts all points are from the same UTM zone
     assert len(zone_letters) == 1
     num, letter = list(zone_nums)[0], list(zone_letters)[0]
     return Centroid(easting=centroid_x, northing=centroid_y, zone_num=num, zone_letter=letter)
