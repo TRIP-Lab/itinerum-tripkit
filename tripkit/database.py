@@ -360,11 +360,11 @@ class Database(object):
                 yield dict_row
 
         if not trip_day_summaries:
-            logger.info(f"No daily summaries for {user.uuid}. Has trip detection been run?")
+            logger.info(f"no daily summaries for {user.uuid}. Has trip detection been run?")
             return
 
         if overwrite:
-            logger.info("Overwriting user daily summaries information...")
+            logger.info("overwriting user daily summaries information...")
             self.delete_user_from_table(DetectedTripDaySummary, user)
 
         model_fields = set(DetectedTripDaySummary._meta.sorted_field_names)

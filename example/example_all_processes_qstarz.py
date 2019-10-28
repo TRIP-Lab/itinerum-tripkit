@@ -63,7 +63,7 @@ itinerum.io.write_semantic_locations_geojson(fn_base=user.uuid, locations=locati
 #     'cold_start_distance': tripkit_config.TRIP_DETECTION_COLD_START_DISTANCE_METERS,
 #     'accuracy_cutoff_meters': tripkit_config.TRIP_DETECTION_ACCURACY_CUTOFF_METERS,
 # }
-user.trips = itinerum.process.canue.trip_detection.run(prepared_coordinates, locations)
+user.trips = itinerum.process.trip_detection.canue.algorithm.run(prepared_coordinates, locations)
 itinerum.database.save_trips(user, user.trips)
 itinerum.io.write_trips_geojson(fn_base=user.uuid, trips=user.trips)
 # itinerum.io.write_trip_summaries_csv(fn_base=user.uuid, summaries=trip_summaries)
@@ -75,13 +75,12 @@ mapmatched_results = map_matcher.match(trip1_coordinates, matcher='WALKING')
 itinerum.io.write_mapmatched_geojson(fn_base=user.uuid, results=mapmatched_results)
 
 # 5. detect complete days and write csv
-complete_day_summaries = itinerum.process.complete_days.triplab.counter.run(user.trips, tripkit_config.TIMEZONE)
-
+complete_day_summaries = itinerum.process.complete_days.canue.counter.run(user.trips, tripkit_config.TIMEZONE)
 itinerum.database.save_trip_day_summaries(user, complete_day_summaries, tripkit_config.TIMEZONE)
 itinerum.io.write_complete_days_csv({user.uuid: complete_day_summaries})
 
 # 6. detect activities and write summaries (compact and full)
 # activity = itinerum.process.activities.triplab.detect.run(user, locations, tripkit_config.SEMANTIC_LOCATION_PROXIMITY_METERS)
 activity = itinerum.process.activities.canue.tally_times.run(user, locations, tripkit_config.SEMANTIC_LOCATION_PROXIMITY_METERS)
-activity_summaries_full = itinerum.process.activities.triplab.summarize.run_full(activity, tripkit_config.TIMEZONE)
-itinerum.io.write_activities_daily_csv(activity_summaries_full)
+# activity_summaries_full = itinerum.process.activities.triplab.summarize.run_full(activity, tripkit_config.TIMEZONE)
+# itinerum.io.write_activities_daily_csv(activity_summaries_full)

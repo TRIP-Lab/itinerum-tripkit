@@ -29,7 +29,7 @@ class Centroid(object):
         return self._latlon[1]
 
 
-def duration(coordinate1, coordinate2):
+def duration_s(coordinate1, coordinate2):
     '''
     Return the duration in seconds between two coordinate records.
     '''

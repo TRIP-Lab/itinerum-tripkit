@@ -65,10 +65,10 @@ def run(coordinates):
             processed.append(gc)
             last_gc = gc
             continue
-        gc.duration_s = geo.calculate_duration(last_gc, gc)
-        gc.distance_m = geo.calculate_lat_lon_distance_m(last_gc, gc)
-        gc.bearing = geo.calculate_bearing(last_gc, gc)
-        gc.delta_heading = geo.calculate_delta_heading(last_gc, gc)
+        gc.duration_s = geo.duration_s(last_gc, gc)
+        gc.distance_m = geo.haversine_distance_m(last_gc, gc)
+        gc.bearing = geo.bearing(last_gc, gc)
+        gc.delta_heading = geo.delta_heading(last_gc, gc)
         
         # skip points with speed of 0
         if not gc.speed_ms:    

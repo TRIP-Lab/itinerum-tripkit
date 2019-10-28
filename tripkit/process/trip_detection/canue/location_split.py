@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # Kyle Fitzsimmons, 2019
-from tripkit.models import Trip as LibraryTrip, TripPoint as LibraryTripPoint
-
+#
+# Splits segments when entry/exit from detected stop locations is longer than a minimum
+# trip duration. This is due to QStarz data collection happening continually without
+# interruption at geofences.
 from tripkit.utils import geo
 
 
@@ -43,26 +45,6 @@ def _truncate_trace(coordinates, location, reverse=False):
     if reverse:
         return list(reversed(truncated))
     return truncated
-
-
-def split_by_time_gap(coordinates, period_s=300):
-    segments = []
-    segment = []
-    last_c = None
-    for c in coordinates:
-        if not last_c:
-            last_c = c
-            continue
-        assert c.timestamp_epoch > last_c.timestamp_epoch
-        diff_s = c.timestamp_epoch - last_c.timestamp_epoch
-        if diff_s > period_s:
-            segments.append(segment)
-            segment = []
-        segment.append(c)
-        last_c = c
-    if segment:
-        segments.append(segment)
-    return segments
 
 
 # determines which points labeled as stop points constitute a valid end of a trip
@@ -149,72 +131,3 @@ def split_by_stop_locations(segments, locations, period_s=300):
                     splits[-1].extend(append_points)                
         split_segments.extend(splits)
     return split_segments
-
-
-def filter_too_short_segments(segments):
-    for segment in segments:
-        if not segment:
-            continue
-        centroid = geo.centroid(segment)
-        
-        segment_is_valid = False
-        for c in segment:
-            if geo.distance_m(c, centroid) > 200:
-                segment_is_valid = True
-                break
-        
-        if segment_is_valid:
-            yield segment
-
-
-def gert_rules(segments):
-    # GERT author's note:
-    #   Some background on threshold values:
-    #   based on 3 feet per second (fps) minimum pedestrian walking speed (LaPlante & Kaeser 2007)
-    #   or 0.91 m/s and a minimum walk duration of 60 s (Bialostozky 2009)
-    #   see also MUTCD 2009 Section 4E.06 Pedestrian Intervals and Signal Phases
-    last_segment = None
-    for segment in segments:
-        if not last_segment:
-            last_segment = segment
-            continue
-        last_point = last_segment[-1]
-        next_point = segment[0]
-
-        time_gap_s = next_point.timestamp_epoch - last_point.timestamp_epoch
-        last_segment = segment
-        
-
-def wrap_for_tripkit(segments):
-    tripkit_trips = []
-
-    for idx, segment in enumerate(segments, start=1):
-        trip = LibraryTrip(num=idx, trip_code=0)
-        trip_distance = 0.0
-        for point in segment:
-            trip_distance += point.distance_m
-            p = LibraryTripPoint(
-                database_id=None,
-                latitude=point.latitude,
-                longitude=point.longitude,
-                h_accuracy=0.,
-                distance_before=point.distance_m,
-                trip_distance=trip_distance,
-                period_before=point.duration_s,
-                timestamp_UTC=point.timestamp_UTC,
-            )
-            trip.points.append(p)
-        tripkit_trips.append(trip)
-    return tripkit_trips
-
-
-def run(coordinates, locations):
-    time_segments = split_by_time_gap(coordinates, period_s=300)
-    location_segments = split_by_stop_locations(time_segments, locations, period_s=300)
-    
-    # condensed_segments = condense_stop_points(location_segments, locations)
-    filtered_segments = filter_too_short_segments(location_segments)
-    # gert_rules(location_segments)
-    
-    trips = wrap_for_tripkit(filtered_segments)
-    return trips
