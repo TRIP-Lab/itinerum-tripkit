@@ -34,4 +34,4 @@ class TripPoint(object):
         self.timestamp_epoch = (timestamp_UTC - datetime(1970, 1, 1)).total_seconds()
 
     def __repr__(self):
-        return f"<TripPoint ({self.latitude}, {self.longitude}) {self.timestamp_UTC}>"
+        return f"<tripkit.models.TripPoint ({self.latitude}, {self.longitude}) {self.timestamp_UTC}>"

@@ -39,4 +39,4 @@ class DaySummary(object):
         self.inactivity_streak = inactivity_streak
 
     def __repr__(self):
-        return f"<DaySummary date={self.date.isoformat()} has_trips={self.has_trips} is_complete={self.is_complete}>"
+        return f"<tripkit.models.DaySummary date={self.date.isoformat()} has_trips={self.has_trips} is_complete={self.is_complete}>"

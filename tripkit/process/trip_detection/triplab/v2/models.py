@@ -49,6 +49,9 @@ class GPSPoint:
     def timestamp_epoch(self):
         return int((self.timestamp_UTC - datetime(1970, 1, 1)).total_seconds())
 
+    def __repr__(self):
+        return f"<tripkit.process.trip_detection.triplab.v2.models.GPSPoint database_id={self.database_id}>"
+
 
 class SubwayEntrance:
     __slots__ = ['latitude', 'longitude', 'northing', 'easting']
@@ -58,6 +61,9 @@ class SubwayEntrance:
         self.longitude = kwargs['longitude']
         self.northing = kwargs['northing']
         self.easting = kwargs['easting']
+
+    def __repr__(self):
+        return f"<tripkit.process.trip_detection.triplab.v2.models.SubwayEntrance>"
 
 
 class TripSegment:
@@ -83,6 +89,9 @@ class TripSegment:
 
     def prepend(self, point):
         self.points.insert(0, point)
+
+    def __repr__(self):
+        return f"<tripkit.process.trip_detection.triplab.v2.models.TripSegment group={self.group}>"
 
 
 class Trip:
@@ -161,6 +170,9 @@ class Trip:
     def avg_speed(self):
         return self.duration / self.cumulative_distance
 
+    def __repr__(self):
+        return f"<tripkit.process.trip_detection.triplab.v2.models.Trip code={self.code}>"
+
 
 class MissingTrip:
     __slots__ = ['category', 'last_trip_end', 'next_trip_start', 'distance', 'duration', 'code']
@@ -184,3 +196,6 @@ class MissingTrip:
     @property
     def avg_speed(self):
         return self.distance / self.duration
+
+    def __repr__(self):
+        return f"<tripkit.process.trip_detection.triplab.v2.models.MissingTrip category={self.category} code={self.code}>"

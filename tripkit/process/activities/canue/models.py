@@ -101,4 +101,4 @@ class UserActivity(object):
         return by_date
 
     def __repr__(self):
-        return f"<activities.UserActivity uuid={self.uuid}>"
+        return f"<tripkit.process.activities.canue.models.UserActivity uuid={self.uuid}>"

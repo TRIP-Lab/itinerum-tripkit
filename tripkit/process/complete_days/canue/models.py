@@ -37,6 +37,9 @@ class Group(object):
         if self.second_points:
             return self.second_points[0]
 
+    def __repr__(self):
+        return f"<tripkit.process.complete_days.canue.models.Group>"
+
 
 class DailyGroups():
     def __init__(self, start_dt_local, end_dt_local):
@@ -65,3 +68,6 @@ class DailyGroups():
 
     def get_second_point(self, date):
         return self._summaries[date].segment_second_point
+
+    def __repr__(self):
+        return f"<tripkit.process.canue.models.DailyGroups>"

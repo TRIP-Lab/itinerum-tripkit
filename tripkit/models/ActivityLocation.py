@@ -15,7 +15,7 @@ class ActivityLocation(object):
     :param zone_letter: Corresponding UTM zone letter (if present).
 
     :type label:       str
-    :type latitde:     float
+    :type latitude:     float
     :type longitude:   float
     :type easting:     float, optional
     :type northing:    float, optional
@@ -31,3 +31,6 @@ class ActivityLocation(object):
         self.northing = northing
         self.zone_num = zone_num
         self.zone_letter = zone_letter
+
+    def __repr__(self):
+        return f"<tripkit.models.ActivityLocation label={self.label} lat={self.latitude} lon={self.longitude}>"

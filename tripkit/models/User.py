@@ -25,4 +25,4 @@ class User(object):
         self.trips = []
 
     def __repr__(self):
-        return f"<User uuid={self.uuid}>"
+        return f"<tripkit.models.User uuid={self.uuid}>"
