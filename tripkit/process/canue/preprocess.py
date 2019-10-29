@@ -69,9 +69,9 @@ def run(coordinates):
         gc.distance_m = geo.haversine_distance_m(last_gc, gc)
         gc.bearing = geo.bearing(last_gc, gc)
         gc.delta_heading = geo.delta_heading(last_gc, gc)
-        
+
         # skip points with speed of 0
-        if not gc.speed_ms:    
+        if not gc.speed_ms:
             continue
         if gc.distance_m < 0.1:
             continue
@@ -81,7 +81,7 @@ def run(coordinates):
         ## - 250 meters (considered as "underground travel"; Bialostozky, 2009)
         # if gc.speed_ms <= 50 and (gc.distance_m <= 250 or gc.duration_s <= 120):
         #     processed.append(gc)
-        
+
         # augment with projected coordinates
         gc.easting, gc.northing, gc.zone_num, gc.zone_letter = utm.from_latlon(gc.latitude, gc.longitude)
         processed.append(gc)

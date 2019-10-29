@@ -162,7 +162,7 @@ def wrap_for_tripkit(tz, complete_days):
 def run(trips, timezone):
     if not trips:
         return None
-    
+
     tz = pytz.timezone(timezone)
 
     min_dt = tz.localize(datetime(1999, 6, 1))

@@ -26,7 +26,7 @@ def group_activity_by_date(activity, timezone):
             'num_trips': 0,
             'num_points': 0,
             'start_UTC': None,
-            'end_UTC': None
+            'end_UTC': None,
         }
 
     for start_UTC, end_UTC, label in activity.commute_times:
@@ -80,6 +80,7 @@ def run_full(user_activity, timezone):
         if activities['end_UTC']:
             end_time = localize(activities['end_UTC'], timezone)
 
+        # generate and append row record
         r = {
             'uuid': user_activity.uuid,
             'date': date,
@@ -90,19 +91,16 @@ def run_full(user_activity, timezone):
             'trips_distance_m': activities['distance'],
             'trips_duration_s': trips_duration,
         }
-
         for dwell_label in all_dwell_labels:
             key = f'dwell_{dwell_label}_s'
             r[key] = dwell_durations.get(dwell_label)
             if not key in duration_keys:
                 duration_keys.append(key)
-
         for commute_label in all_commute_labels:
             key = f'commute_{commute_label}_s'
             r[key] = commute_durations.get(commute_label)
             if not key in duration_keys:
                 duration_keys.append(key)
-
         records.append(r)
     summaries = {'records': records, 'duration_keys': duration_keys}
     return summaries

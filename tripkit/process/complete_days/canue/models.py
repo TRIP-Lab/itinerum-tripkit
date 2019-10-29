@@ -41,7 +41,7 @@ class Group(object):
         return f"<tripkit.process.complete_days.canue.models.Group>"
 
 
-class DailyGroups():
+class DailyGroups:
     def __init__(self, start_dt_local, end_dt_local):
         self._summaries = {}
         delta = end_dt_local - start_dt_local

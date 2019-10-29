@@ -32,14 +32,16 @@ class Coordinate(object):
         'avg_delta_heading',
         'kmeans',
         'stdev',
-        'stop_label'
+        'stop_label',
     ]
 
     def __init__(self, c):
         self.uuid = c.user
         self.latitude = c.latitude
         self.longitude = c.longitude
-        self.timestamp_UTC = ciso8601.parse_datetime_as_naive(c.timestamp_UTC)  # optimization for datetime.fromisoformat()
+        self.timestamp_UTC = ciso8601.parse_datetime_as_naive(
+            c.timestamp_UTC
+        )  # optimization for datetime.fromisoformat()
         # attributes to be later calculated based upon previous point
         self.duration_s = 0
         self.distance_m = 0.0
@@ -79,7 +81,7 @@ class Coordinate(object):
             self.kmeans.label,
             self.kmeans.group_num,
             self.stdev.label,
-            self.stdev.group_num
+            self.stdev.group_num,
         ]
 
     def __repr__(self):

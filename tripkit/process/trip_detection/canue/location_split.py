@@ -24,7 +24,7 @@ def _common_centroid(stop_points, locations):
 
 def _truncate_trace(coordinates, location, reverse=False):
     last_c = None
-    last_dist_m = 10E16
+    last_dist_m = 10e16
     truncate_idx = None
     if reverse:
         coordinates = list(reversed(coordinates))
@@ -79,7 +79,7 @@ def _prepend_to_split(current_point, stop_points, stop_centroid, period_s):
 def split_by_stop_locations(segments, locations, period_s=300):
     split_segments = []
     for segment in segments:
-        splits = [ [] ]
+        splits = [[]]
         stop_points = []
         for c in segment:
             stop_label = _nearest_location(c, locations, buffer_m=60)
@@ -126,8 +126,8 @@ def split_by_stop_locations(segments, locations, period_s=300):
                 stop_centroid = _common_centroid(stop_points, locations)
                 current_segment = splits[-1]
                 if current_segment:
-                    last_point = current_segment[-1]                
+                    last_point = current_segment[-1]
                     append_points = _append_to_split(last_point, stop_points, stop_centroid, period_s)
-                    splits[-1].extend(append_points)                
+                    splits[-1].extend(append_points)
         split_segments.extend(splits)
     return split_segments

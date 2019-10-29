@@ -4,6 +4,7 @@ import itertools
 import logging
 
 from .models import UserActivity
+
 # from .utils import localize
 from tripkit.utils import geo
 
@@ -15,7 +16,9 @@ def detect_semantic_location_overlap(uuid, locations, activity_proximity_m):
     for loc1, loc2 in itertools.combinations(locations, 2):
         distance_between_m = geo.distance_m(loc1, loc2)
         if distance_between_m <= (activity_proximity_m * 2):
-            logger.warn(f"possible overlap in semantic locations: {uuid} {loc1.label}-->{loc2.label} ({distance_between_m} m)")
+            logger.warn(
+                f"possible overlap in semantic locations: {uuid} {loc1.label}-->{loc2.label} ({distance_between_m} m)"
+            )
 
 
 def label_trip_points(locations, trip, proximity_m):
@@ -82,6 +85,6 @@ def run(user, locations, proximity_m=50):
             dwell_label = classify_dwell(last_t, t)
             activity.add_dwell_time(last_t.end_UTC, t.start_UTC, dwell_label)
         last_t = t
-        
+
         activity.add_trip(t)
     return activity

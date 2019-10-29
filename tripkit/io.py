@@ -203,7 +203,7 @@ def write_trips_geojson(fn_base, trips):
             'end_UTC': trip.end_UTC,
             'distance': trip.distance,
             'duration': trip.duration,
-            'trip_code': trip.trip_code
+            'trip_code': trip.trip_code,
         }
         linestring = _points_to_geojson_linestring(trip.geojson_coordinates, properties)
         detected_trips_features.append(linestring)
@@ -296,7 +296,9 @@ def write_input_geopackage(fn_base, coordinates, prompts, cancelled_prompts):
     cancelled_prompts_filename = f'{fn_base}_cancelled_prompts.gpkg'
     cancelled_prompts_gpkg_schema = _input_gpkg_schema(cancelled_prompts.model, ignore_keys)
     cancelled_prompts_features = _input_cancelled_prompts_features(cancelled_prompts, ignore_keys)
-    _write_features_to_geopackage_f(cancelled_prompts_filename, cancelled_prompts_gpkg_schema, cancelled_prompts_features)
+    _write_features_to_geopackage_f(
+        cancelled_prompts_filename, cancelled_prompts_gpkg_schema, cancelled_prompts_features
+    )
 
 
 def write_trips_geopackage(fn_base, trips):
@@ -543,5 +545,5 @@ def write_activities_daily_csv(daily_summaries, extra_cols=None):
         writer.writerow(headers1)
     with open(csv_fp, 'a', newline=NEWLINE_MODE) as csv_f:
         writer = csv.DictWriter(csv_f, dialect='excel', fieldnames=headers2)
-        writer.writeheader()        
+        writer.writeheader()
         writer.writerows(daily_summaries)

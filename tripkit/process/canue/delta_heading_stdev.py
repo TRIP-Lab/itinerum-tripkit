@@ -23,8 +23,8 @@ def group_by_stdev(coordinates, cutoff=1):
             group.append(c)
         else:
             c.stdev = ClusterInfo(label='trip')
-        
-        if group and c.avg_delta_heading < threshold:    
+
+        if group and c.avg_delta_heading < threshold:
             stdev_groups.append(group)
             group = []
     return stdev_groups

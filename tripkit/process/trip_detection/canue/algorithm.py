@@ -47,13 +47,13 @@ def filter_too_short_segments(segments, min_distance_m=250):
         if not segment:
             continue
         centroid = geo.centroid(segment)
-        
+
         segment_is_valid = False
         for c in segment:
             if geo.distance_m(c, centroid) > min_distance_m:
                 segment_is_valid = True
                 break
-        
+
         if segment_is_valid:
             yield segment
 
@@ -89,7 +89,7 @@ def make_trips_diary(valid_segments, missing_segments):
     missing_test_segment = next(missing_iter)
     trip_idx = 0
     missing_idxs = []
-    for valid_segment in valid_segments:      
+    for valid_segment in valid_segments:
         if missing_test_segment and valid_segment[0].timestamp_UTC < missing_test_segment[0].timestamp_UTC:
             trips.append(valid_segment)
             trip_idx += 1
@@ -118,9 +118,9 @@ def wrap_for_tripkit(diary):
                 database_id=None,
                 latitude=start.latitude,
                 longitude=start.longitude,
-                h_accuracy=0.,
-                distance_before=0.,
-                trip_distance=0.,
+                h_accuracy=0.0,
+                distance_before=0.0,
+                trip_distance=0.0,
                 period_before=0,
                 timestamp_UTC=start.timestamp_UTC,
             )
@@ -129,7 +129,7 @@ def wrap_for_tripkit(diary):
                 database_id=None,
                 latitude=end.latitude,
                 longitude=end.longitude,
-                h_accuracy=0.,
+                h_accuracy=0.0,
                 distance_before=geo.distance_m(*detected_trip),
                 trip_distance=geo.distance_m(*detected_trip),
                 period_before=geo.duration_s(start, end),
@@ -144,7 +144,7 @@ def wrap_for_tripkit(diary):
                     database_id=None,
                     latitude=point.latitude,
                     longitude=point.longitude,
-                    h_accuracy=0.,
+                    h_accuracy=0.0,
                     distance_before=point.distance_m,
                     trip_distance=trip_distance,
                     period_before=point.duration_s,
@@ -158,13 +158,15 @@ def wrap_for_tripkit(diary):
 
 def run(cfg, coordinates, locations):
     time_segments = split_by_time_gap(coordinates, period_s=cfg.TRIP_DETECTION_BREAK_INTERVAL_SECONDS)
-    location_segments = split_by_stop_locations(time_segments, locations, period_s=cfg.TRIP_DETECTION_BREAK_INTERVAL_SECONDS)
+    location_segments = split_by_stop_locations(
+        time_segments, locations, period_s=cfg.TRIP_DETECTION_BREAK_INTERVAL_SECONDS
+    )
     # gert_rules(location_segments)
 
     valid_segments = filter_too_short_segments(location_segments, min_distance_m=250)
     missing_segments = detect_missing_segments(valid_segments, missing_segment_m=250)
     trips_diary = make_trips_diary(valid_segments, missing_segments)
-    
+
     # detected_trips = valid_segments
     trips = wrap_for_tripkit(trips_diary)
     return trips

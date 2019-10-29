@@ -29,7 +29,7 @@ def label_coordinate_clusters(coordinates, kmeans):
 
     for idx, num in enumerate(kmeans.labels_):
         coordinates[idx].kmeans = ClusterInfo(label=labels[num])
-    
+
 
 # group clusters sequentially by their occurance in the user's travel diary
 def group_sequentially(coordinates):
@@ -69,9 +69,6 @@ def run(coordinates):
     label_coordinate_clusters(coordinates, kmeans)
     cluster_groups, stop_groups = group_sequentially(coordinates)
     cluster_groups, stop_groups = relabel_by_stop_time(cluster_groups, stop_groups, min_time=MIN_STOP_TIME)
-    
-    groups = {
-        'clusters': cluster_groups,
-        'stops': stop_groups
-    }
+
+    groups = {'clusters': cluster_groups, 'stops': stop_groups}
     return groups

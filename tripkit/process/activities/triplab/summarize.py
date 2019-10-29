@@ -42,9 +42,9 @@ def run_condensed(user_activity, day_summaries, timezone):
         'dwell_time_study_s': 0,
         'num_trips': 0,
         'total_trips_duration_s': 0,
-        'total_trips_distance_m': 0,        
+        'total_trips_distance_m': 0,
         'avg_trips_per_day': 0,
-        'avg_trip_distance_m': 0
+        'avg_trip_distance_m': 0,
     }
 
     # tally days by complete or incomplete
@@ -107,19 +107,21 @@ def run_full(user_activity, timezone):
         if activities['end_UTC']:
             end_time = localize(activities['end_UTC'], timezone)
 
-        records.append({
-            'uuid': user_activity.uuid,
-            'date': date,
-            'start_time': start_time,
-            'end_time': end_time,
-            'num_trips': activities['num_trips'],
-            'num_points': activities['num_points'],
-            'trips_distance_m': activities['distance'],
-            'trips_duration_s': trips_duration,
-            'dwell_time_home_s': dwell_home,
-            'dwell_time_work_s': dwell_work,
-            'dwell_time_study_s': dwell_study,
-            'commute_time_study_s': commute_study,
-            'commute_time_work_s': commute_work
-        })
+        records.append(
+            {
+                'uuid': user_activity.uuid,
+                'date': date,
+                'start_time': start_time,
+                'end_time': end_time,
+                'num_trips': activities['num_trips'],
+                'num_points': activities['num_points'],
+                'trips_distance_m': activities['distance'],
+                'trips_duration_s': trips_duration,
+                'dwell_time_home_s': dwell_home,
+                'dwell_time_work_s': dwell_work,
+                'dwell_time_study_s': dwell_study,
+                'commute_time_study_s': commute_study,
+                'commute_time_work_s': commute_work,
+            }
+        )
     return records

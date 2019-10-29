@@ -52,11 +52,7 @@ class UserActivity(object):
     @staticmethod
     def _init_values(d, date):
         if not date in d:
-            d[date] = {
-                'commutes': {},
-                'dwells': {},
-                'distance': 0
-            }
+            d[date] = {'commutes': {}, 'dwells': {}, 'distance': 0}
 
     def __repr__(self):
         return f"<tripkit.process.activities.canue.models.UserActivity uuid={self.uuid}>"

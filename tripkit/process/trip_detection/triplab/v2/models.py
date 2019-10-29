@@ -198,4 +198,6 @@ class MissingTrip:
         return self.distance / self.duration
 
     def __repr__(self):
-        return f"<tripkit.process.trip_detection.triplab.v2.models.MissingTrip category={self.category} code={self.code}>"
+        return (
+            f"<tripkit.process.trip_detection.triplab.v2.models.MissingTrip category={self.category} code={self.code}>"
+        )

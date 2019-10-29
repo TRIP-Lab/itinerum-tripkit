@@ -75,7 +75,6 @@ def _generate_null_survey(input_dir, coordinates_csv_fn, id_column='uuid', uuid_
                 headers = [h.lower() for h in next(reader)]
             orig_id_idx = headers.index(id_column)
             orig_ids = {r[orig_id_idx] for r in reader}
-    
 
     for uuid in orig_ids:
         if uuid_lookup:

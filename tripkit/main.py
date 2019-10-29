@@ -132,8 +132,9 @@ class Itinerum(object):
         '''
         survey_responses_table_exists = self.database.db.table_exists(UserSurveyResponse._meta.table_name)
         if not survey_responses_table_exists:
-            raise Exception("UserSurveyResponse table does not exist in database. Please re-run setup "
-                            "and try again.")
+            raise Exception(
+                "UserSurveyResponse table does not exist in database. Please re-run setup " "and try again."
+            )
 
     def load_users(self, uuid=None, load_trips=True, limit=None, start=None, end=None):
         '''
@@ -205,4 +206,3 @@ class Itinerum(object):
             if load_trips:
                 user.trips = self.database.load_trips(user, start=start, end=end)
             return user
-

@@ -10,13 +10,10 @@ def localize(naive_utc, timezone):
 
 
 # TODO: improve docstring
-#  get the durations for the trip as either a 1-member (no split at midnight) or a 
+#  get the durations for the trip as either a 1-member (no split at midnight) or a
 # 2-member (split at midnight) list of tuples --> [(date, duration_s), ...]
 def split_at_midnight(start, end):
     if start.day != end.day:
         midnight = end.replace(hour=0, minute=0, second=0, microsecond=0)
-        return [
-            (start.date(), (midnight - start).total_seconds()),
-            (end.date(), (end - midnight).total_seconds())
-        ]
+        return [(start.date(), (midnight - start).total_seconds()), (end.date(), (end - midnight).total_seconds())]
     return [(start.date(), (end - start).total_seconds())]

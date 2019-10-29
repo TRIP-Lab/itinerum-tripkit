@@ -101,10 +101,12 @@ def summarize_stops(labeled_coordinates):
             if trip_rule_1 and trip_rule_2:
                 print("HELLO FROM detect_stops.py -- first rule")
                 import sys
+
                 sys.exit()
             elif stop_rule_1:
                 print("HELLO FROM detect_stops.py -- second rule")
                 import sys
+
                 sys.exit()
             else:
                 print("HELLO FROM detect_stops.py -- none")

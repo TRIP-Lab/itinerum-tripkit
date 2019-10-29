@@ -37,15 +37,17 @@ def wrap_for_tripkit(locations):
     tripkit_locations = []
 
     for label, centroid in locations.items():
-        tripkit_locations.append(TripkitActivityLocation(
-            label=label,
-            latitude=centroid.lat,
-            longitude=centroid.lon,
-            easting=centroid.easting,
-            northing=centroid.northing,
-            zone_num=centroid.zone_num,
-            zone_letter=centroid.zone_letter
-        ))
+        tripkit_locations.append(
+            TripkitActivityLocation(
+                label=label,
+                latitude=centroid.lat,
+                longitude=centroid.lon,
+                easting=centroid.easting,
+                northing=centroid.northing,
+                zone_num=centroid.zone_num,
+                zone_letter=centroid.zone_letter,
+            )
+        )
     return tripkit_locations
 
 
@@ -58,7 +60,7 @@ def run(kmeans_groups, stdev_groups):
 
     stdev_centroids = [geo.centroid(stop_cluster) for stop_cluster in stdev_groups]
     stdev_centroids = condense_overlaps(stdev_centroids)
-    
+
     # check which kmeans centroids exist within 50-100m intersection of stdev centroids,
     # these will be stop locations with relatively good confidence. The centroid coordinate
     # of the stdev cluster is more precise so these will be used for the position of overlapping

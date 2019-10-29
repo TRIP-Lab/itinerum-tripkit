@@ -50,11 +50,7 @@ class UserActivity(object):
     @staticmethod
     def _init_values(d, date):
         if not date in d:
-            d[date] = {
-                'commutes': {},
-                'dwells': {},
-                'distance': 0
-            }
+            d[date] = {'commutes': {}, 'dwells': {}, 'distance': 0}
 
     def group_by_date(self, timezone):
         start_date = localize(self.first_seen_UTC, timezone).date()
@@ -75,7 +71,7 @@ class UserActivity(object):
                 'num_trips': 0,
                 'num_points': 0,
                 'start_UTC': None,
-                'end_UTC': None
+                'end_UTC': None,
             }
 
         for start_UTC, end_UTC, label in self.commute_times:

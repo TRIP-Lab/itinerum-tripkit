@@ -22,7 +22,7 @@ class Centroid(object):
     def lat(self):
         self._update_latlon()
         return self._latlon[0]
-    
+
     @property
     def lon(self):
         self._update_latlon()

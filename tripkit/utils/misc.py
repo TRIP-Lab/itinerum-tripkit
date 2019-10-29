@@ -41,4 +41,5 @@ def timer(func):
         end = time.perf_counter()
         logger.info(f"{func.__name__} completed in {end - start:.2f} s.")
         return value
+
     return wrapper

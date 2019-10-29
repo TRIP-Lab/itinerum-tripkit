@@ -127,7 +127,7 @@ class QstarzCSVParser(object):
             'timestamp_UTC': timestamp_UTC,
             'timestamp_epoch': timestamp_epoch,
         }
-        return db_row                    
+        return db_row
 
     # read .csv file, apply filter and yield row
     def _row_generator(self, csv_fp, filter_func=None):
@@ -170,7 +170,9 @@ class QstarzCSVParser(object):
         :param input_dir: Directory containing input .csv data
         '''
         self._generate_uuids(input_dir)
-        _generate_null_survey(input_dir, self.coordinates_csv, id_column='user', uuid_lookup=self.uuid_lookup, headers=self.headers)
+        _generate_null_survey(
+            input_dir, self.coordinates_csv, id_column='user', uuid_lookup=self.uuid_lookup, headers=self.headers
+        )
 
     def load_export_coordinates(self, input_dir):
         '''

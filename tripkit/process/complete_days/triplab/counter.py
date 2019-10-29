@@ -40,12 +40,7 @@ def group_trips_by_day(first_date, last_date, trips, tz):
     min_dt = tz.localize(datetime.combine(first_date, datetime.min.time()))
     for i in range(delta.days + 1):
         date = first_date + timedelta(days=i)
-        daily_trip_summaries[date] = {
-            'trip_codes': [],
-            'start_points': [],
-            'second_points': [],
-            'end_points': []
-        }
+        daily_trip_summaries[date] = {'trip_codes': [], 'start_points': [], 'second_points': [], 'end_points': []}
 
     for t in trips:
         if not t.start_local >= min_dt:

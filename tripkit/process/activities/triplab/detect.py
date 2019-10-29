@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # Kyle Fitzsimmons, 2019
 #
-# This module tallies the commute and dwell times for a user over the course of 
+# This module tallies the commute and dwell times for a user over the course of
 # a survey and reports this output by date and aggregate for the survey period.
 # There are 2 categories for dwell times: those during the course of a detected trip
 # (`dwell_times`) and those occuring between trips (`stay_times`). For the sake
@@ -74,6 +74,7 @@ def classify_commute(trip):
         commute_label = 'study'
     return commute_label
 
+
 def classify_dwell(last_trip, trip):
     '''
     Count the time spent at known locations by tallying the intervals between labeled points.
@@ -121,6 +122,6 @@ def run(user, locations, proximity_m=50):
             dwell_label = classify_dwell(last_t, t)
             activity.add_dwell_time(last_t.end_UTC, t.start_UTC, dwell_label)
         last_t = t
-        
+
         activity.add_trip(t)
     return activity
