@@ -19,18 +19,20 @@ itinerum.setup(force=False)
 
 # 2. write GIS-compatible outputs of input data
 user = itinerum.load_user_by_orig_id(orig_id=1)
-# itinerum.io.write_input_geojson(
-#     fn_base=user.uuid,
-#     coordinates=user.coordinates,
-#     prompts=user.prompt_responses,
-#     cancelled_prompts=user.cancelled_prompt_responses,
-# )
+itinerum.io.write_input_geojson(
+    fn_base=user.uuid,
+    coordinates=user.coordinates,
+    prompts=user.prompt_responses,
+    cancelled_prompts=user.cancelled_prompt_responses,
+)
 
-# 3. detect trips on data and write a GIS-compatible output
+# 2.1. clean out junk input data
+## about 90% of provided points seem to be junk, many with the exact
+## same lat/lon 1-sec apart with 0-values for accelerations. Clean these
+## to properly test point-to-point speed
+# prepared_coordinates = itinerum.process.canue.preprocess.run(user.coordinates)
 
-# about 90% of provided points seem to be junk, many with the exact
-# same lat/lon 1-sec apart with 0-values for accelerations. Clean these
-# to properly test point-to-point speed
+## DEBUG: cache above (comment both)
 import csv
 import os
 import pickle
@@ -42,12 +44,13 @@ if not os.path.exists(pickle_fp):
 with open(pickle_fp, 'rb') as pickle_f:
     prepared_coordinates = pickle.load(pickle_f)
 
+# 3. detect trips on data and write a GIS-compatible output
 
 # augment CANUE Coordinate objects with labels
 kmeans_groups = itinerum.process.canue.kmeans.run(prepared_coordinates)
 delta_heading_stdev_groups = itinerum.process.canue.delta_heading_stdev.run(prepared_coordinates)
 
-# DEBUG: temp dump coordinates point features to GIS format
+## DEBUG: temp dump coordinates point features to GIS format
 ignore_keys = ('id', 'user', 'longitude', 'latitude', 'direction', 'h_accuracy', 'v_accuracy', 'acceleration_x', 'acceleration_y', 'acceleration_z', 'point_type', 'mode_detected')
 coordinates_features = itinerum.io._input_coordinates_features(prepared_coordinates, ignore_keys)
 coordinates_filename = f'{user.uuid}_prepared_coordinates.geojson'
@@ -56,14 +59,7 @@ itinerum.io._write_features_to_geojson_f(coordinates_filename, coordinates_featu
 locations = itinerum.process.activities.canue.detect_locations.run(kmeans_groups, delta_heading_stdev_groups)
 itinerum.io.write_semantic_locations_geojson(fn_base=user.uuid, locations=locations)
 
-# parameters = {
-#     'subway_entrances': itinerum.database.load_subway_entrances(),
-#     'break_interval_seconds': tripkit_config.TRIP_DETECTION_BREAK_INTERVAL_SECONDS,
-#     'subway_buffer_meters': tripkit_config.TRIP_DETECTION_SUBWAY_BUFFER_METERS,
-#     'cold_start_distance': tripkit_config.TRIP_DETECTION_COLD_START_DISTANCE_METERS,
-#     'accuracy_cutoff_meters': tripkit_config.TRIP_DETECTION_ACCURACY_CUTOFF_METERS,
-# }
-user.trips = itinerum.process.trip_detection.canue.algorithm.run(prepared_coordinates, locations)
+user.trips = itinerum.process.trip_detection.canue.algorithm.run(tripkit_config, prepared_coordinates, locations)
 itinerum.database.save_trips(user, user.trips)
 itinerum.io.write_trips_geojson(fn_base=user.uuid, trips=user.trips)
 # itinerum.io.write_trip_summaries_csv(fn_base=user.uuid, summaries=trip_summaries)
@@ -80,7 +76,6 @@ itinerum.database.save_trip_day_summaries(user, complete_day_summaries, tripkit_
 itinerum.io.write_complete_days_csv({user.uuid: complete_day_summaries})
 
 # 6. detect activities and write summaries (compact and full)
-# activity = itinerum.process.activities.triplab.detect.run(user, locations, tripkit_config.SEMANTIC_LOCATION_PROXIMITY_METERS)
 activity = itinerum.process.activities.canue.tally_times.run(user, locations, tripkit_config.SEMANTIC_LOCATION_PROXIMITY_METERS)
-# activity_summaries_full = itinerum.process.activities.triplab.summarize.run_full(activity, tripkit_config.TIMEZONE)
-# itinerum.io.write_activities_daily_csv(activity_summaries_full)
+activity_summaries = itinerum.process.activities.canue.summarize.run_full(activity, tripkit_config.TIMEZONE)
+itinerum.io.write_activities_daily_csv(activity_summaries['records'], extra_cols=activity_summaries['duration_keys'])

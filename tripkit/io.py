@@ -514,7 +514,7 @@ def write_activity_summaries_csv(summaries):
         writer.writerows(summaries)
 
 
-def write_activities_daily_csv(daily_summaries):
+def write_activities_daily_csv(daily_summaries, extra_cols=None):
     '''
     Write the user activity summaries by date with a record for each day that a user
     participated in a survey.
@@ -535,12 +535,9 @@ def write_activities_daily_csv(daily_summaries):
         'num_points',
         'trips_distance_m',
         'trips_duration_s',
-        'dwell_time_home_s',
-        'dwell_time_work_s',
-        'dwell_time_study_s',
-        'commute_time_study_s',
-        'commute_time_work_s',        
     ]
+    if extra_cols:
+        headers2 += extra_cols
     with open(csv_fp, 'w', newline=NEWLINE_MODE) as csv_f:
         writer = csv.writer(csv_f, dialect='excel')
         writer.writerow(headers1)

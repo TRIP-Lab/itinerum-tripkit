@@ -16,7 +16,6 @@ class MapMatcherAPI(object):
         latlngs = []
         radiuses = []
         timestamps = []
-        last_ts = None
         for c in coordinates:
             latlngs.append("{lon},{lat}".format(lat=c.latitude, lon=c.longitude))
             radiuses.append("{radius}".format(radius=c.h_accuracy))

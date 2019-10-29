@@ -42,7 +42,7 @@ def split_by_time_gap(coordinates, period_s=300):
 #         last_segment = segment
 
 
-def filter_too_short_segments(segments):
+def filter_too_short_segments(segments, min_distance_m=250):
     for segment in segments:
         if not segment:
             continue
@@ -50,7 +50,7 @@ def filter_too_short_segments(segments):
         
         segment_is_valid = False
         for c in segment:
-            if geo.distance_m(c, centroid) > 200:
+            if geo.distance_m(c, centroid) > min_distance_m:
                 segment_is_valid = True
                 break
         
@@ -58,7 +58,7 @@ def filter_too_short_segments(segments):
             yield segment
 
 
-def detect_missing_segments(segments, missing_segment_m=200):
+def detect_missing_segments(segments, missing_segment_m=250):
     ''' 
     Returns a list of missing segments consisting of the last valid segment end point
     and the next valid segment start point.
@@ -156,13 +156,13 @@ def wrap_for_tripkit(diary):
     return tripkit_trips
 
 
-def run(coordinates, locations):
-    time_segments = split_by_time_gap(coordinates, period_s=300)
-    location_segments = split_by_stop_locations(time_segments, locations, period_s=300)
+def run(cfg, coordinates, locations):
+    time_segments = split_by_time_gap(coordinates, period_s=cfg.TRIP_DETECTION_BREAK_INTERVAL_SECONDS)
+    location_segments = split_by_stop_locations(time_segments, locations, period_s=cfg.TRIP_DETECTION_BREAK_INTERVAL_SECONDS)
     # gert_rules(location_segments)
 
-    valid_segments = list(filter_too_short_segments(location_segments))
-    missing_segments = detect_missing_segments(valid_segments, missing_segment_m=200)
+    valid_segments = filter_too_short_segments(location_segments, min_distance_m=250)
+    missing_segments = detect_missing_segments(valid_segments, missing_segment_m=250)
     trips_diary = make_trips_diary(valid_segments, missing_segments)
     
     # detected_trips = valid_segments

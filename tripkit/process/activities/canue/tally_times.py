@@ -47,6 +47,15 @@ def classify_dwell(last_trip, trip):
             break
     if end_location and end_location == start_location:
         return end_location
+    return 'uncategorized'
+
+
+def classify_commute(trip):
+    if trip.start.label and trip.end.label:
+        commute_label = '-'.join(sorted([trip.start.label, trip.end.label]))
+        return commute_label
+    else:
+        return 'uncategorized'
 
 
 def run(user, locations, proximity_m=50):
@@ -64,9 +73,9 @@ def run(user, locations, proximity_m=50):
     for t in user.trips:
         label_trip_points(locations, t, proximity_m)
 
-        # # classify commute times for trips occuring between semantic locations
-        # commute_label = classify_commute(t)
-        # activity.add_commute_time(t.start_UTC, t.end_UTC, commute_label)
+        # classify commute times for trips occuring between semantic locations
+        commute_label = classify_commute(t)
+        activity.add_commute_time(t.start_UTC, t.end_UTC, commute_label)
 
         # classify dwell times for stays at the same semantic location between two consecutive trips
         if last_t:

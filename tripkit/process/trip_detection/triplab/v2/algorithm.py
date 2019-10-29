@@ -17,8 +17,7 @@ logger = logging.getLogger(__name__)
 # cast input data as objects
 def generate_subway_entrances(coordinates):
     '''
-    Find UTM coordinates for subway stations entrances from lat/lon
-    and yield objects.
+    Find UTM coordinates for subway stations entrances from lat/lon and yield objects.
     '''
     entrances = []
     for c in coordinates:
@@ -29,8 +28,7 @@ def generate_subway_entrances(coordinates):
 
 def generate_gps_points(coordinates):
     '''
-    Find UTM coordinates for user GPS points from lat/lon
-    and yield objects.
+    Find UTM coordinates for user GPS points from lat/lon and yield objects.
     '''
     for c in coordinates:
         easting, northing, _, _ = utm.from_latlon(c.latitude, c.longitude)
@@ -49,8 +47,7 @@ def generate_gps_points(coordinates):
 # perform cleaning on points
 def filter_by_accuracy(points, cutoff=30):
     '''
-    Remove points that have worse reported accuracy than the cutoff value
-    in meters.
+    Remove points that have worse reported accuracy than the cutoff value in meters.
     '''
     for p in points:
         if p.h_accuracy <= cutoff:
@@ -59,9 +56,8 @@ def filter_by_accuracy(points, cutoff=30):
 
 def filter_erroneous_distance(points, check_speed_kph=60):
     '''
-    Remove points with unreasonably fast speeds where, in a series
-    of 3 consecutive points (1, 2, and 3), point 3 is closer to point 1
-    than point 2.
+    Remove points with unreasonably fast speeds where, in a series of 3 consecutive points (1, 2, and 3),
+    point 3 is closer to point 1 than point 2.
     '''
 
     # create two copies of the points generator to compare against
@@ -101,8 +97,7 @@ def filter_erroneous_distance(points, check_speed_kph=60):
 
 def break_points_by_collection_pause(points, max_break_period=360):
     '''
-    Break into trip segments when time recorded between points is
-    greater than the specified break period.
+    Break into trip segments when time recorded between points is greater than the specified break period.
     '''
     segments = []
     last_p = None
@@ -141,8 +136,7 @@ def initialize_trips(segments):
 # stitch segments into longer trips if pre-determined conditions are met
 def find_subway_connections(trips, subway_entrances, buffer_m=200):
     '''
-    Look for segments that can be connected by an explained subway trip update
-    the related trip objects.
+    Look for segments that can be connected by an explained subway trip update the related trip objects.
     '''
     connected_trips = []
     last_trip = None
@@ -208,9 +202,8 @@ def find_velocity_connections(trips):
 
 def filter_single_points(trips):
     '''
-    Remove any isolated GPS points that are not within 20 minutes
-    or 150 meters of the previous end point or next trip start point.
-    Otherwise, attach them to the soonest trip end.
+    Remove any isolated GPS points that are not within 20 minutes or 150 meters of the previous end point
+    or next trip start point. Otherwise, attach them to the soonest trip end.
     '''
     max_break_period = 20 * 60  # minutes * seconds
     max_distance_m = 150
@@ -261,8 +254,8 @@ def filter_single_points(trips):
 
 def infer_missing_trips(trips, subway_entrances, min_trip_m=250, subway_buffer_m=200, cold_start_m=750):
     '''
-    Determines where the gap between known trips is unexplained and missing
-    trip information in the source data can be assumed.
+    Determines where the gap between known trips is unexplained and missing trip information
+    in the source data can be assumed.
     '''
     missing_trips = []
     last_trip = None
@@ -438,8 +431,7 @@ def points_intersect(points, test_point, buffer_m=200):
 
 def wrap_for_tripkit(detected_trips):
     '''
-    Return result as the same type of object (list of TripPoints) as returned
-    by `itinerum-tripkit/tripkit/database.py`.
+    Return result as the same type of object (list of TripPoints) as returned by `tripkit.database`.
     '''
     tripkit_trips = []
     for trip_num, detected_trip in enumerate(detected_trips, start=1):
