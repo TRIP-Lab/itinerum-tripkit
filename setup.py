@@ -5,7 +5,7 @@ with open('README.md', 'r') as fh:
 
 setuptools.setup(
     name='itinerum-tripkit',
-    version='0.0.2',
+    version='0.0.3',
     author='Kyle Fitzsimmons',
     author_email='kfitzsimmons@gmail.com',
     description='A toolkit for inferencing trips and trip metadata from Itinerum GPS data',
@@ -14,7 +14,7 @@ setuptools.setup(
         'fiona>=1.8.6',
         'geopy>=1.20.0',
         'networkx>=2.4',
-        'numpy>=1.17.2',
+        'numpy>=1.17.3',
         'peewee>=3.10.0',
         'polyline>=1.4.0',
         'pytz>=2019.2',

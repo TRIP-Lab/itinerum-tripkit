@@ -36,7 +36,6 @@ class Coordinate(object):
     ]
 
     def __init__(self, c):
-        self.uuid = c.user
         self.latitude = c.latitude
         self.longitude = c.longitude
         self.timestamp_UTC = ciso8601.parse_datetime_as_naive(
@@ -53,7 +52,7 @@ class Coordinate(object):
         self.northing = None
         self.zone_num = None
         self.zone_letter = None
-        self.timestamp_epoch = (self.timestamp_UTC - datetime(1970, 1, 1)).total_seconds()
+        self.timestamp_epoch = c.timestamp_epoch
         self.avg_distance_m = None
         self.avg_delta_heading = None
         self.kmeans = None
@@ -62,7 +61,7 @@ class Coordinate(object):
 
     @property
     def speed_ms(self):
-        if self.distance_m:
+        if self.duration_s:
             return self.distance_m / self.duration_s
         return 0.0
 

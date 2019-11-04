@@ -16,6 +16,7 @@ idna==2.8
 joblib==0.13.2
 mccabe==0.6.1
 munch==2.3.2
+networkx==2.4
 numpy==1.17.1
 peewee==3.10.0
 polyline==1.4.0

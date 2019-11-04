@@ -43,7 +43,6 @@ def rolling_window_sample(values, idx, size=20):
     upper_idx = idx + half_size
     return sum(values[lower_idx:upper_idx]) / (size + 1)
 
-
 def run(coordinates):
     total_coordinates = coordinates.count()
     logger.info(f"Uncleaned input coordinates: {total_coordinates}")
@@ -53,9 +52,10 @@ def run(coordinates):
     last_pct = 0
     logger.info(f"Processing...{last_pct}%")
     for idx, c in enumerate(coordinates):
-        pct = (idx / total_coordinates) * 100
-        if pct - last_pct >= 1:
-            logger.info(f"Processing...{int(pct)}%")
+        pct = int((idx / total_coordinates) * 100)
+        update_pct = pct != last_pct and pct % 5 == 0
+        if update_pct:
+            logger.info(f"Processing...{pct}%", )
             last_pct = pct
         gc = Coordinate(c)
 
@@ -86,6 +86,7 @@ def run(coordinates):
         gc.easting, gc.northing, gc.zone_num, gc.zone_letter = utm.from_latlon(gc.latitude, gc.longitude)
         processed.append(gc)
         last_gc = gc
+    logger.info(f"Processing...100%")
 
     # update rolling averages
     distance_values = [c.distance_m for c in processed]

@@ -13,8 +13,6 @@ from .csvparser import ItinerumCSVParser, QstarzCSVParser
 from .database import Database, UserSurveyResponse
 from .database import Coordinate, PromptResponse, CancelledPromptResponse, DetectedTripCoordinate, SubwayStationEntrance
 
-# from .utils.misc import timer
-import tripkit_config as Config
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -96,7 +94,6 @@ class Itinerum(object):
         '''
         return self._process
 
-    # @timer
     def setup(self, force=False, generate_null_survey=False):
         '''
         Create the cache database tables if the ``UserSurveyResponse`` table does not exist.
@@ -173,6 +170,9 @@ class Itinerum(object):
             logger.info(f"Loading user from database: {idx}/{len(uuids)}...")
 
             user = self.database.load_user(_uuid, start=start, end=end)
+            if user.coordinates.count() == 0:
+                logger.info(f"User {idx} has no points, skipped.")
+                continue
             if load_trips:
                 user.trips = self.database.load_trips(user, start=start, end=end)
             if return_one:
