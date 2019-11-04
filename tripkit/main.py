@@ -6,13 +6,13 @@ from datetime import datetime
 import logging
 import time
 
-from . import io
+from .io import IO
 from . import models
 from . import process
 from .csvparser import ItinerumCSVParser, QstarzCSVParser
 from .database import Database, UserSurveyResponse
 from .database import Coordinate, PromptResponse, CancelledPromptResponse, DetectedTripCoordinate, SubwayStationEntrance
-from .utils.misc import timer
+# from .utils.misc import timer
 import tripkit_config as Config
 
 logging.basicConfig(level=logging.DEBUG)
@@ -46,15 +46,15 @@ class Itinerum(object):
 
     '''
 
-    def __init__(self):
-        self.config = Config
+    def __init__(self, config):
+        self.config = config
 
         self._database = Database()
         self._database.db.init(self.config.DATABASE_FN)
         self._csv = self._init_csv_parser()
 
         # attach I/O functions and extensions as objects
-        self._io = io
+        self._io = IO(self.config)
         self._process = process
         self._process.map_match.osrm(self.config)
 
@@ -95,7 +95,7 @@ class Itinerum(object):
         '''
         return self._process
 
-    @timer
+    # @timer
     def setup(self, force=False, generate_null_survey=False):
         '''
         Create the cache database tables if the ``UserSurveyResponse`` table does not exist.

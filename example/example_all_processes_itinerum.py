@@ -44,9 +44,8 @@ itinerum.io.write_trip_summaries_csv(fn_base=user.uuid, summaries=trip_summaries
 # 4. map match one of the detected trips and write GIS-compatible output
 trip1_coordinates = user.trips[0].points
 map_matcher = itinerum.process.map_match.osrm(tripkit_config)
-# mapmatched_results = map_matcher.match(trip1_coordinates, matcher='DRIVING')
-
-# itinerum.io.write_mapmatched_geojson(fn_base=user.uuid, results=mapmatched_results)
+mapmatched_results = map_matcher.match(trip1_coordinates, matcher='DRIVING')
+itinerum.io.write_mapmatched_geojson(fn_base=user.uuid, results=mapmatched_results)
 
 # 5. detect complete days and write csv
 complete_day_summaries = itinerum.process.complete_days.triplab.counter.run(user.trips, tripkit_config.TIMEZONE)

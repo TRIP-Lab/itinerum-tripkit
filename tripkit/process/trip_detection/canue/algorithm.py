@@ -163,10 +163,7 @@ def run(cfg, coordinates, locations):
     )
     # gert_rules(location_segments)
 
-    valid_segments = filter_too_short_segments(location_segments, min_distance_m=250)
+    valid_segments = list(filter_too_short_segments(location_segments, min_distance_m=250))
     missing_segments = detect_missing_segments(valid_segments, missing_segment_m=250)
     trips_diary = make_trips_diary(valid_segments, missing_segments)
-
-    # detected_trips = valid_segments
-    trips = wrap_for_tripkit(trips_diary)
-    return trips
+    return wrap_for_tripkit(trips_diary)
