@@ -112,6 +112,7 @@ class Database(object):
             # transform uuids to the hex representation used by peewee
             if table_name == 'survey_responses':
                 row['uuid'] = uuid.UUID(hex=row['uuid']).hex
+                row.setdefault('orig_id', None)
             elif 'uuid' in row:
                 row['user_id'] = uuid.UUID(hex=row['uuid']).hex
             elif 'user_id' not in row:
@@ -381,7 +382,7 @@ class UserSurveyResponse(BaseModel):
         table_name = 'survey_responses'
 
     uuid = UUIDField(unique=True, primary_key=True)
-    orig_id = TextField()
+    orig_id = TextField(null=True)
     created_at_UTC = DateTimeField()
     modified_at_UTC = DateTimeField()
     itinerum_version = CharField()
