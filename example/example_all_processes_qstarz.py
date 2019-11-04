@@ -36,6 +36,7 @@ itinerum.io.geojson.write_inputs(
 import csv
 import os
 import pickle
+
 pickle_fp = f'{user.uuid}.pickle'
 if not os.path.exists(pickle_fp):
     prepared_coordinates = itinerum.process.canue.preprocess.run(user.coordinates)
@@ -68,6 +69,8 @@ itinerum.database.save_trip_day_summaries(user, complete_day_summaries, tripkit_
 itinerum.io.csv.write_complete_days({user.uuid: complete_day_summaries})
 
 # 6. detect activities and write summaries (compact and full)
-activity = itinerum.process.activities.canue.tally_times.run(user, locations, tripkit_config.SEMANTIC_LOCATION_PROXIMITY_METERS)
+activity = itinerum.process.activities.canue.tally_times.run(
+    user, locations, tripkit_config.SEMANTIC_LOCATION_PROXIMITY_METERS
+)
 activity_summaries = itinerum.process.activities.canue.summarize.run_full(activity, tripkit_config.TIMEZONE)
 itinerum.io.csv.write_activities_daily(activity_summaries['records'], extra_cols=activity_summaries['duration_keys'])

@@ -54,7 +54,9 @@ for idx, user in enumerate(users, start=1):
     itinerum.io.write_semantic_locations_geojson(fn_base=user.uuid, locations=locations)
 
     complete_day_summaries = itinerum.process.complete_days.triplab.counter.run(user.trips, tripkit_config.TIMEZONE)
-    activity = itinerum.process.activities.triplab.detect.run(user, locations, tripkit_config.SEMANTIC_LOCATION_PROXIMITY_METERS)
+    activity = itinerum.process.activities.triplab.detect.run(
+        user, locations, tripkit_config.SEMANTIC_LOCATION_PROXIMITY_METERS
+    )
     summaries = itinerum.process.activities.triplab.detect.summarize_full(activity, tripkit_config.TIMEZONE)
     if summaries:
         daily_activity_summaries.extend(summaries)

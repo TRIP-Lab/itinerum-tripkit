@@ -12,7 +12,9 @@ class GeopackageIO(object):
 
     def _write_features_to_f(self, filename, schema, features):
         geopackage_fp = os.path.join(self.config.OUTPUT_DATA_DIR, filename)
-        with fiona.open(geopackage_fp, 'w', driver='GPKG', schema=schema, crs=fiona.crs.from_epsg(4326)) as geopackage_f:
+        with fiona.open(
+            geopackage_fp, 'w', driver='GPKG', schema=schema, crs=fiona.crs.from_epsg(4326)
+        ) as geopackage_f:
             for feature in features:
                 geopackage_f.write(feature)
 
@@ -52,9 +54,7 @@ class GeopackageIO(object):
         cancelled_prompts_filename = f'{fn_base}_cancelled_prompts.gpkg'
         cancelled_prompts_gpkg_schema = formatters._input_gpkg_schema(cancelled_prompts.model, ignore_keys)
         cancelled_prompts_features = formatters._input_cancelled_prompts_features(cancelled_prompts, ignore_keys)
-        self._write_features_to_f(
-            cancelled_prompts_filename, cancelled_prompts_gpkg_schema, cancelled_prompts_features
-        )
+        self._write_features_to_f(cancelled_prompts_filename, cancelled_prompts_gpkg_schema, cancelled_prompts_features)
 
     def write_trips(self, fn_base, trips):
         '''
@@ -69,9 +69,16 @@ class GeopackageIO(object):
         geopackage_fp = os.path.join(self.config.OUTPUT_DATA_DIR, f'{fn_base}_trips.gpkg')
         schema = {
             'geometry': 'LineString',
-            'properties': [('start_UTC', 'datetime'), ('end_UTC', 'datetime'), ('trip_code', 'int'), ('distance', 'float')],
+            'properties': [
+                ('start_UTC', 'datetime'),
+                ('end_UTC', 'datetime'),
+                ('trip_code', 'int'),
+                ('distance', 'float'),
+            ],
         }
-        with fiona.open(geopackage_fp, 'w', driver='GPKG', schema=schema, crs=fiona.crs.from_epsg(4326)) as geopackage_f:
+        with fiona.open(
+            geopackage_fp, 'w', driver='GPKG', schema=schema, crs=fiona.crs.from_epsg(4326)
+        ) as geopackage_f:
             for trip in trips:
                 properties = {
                     'start_UTC': trip.start_UTC,

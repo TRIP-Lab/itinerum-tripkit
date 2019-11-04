@@ -60,21 +60,34 @@ itinerum.io.csv.write_complete_days({user.uuid: complete_day_summaries})
 def create_activity_locations(user):
     Coordinate = namedtuple('Coordinate', ['latitude', 'longitude'])
     locations = {
-        'home': Coordinate(latitude=user.survey_response['location_home_lat'],
-                           longitude=user.survey_response['location_home_lon'])
+        'home': Coordinate(
+            latitude=user.survey_response['location_home_lat'], longitude=user.survey_response['location_home_lon']
+        )
     }
-    work = Coordinate(latitude=user.survey_response.get('location_work_lat'),
-                      longitude=user.survey_response.get('location_work_lon'))
+    work = Coordinate(
+        latitude=user.survey_response.get('location_work_lat'), longitude=user.survey_response.get('location_work_lon')
+    )
     if work.latitude and work.longitude:
         locations['work'] = work
-    study = Coordinate(latitude=user.survey_response.get('location_study_lat'),
-                       longitude=user.survey_response.get('location_study_lon'))
+    study = Coordinate(
+        latitude=user.survey_response.get('location_study_lat'),
+        longitude=user.survey_response.get('location_study_lon'),
+    )
     if study.latitude and study.longitude:
         locations['study'] = study
     return locations
 
+
 locations = create_activity_locations(user)
-activity = itinerum.process.activities.triplab.detect.run(user, locations, tripkit_config.SEMANTIC_LOCATION_PROXIMITY_METERS)
+activity = itinerum.process.activities.triplab.detect.run(
+    user, locations, tripkit_config.SEMANTIC_LOCATION_PROXIMITY_METERS
+)
 activity_summaries_full = itinerum.process.activities.triplab.summarize.run_full(activity, tripkit_config.TIMEZONE)
-duration_cols = ['commute_time_work_s', 'commute_time_study_s', 'dwell_time_home_s', 'dwell_time_work_s', 'dwell_time_study_s']
+duration_cols = [
+    'commute_time_work_s',
+    'commute_time_study_s',
+    'dwell_time_home_s',
+    'dwell_time_work_s',
+    'dwell_time_study_s',
+]
 itinerum.io.csv.write_activities_daily(activity_summaries_full, extra_cols=duration_cols)
