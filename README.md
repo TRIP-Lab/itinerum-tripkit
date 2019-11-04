@@ -4,24 +4,19 @@
 
 Documentation for library usage: https://itinerum-tripkit.readthedocs.io/
 
-This library serves as a framework to process data from the Itinerum platform and hardware GPS loggers (e.g., QStarz). It can be used both through Jupyter to explore datasets interactively or imported as a module in standalone scripts and applications.
+This library serves as a framework to process data from the Itinerum platform and hardware GPS loggers (e.g., QStarz). It can be used both through as a library in Jupyter to explore datasets interactively or imported as a module in standalone scripts and applications.
 
 This repository also serves as the development bed for the Itinerum platform algorithms within the TRIP Lab repositories. 
+
+Want to get up and running quickly? Try the [itinerum-tripkit-cli!](https://github.com/TRIP-Lab/itinerum-tripkit-cli)
 
 ## Setup
 
 ### Quickstart
 
-1. Clone this repository and `pip install -r requirements.txt` (using a Python [virtual environment](https://docs.python.org/3/library/venv.html) is recommended)
-2. Place source *.csv* data in the `itinerum-tripkit/input` folder (create if necessary) and edit `./tripkit/config.py` to reflect the correct filepaths.
-
-Then either:
-
- - Start Jupyter in repository directly and get started by `from tripkit import Itinerum`
-
-   *or*
-
- - Copy the `tripkit` directory into other projects as a library (more complete packaging to come)
+1. Install this library from PyPI (a Python [virtual environment](https://docs.python.org/3/library/venv.html) is recommended)
+2. Create a configuration file with input filepaths, output filepaths, and trip processing parameters. See the included `tripkit_config.py` file for a full example.
+3. Import `tripkit` as a dependency in a notebook or script
 
 For more complete installation information, see the official [itinerum-tripkit documentation](https://itinerum-tripkit.readthedocs.io/en/stable/usage/installation.html).
 
