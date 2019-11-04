@@ -17,7 +17,7 @@ joblib==0.13.2
 mccabe==0.6.1
 munch==2.3.2
 networkx==2.4
-numpy==1.17.1
+numpy==1.17.3
 peewee==3.10.0
 polyline==1.4.0
 pycodestyle==2.5.0
