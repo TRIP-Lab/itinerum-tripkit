@@ -8,7 +8,7 @@ import scipy
 import utm
 import warnings
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('itinerum-tripkit.process.clustering.hdbscan_ts')
 
 
 def distance_m(point1, point2):
@@ -133,7 +133,7 @@ def run(min_stop_time_s, coordinates):
 
     jobs = -1
     if os.name == 'nt':
-        logger.debug("Reduce cluster jobs on Windows to avoid broken multiprocessing pool")
+        logger.info("Reduce cluster jobs on Windows to avoid broken multiprocessing pool")
         jobs = 1
     clusterer = hdbscan.HDBSCAN(
         min_cluster_size=15, min_samples=20, metric='euclidean', allow_single_cluster=True, core_dist_n_jobs=jobs

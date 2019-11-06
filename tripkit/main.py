@@ -14,8 +14,7 @@ from .database import Database, UserSurveyResponse
 from .database import Coordinate, PromptResponse, CancelledPromptResponse, DetectedTripCoordinate, SubwayStationEntrance
 
 
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('itinerum-tripkit.main')
 
 
 class Itinerum(object):

@@ -23,7 +23,7 @@ from .models.TripPoint import TripPoint
 from .models.User import User
 from .utils.misc import UserNotFoundError
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('itinerum-tripkit.database')
 
 # globally create a single database connection for SQLite
 deferred_db = SqliteDatabase(None)

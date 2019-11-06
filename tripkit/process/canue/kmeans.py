@@ -5,6 +5,7 @@ from sklearn.cluster import KMeans
 
 from .models import ClusterInfo
 
+
 MAX_AVG_DISTANCE = 50
 MIN_STOP_TIME = 120
 

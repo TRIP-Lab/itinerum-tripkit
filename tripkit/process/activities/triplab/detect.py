@@ -8,14 +8,11 @@
 # of concise reporting, these are combined in the final output.
 import itertools
 import logging
-
 from geopy.distance import distance
 
 from .models import UserActivity
 
-
-# logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('itinerum-tripkit.process.activites.triplab.detect')
 
 
 def generate_locations(location_columns, survey_response):

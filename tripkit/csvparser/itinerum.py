@@ -16,8 +16,7 @@ from ..database import (
     SubwayStationEntrance,
 )
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('itinerum-tripkit.csvparser.itinerum')
 
 
 # .csv row filters for parsing Itinerum exports to database models

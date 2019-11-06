@@ -6,7 +6,7 @@ import pytz
 # return a naive UTC datetime to a localized datetime with offset tzinfo
 def localize(naive_utc, timezone):
     tz = pytz.timezone(timezone)
-    return pytz.utc.localize(naive_utc).astimezone()
+    return pytz.utc.localize(naive_utc).astimezone(tz)
 
 
 # TODO: improve docstring

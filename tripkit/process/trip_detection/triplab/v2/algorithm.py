@@ -11,7 +11,7 @@ from .models import GPSPoint, SubwayEntrance, MissingTrip, TripSegment, Trip
 from .trip_codes import TRIP_CODES
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('itinerum-tripkit.process.trip_detection.triplab.v2')
 
 
 # cast input data as objects
@@ -299,7 +299,7 @@ def infer_missing_trips(trips, subway_entrances, min_trip_m=250, subway_buffer_m
             #    prepend the last point of previous trip to start of current trip. This new
             #    point will have the same timestamp as the original first (now second) point
             elif distance_prev_trip <= cold_start_m:
-                logger.debug('test this copy that attributes are not changed simultaneously')
+                # TODO: test that this copy's attributes are not changed simultaneously (shared with original)
                 cold_start_point = copy.copy(last_end_point)
                 trip.first_segment.is_cold_start = True
                 trip.first_segment.prepend(cold_start_point)
@@ -519,10 +519,10 @@ def run(coordinates, parameters):
     tripkit_trips = wrap_for_tripkit(annotate_trips(trips))
 
     logger.info("-------------------------------")
-    logger.info("V2 - Num. segments: %d", len(segments))
-    logger.info("V2 - Num. trips (w/ subway links): %d", len(subway_linked_trips))
-    logger.info("V2 - Num. trips (w/ velocity links): %d", len(velocity_linked_trips))
-    logger.info("V2 - Num. full-length trips: %d", len(full_length_trips))
-    logger.info("V2 - Num. missing trips: %d", len(missing_trips))
-    logger.info("V2 - Num. point rows: %d", sum([len(t.points) for t in tripkit_trips]))
+    logger.info("Num. segments: %d", len(segments))
+    logger.info("Num. trips (w/ subway links): %d", len(subway_linked_trips))
+    logger.info("Num. trips (w/ velocity links): %d", len(velocity_linked_trips))
+    logger.info("Num. full-length trips: %d", len(full_length_trips))
+    logger.info("Num. missing trips: %d", len(missing_trips))
+    logger.info("Num. point rows: %d", sum([len(t.points) for t in tripkit_trips]))
     return tripkit_trips

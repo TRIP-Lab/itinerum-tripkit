@@ -28,7 +28,7 @@ import utm
 from .models import Coordinate
 from tripkit.utils import calc, geo
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('itinerum-tripkit.process.canue.preprocess')
 
 
 def rolling_window_sample(values, idx, size=20):

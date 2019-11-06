@@ -13,8 +13,7 @@ from .common import _generate_null_survey, _load_subway_stations
 from ..database import Coordinate
 from ..utils.misc import timer
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('itinerum-tripkit.csvparser.qstarz')
 
 
 # .csv parsing

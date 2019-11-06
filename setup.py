@@ -7,7 +7,7 @@ setuptools.setup(
     name='itinerum-tripkit',
     version='0.0.3',
     author='Kyle Fitzsimmons',
-    author_email='kfitzsimmons@gmail.com',
+    author_email='kafitz22@gmail.com',
     description='A toolkit for inferencing trips and trip metadata from Itinerum GPS data',
     install_requires=[
         'ciso8601>=2.1.1',

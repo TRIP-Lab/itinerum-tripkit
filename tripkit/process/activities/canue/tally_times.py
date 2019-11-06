@@ -5,10 +5,9 @@ import logging
 
 from .models import UserActivity
 
-# from .utils import localize
 from tripkit.utils import geo
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('itinerum-tripkit.process.activities.canue.tally_times')
 
 
 # check whether two semantic locations could be detected for the same coordinates

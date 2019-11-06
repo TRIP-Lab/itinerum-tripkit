@@ -10,8 +10,7 @@ import os
 
 from ..database import SubwayStationEntrance, UserSurveyResponse
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('itinerum-tripkit.csvparser.common')
 
 
 def _load_subway_stations(subway_stations_csv_fp):
