@@ -1,33 +1,35 @@
 #!/usr/bin/env python
 # Kyle Fitzsimmons, 2019
-
 # run from parent directory
 import os
 import sys
+import tripkit_config_itinerum as cfg
 
 sys.path[0] = os.path.abspath(os.path.pardir)
 os.chdir(os.path.pardir)
 # begin
-from tripkit import Itinerum
+import logging
+from tripkit import TripKit
 
-import tripkit_config
+logging.basicConfig(level=logging.INFO)
+logging.getLogger('itinerum-tripkit').setLevel(level=logging.DEBUG)
 
 
 # Edit ./tripkit_config.py first!
-itinerum = Itinerum(config=tripkit_config)
-itinerum.setup()
+tripkit = TripKit(config=cfg)
+tripkit.setup()
 
 # -- Load user trip from database and write as GIS-compatible file
-users = itinerum.load_users(load_trips=False)
+users = tripkit.load_users(load_trips=False)
 
 parameters = {
-    'subway_entrances': itinerum.database.load_subway_entrances(),
-    'break_interval_seconds': tripkit_config.TRIP_DETECTION_BREAK_INTERVAL_SECONDS,
-    'subway_buffer_meters': tripkit_config.TRIP_DETECTION_SUBWAY_BUFFER_METERS,
-    'cold_start_distance': tripkit_config.TRIP_DETECTION_COLD_START_DISTANCE_METERS,
-    'accuracy_cutoff_meters': tripkit_config.TRIP_DETECTION_ACCURACY_CUTOFF_METERS,
+    'subway_entrances': tripkit.database.load_subway_entrances(),
+    'break_interval_seconds': cfg.TRIP_DETECTION_BREAK_INTERVAL_SECONDS,
+    'subway_buffer_meters': cfg.TRIP_DETECTION_SUBWAY_BUFFER_METERS,
+    'cold_start_distance': cfg.TRIP_DETECTION_COLD_START_DISTANCE_METERS,
+    'accuracy_cutoff_meters': cfg.TRIP_DETECTION_ACCURACY_CUTOFF_METERS,
 }
 for user in users:
-    user.trips = itinerum.process.trip_detection.triplab.v2.algorithm.run(user.coordinates, parameters)
-    itinerum.database.save_trips(user, user.trips)
-    itinerum.io.write_trips_geopackage(tripkit_config, fn_base=user.uuid, trips=user.trips)
+    user.trips = tripkit.process.trip_detection.triplab.v2.algorithm.run(user.coordinates, parameters)
+    tripkit.database.save_trips(user, user.trips)
+    tripkit.io.geopackage.write_trips(fn_base=user.uuid, trips=user.trips)

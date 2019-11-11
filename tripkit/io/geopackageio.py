@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # Kyle Fitzsimmons, 2019
 import fiona
+import fiona.crs
 import os
 
 from . import formatters

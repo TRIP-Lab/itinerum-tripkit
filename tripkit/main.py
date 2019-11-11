@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # Kyle Fitzsimmons, 2018
 #
-# This module implements the core Itinerum object
+# This module implements the core TripKit object
 from datetime import datetime
 import logging
 import time
@@ -17,26 +17,23 @@ from .database import Coordinate, PromptResponse, CancelledPromptResponse, Detec
 logger = logging.getLogger('itinerum-tripkit.main')
 
 
-class Itinerum(object):
+class TripKit(object):
     '''
-    The vase Itinerum object provides an interface for working with
-    .csv data exported from the Itinerum platform. The object
-    is passed the `config` at initialization which should be an imported
-    Python file of global variables or class with the same attributes as
-    expected here.
+    The base TripKit object provides an interface for working with .csv data exported from
+    the Itinerum platform or QStarz GPS data loggers. The object is passed the `config` at
+    initialization which should be an imported Python file of global variables or class with
+    the same attributes as expected here.
 
-    This Itinerum object is the entry API for loading .csv data to
-    an SQLite database (used as cache), running algorithms on the GPS data,
-    and visualizing or exporting the results to GIS-friendly formats.
+    This TripKit object is the entry API for loading .csv data to an SQLite database (used as cache),
+    running algorithms on the GPS data, and visualizing or exporting the results to GIS-friendly formats.
 
-    The Itinerum instance is usually created in your main module
-    like this::
+    The TripKit instance is usually created in your main module like this::
 
-        from tripkit import Itinerum
+        from tripkit import TripKit
         import tripkit_config
 
-        itinerum = Itinerum(config=tripkit_config)
-        itinerum.setup()
+        tripkit = TripKit(config=tripkit_config)
+        tripkit.setup()
 
     :param config: An imported Python file of global variables or
                    a bare config class with the same attributes,
@@ -47,8 +44,7 @@ class Itinerum(object):
     def __init__(self, config):
         self.config = config
 
-        self._database = Database()
-        self._database.db.init(self.config.DATABASE_FN)
+        self._database = Database(name=self.config.SURVEY_NAME)
         self._csv = self._init_csv_parser()
 
         # attach I/O functions and extensions as objects

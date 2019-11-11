@@ -85,12 +85,3 @@ class Coordinate(object):
 
     def __repr__(self):
         return f"<tripkit.process.canue.models.Coordinate uuid={self.uuid}>"
-
-
-class ClusterInfo:
-    def __init__(self, group_num=None, label=None):
-        self.group_num = group_num
-        self.label = label
-
-    def __repr__(self):
-        return f"<tripkit.process.canue.models.ClusterInfo group_num={self.group_num} label={self.label}>"

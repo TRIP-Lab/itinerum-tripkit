@@ -148,8 +148,7 @@ class CSVIO(object):
             'consecutive_inactive_days',
             'inactivity_streak',
         ]
-        survey_name = self.config.DATABASE_FN.split('.')[0]
-        csv_fp = os.path.join(self.config.OUTPUT_DATA_DIR, f'{survey_name}-complete_days.csv')
+        csv_fp = os.path.join(self.config.OUTPUT_DATA_DIR, f'{self.config.SURVEY_NAME}-complete_days.csv')
         with open(csv_fp, 'w', newline=NEWLINE_MODE) as csv_f:
             writer = csv.DictWriter(csv_f, dialect='excel', fieldnames=headers)
             writer.writeheader()
@@ -187,8 +186,7 @@ class CSVIO(object):
             'commute_time_study_s',
             'commute_time_work_s',
         ]
-        survey_name = self.config.DATABASE_FN.split('.')[0]
-        csv_fp = os.path.join(self.config.OUTPUT_DATA_DIR, f'{survey_name}-activity_summaries.csv')
+        csv_fp = os.path.join(self.config.OUTPUT_DATA_DIR, f'{self.config.SURVEY_NAME}-activity_summaries.csv')
         with open(csv_fp, 'w', newline=NEWLINE_MODE) as csv_f:
             writer = csv.writer(csv_f, dialect='excel')
             writer.writerow(headers1)
@@ -206,8 +204,7 @@ class CSVIO(object):
 
         :type daily_summaries: list of dict
         '''
-        survey_name = self.config.DATABASE_FN.split('.')[0]
-        csv_fp = os.path.join(self.config.OUTPUT_DATA_DIR, f'{survey_name}-daily_activity_summaries.csv')
+        csv_fp = os.path.join(self.config.OUTPUT_DATA_DIR, f'{self.config.SURVEY_NAME}-daily_activity_summaries.csv')
         headers1 = ['Survey timezone:', self.config.TIMEZONE]
         headers2 = [
             'uuid',

@@ -11,7 +11,7 @@ import uuid
 
 from .common import _generate_null_survey, _load_subway_stations
 from ..database import Coordinate
-from ..utils.misc import timer
+from ..utils.misc import temp_path
 
 logger = logging.getLogger('itinerum-tripkit.csvparser.qstarz')
 
@@ -145,8 +145,7 @@ class QstarzCSVParser(object):
     def _generate_uuids(self, input_dir):
         self.uuid_lookup = {}
         logger.info("Generating UUIDs for non-standard user ids...")
-        lookup_fn = self.config.DATABASE_FN.split('.')[0]
-        lookup_fp = f'{lookup_fn}.json'
+        lookup_fp = temp_path(f'{self.config.SURVEY_NAME}.json')
         if os.path.exists(lookup_fp):
             with open(lookup_fp, 'r') as json_f:
                 self.uuid_lookup = json.load(json_f)

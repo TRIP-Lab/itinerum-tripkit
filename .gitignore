@@ -21,3 +21,4 @@ debug/CANUEStopDetection/
 build
 dist
 itinerum_tripkit.egg-info
+_temp

@@ -1,3 +1,3 @@
-from .main import Itinerum
+from .main import TripKit
 
 name = 'tripkit'

@@ -21,7 +21,7 @@ from .models.DaySummary import DaySummary
 from .models.Trip import Trip
 from .models.TripPoint import TripPoint
 from .models.User import User
-from .utils.misc import UserNotFoundError
+from .utils.misc import UserNotFoundError, temp_path
 
 logger = logging.getLogger('itinerum-tripkit.database')
 
@@ -31,13 +31,14 @@ deferred_db = SqliteDatabase(None)
 
 class Database(object):
     '''
-    Handles itinerum-tripkit interactions with the cached database using peewee. `Note: This
-    may soon transition to SQLAlchemy to maintain direct compatibility with the Itinerum API
-    code base.`
+    Handles itinerum-tripkit interactions with the cached database using peewee.
     '''
 
-    def __init__(self):
+    def __init__(self, name):
+        database_fp = temp_path(f'{name}.sqlite')
+
         self.db = deferred_db
+        self.db.init(database_fp)
 
     def create(self):
         '''

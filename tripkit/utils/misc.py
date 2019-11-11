@@ -1,14 +1,15 @@
 #!/usr/bin/env python
-# Kyle Fitzsimmons, 2018
+# Kyle Fitzsimmons, 2018-2019
 from datetime import date, datetime
 import functools
 import logging
+import os
 import platform
 import uuid
 import time
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('itinerum-tripkit')
 
 
 # serialize types not handled by default by JSON library to string
@@ -43,3 +44,12 @@ def timer(func):
         return value
 
     return wrapper
+
+
+# return the relative path for a given filename in a temporary directory; create
+# the directory if it is not already present
+def temp_path(filename):
+    temp_dir = './_temp'
+    if not os.path.exists(temp_dir):
+        os.mkdir(temp_dir)
+    return os.path.join(temp_dir, filename)

@@ -1,64 +1,46 @@
 #!/usr/bin/env python
-# Kyle Fitzsimmons, 2018
-
+# Kyle Fitzsimmons, 2019
+# !! NOTE: A tripbreaking script must be run before this example can function. !!
 # run from parent directory
 import os
 import sys
+import tripkit_config_itinerum as cfg
 
 sys.path[0] = os.path.abspath(os.path.pardir)
 os.chdir(os.path.pardir)
 # begin
-from collections import namedtuple
-from tripkit import Itinerum
+import logging
+from tripkit import TripKit, utils
+from tripkit.models import ActivityLocation
 
-import tripkit_config
-
-
-def create_activity_locations(user):
-    '''
-    Create locations known from survey answers to create activity centroids to match
-    with a given user's coordinates.
-    '''
-    Coordinate = namedtuple('Coordinate', ['latitude', 'longitude'])
-    locations = {
-        'home': Coordinate(
-            latitude=user.survey_response['location_home_lat'], longitude=user.survey_response['location_home_lon']
-        )
-    }
-    work = Coordinate(
-        latitude=user.survey_response.get('location_work_lat'), longitude=user.survey_response.get('location_work_lon')
-    )
-    if work.latitude and work.longitude:
-        locations['work'] = work
-    study = Coordinate(
-        latitude=user.survey_response.get('location_study_lat'),
-        longitude=user.survey_response.get('location_study_lon'),
-    )
-    if study.latitude and study.longitude:
-        locations['study'] = study
-    return locations
+logging.basicConfig(level=logging.INFO)
+logging.getLogger('itinerum-tripkit').setLevel(level=logging.DEBUG)
 
 
 # -- main
-# NOTE: the ./example_detect_complete_days_and_write_csv.py can pre-populate all
-# data in cache needed to run this example
-itinerum = Itinerum()
-itinerum.setup()
-users = itinerum.load_users(limit=1)
+tripkit = TripKit(config=cfg)
+tripkit.setup()
+users = tripkit.load_users(limit=1)
 
 # perform activity detection on all user points
 daily_activity_summaries = []
 for idx, user in enumerate(users, start=1):
     # determine the locations to associate with coordinates as activities
-    locations = create_activity_locations(user)
-    itinerum.io.write_semantic_locations_geojson(fn_base=user.uuid, locations=locations)
+    locations = utils.itinerum.create_activity_locations(user)
+    tripkit.io.geojson.write_semantic_locations(fn_base=user.uuid, locations=locations)
 
-    complete_day_summaries = itinerum.process.complete_days.triplab.counter.run(user.trips, tripkit_config.TIMEZONE)
-    activity = itinerum.process.activities.triplab.detect.run(
-        user, locations, tripkit_config.SEMANTIC_LOCATION_PROXIMITY_METERS
-    )
-    summaries = itinerum.process.activities.triplab.detect.summarize_full(activity, tripkit_config.TIMEZONE)
+    complete_day_summaries = tripkit.process.complete_days.triplab.counter.run(user.trips, cfg.TIMEZONE)
+    activity = tripkit.process.activities.triplab.detect.run(user, locations, cfg.SEMANTIC_LOCATION_PROXIMITY_METERS)
+    summaries = tripkit.process.activities.triplab.summarize.run_full(activity, cfg.TIMEZONE)
     if summaries:
         daily_activity_summaries.extend(summaries)
-# write .csv output
-itinerum.io.write_activities_daily_csv(daily_activity_summaries)
+
+# write .csv output with itinerum semantic locations
+duration_cols = [
+    'commute_time_work_s',
+    'commute_time_study_s',
+    'dwell_time_home_s',
+    'dwell_time_work_s',
+    'dwell_time_study_s',
+]
+tripkit.io.csv.write_activities_daily(daily_activity_summaries, extra_cols=duration_cols)

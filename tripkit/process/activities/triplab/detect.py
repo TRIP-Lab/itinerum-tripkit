@@ -8,7 +8,7 @@
 # of concise reporting, these are combined in the final output.
 import itertools
 import logging
-from geopy.distance import distance
+from tripkit.utils import geo
 
 from .models import UserActivity
 
@@ -38,18 +38,28 @@ def generate_locations(location_columns, survey_response):
 # check whether two semantic locations could be detected for the same coordinates
 def detect_semantic_location_overlap(uuid, locations, activity_proximity_m):
     for loc1, loc2 in itertools.combinations(locations, 2):
-        distance_between_m = distance(locations[loc1], locations[loc2]).meters
+        distance_between_m = geo.haversine_distance_m(loc1, loc2)
         if distance_between_m <= (activity_proximity_m * 2):
             logger.warn(f"possible overlap in semantic locations: {uuid} {loc1}-->{loc2} ({distance_between_m} m)")
 
 
-# label each trip point with its closest semantic location
 def label_trip_points(locations, trip, proximity_m):
+    '''
+    Labels each trip point with its closest semantic location.
+
+    :param locations:   List of activity locations with semantic labels.
+    :param trip:        Detected trip from user coordinates.
+    :param proximity_m: The buffer distance (meters) from the activity location centroid to label trip points.
+
+    :type locations:   list of :py:class:`tripkit.models.ActivityLocation`
+    :type trip:        :py:class:`tripkit.models.Trip`
+    :type proximity_m: int
+    '''
     for p in trip.points:
         p.label = None
-        for label, location in locations.items():
-            if distance([p.latitude, p.longitude], location).meters <= proximity_m:
-                p.label = label
+        for location in locations:
+            if geo.haversine_distance_m(p, location) <= proximity_m:
+                p.label = location.label
                 continue
 
 
