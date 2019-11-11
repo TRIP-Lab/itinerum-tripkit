@@ -8,7 +8,7 @@ This library serves as a framework to process data from the Itinerum platform an
 
 This repository also serves as the development bed for the Itinerum platform algorithms within the TRIP Lab repositories. 
 
-Want to get up and running quickly? Try the [itinerum-tripkit-cli!](https://github.com/TRIP-Lab/itinerum-tripkit-cli)
+Want to get up and running quickly? Try the [itinerum-tripkit-cli](https://github.com/TRIP-Lab/itinerum-tripkit-cli)!
 
 ## Setup
 
