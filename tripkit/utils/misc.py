@@ -10,6 +10,7 @@ import time
 
 
 logger = logging.getLogger('itinerum-tripkit')
+RUN_TIME = time.time()
 
 
 # serialize types not handled by default by JSON library to string
@@ -53,3 +54,15 @@ def temp_path(filename):
     if not os.path.exists(temp_dir):
         os.mkdir(temp_dir)
     return os.path.join(temp_dir, filename)
+
+
+# compare file creation date to the program initialization time and remove if too old;
+# returns true when file does not exist at location by end of function call
+def clean_up_old_file(filepath):
+    if os.path.exists(filepath):
+        creation_time = os.path.getctime(filepath)
+        if creation_time < RUN_TIME:
+            os.remove(filepath)
+            return True
+        return False
+    return True

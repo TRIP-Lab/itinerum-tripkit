@@ -14,7 +14,21 @@ class CSVIO(object):
     def __init__(self, cfg):
         self.config = cfg
 
-    def write_trips(self, fn_base, trips, extra_fields=None):
+
+    # Efficiently return a value from the last row of a csv file
+    # https://stackoverflow.com/a/54278929
+    @staticmethod
+    def _last_row_value(filepath, headers, key):
+        with open(filepath, 'rb') as csv_f:
+            csv_f.seek(-2, os.SEEK_END)
+            while csv_f.read(1) != b'\n':
+                csv_f.seek(-2, os.SEEK_CUR) 
+            last_line = csv_f.readline().decode()
+            reader = csv.DictReader(last_line, fieldnames=headers)
+            return next(reader)[key]
+
+
+    def write_trips(self, fn_base, trips, extra_fields=None, append=False):
         '''
         Write detected trips data to a csv file.
 
@@ -42,14 +56,23 @@ class CSVIO(object):
         ]
         if extra_fields:
             headers.extend(extra_fields)
-        with open(csv_fp, 'w', newline=NEWLINE_MODE) as csv_f:
+
+        row_idx = None
+        if append is True:
+            row_idx = int(self._last_row_value(csv_fp, headers, 'id'))
+            row_idx += 1
+        else:
+            with open(csv_fp, 'w', newline=NEWLINE_MODE) as csv_f:
+                writer = csv.DictWriter(csv_f, dialect='excel', fieldnames=headers)
+                writer.writeheader()
+        with open(csv_fp, 'a', newline=NEWLINE_MODE) as csv_f:
             writer = csv.DictWriter(csv_f, dialect='excel', fieldnames=headers)
-            writer.writeheader()
-            idx = 1
+            if not row_idx:
+                row_idx = 1
             for t in trips:
                 for p in t.points:
                     record = {
-                        'id': idx,
+                        'id': row_idx,
                         'uuid': None,
                         'trip': t.num,
                         'latitude': p.latitude,
@@ -67,54 +90,61 @@ class CSVIO(object):
                         for field in extra_fields:
                             record[field] = getattr(p, field)
                     writer.writerow(record)
-                    idx += 1
+                    row_idx += 1
 
-    def write_trip_summaries(self, fn_base, summaries, extra_fields=None):
+    def write_trip_summaries(self, fn_base, summaries, extra_fields=None, append=False):
         '''
         Write detected trip summary data to csv consisting of a single record for each trip.
 
-        :param fn_base:      The base filename to prepend to the output csv file
-        :param summaries:    Iterable of trip summaries for row records
+        :param fn_base:      The base filename to prepend to the output csv file.
+        :param summaries:    Iterable of trip summaries for row records.
         :param extra_fields: Additional columns to append to csv (must have matching
-                            key in `summaries` object)
+                             key in `summaries` object).
+        :param append:       Append data to an existing .csv file.
 
         :type fn_base: str
         :type summaries: list of dict
         :type extra_fields: list, optional
+        :type append: boolean, optional
         '''
         csv_fp = os.path.join(self.config.OUTPUT_DATA_DIR, f'{fn_base}-trip_summaries.csv')
-        with open(csv_fp, 'w', newline=NEWLINE_MODE) as csv_f:
-            headers = [
-                'uuid',
-                'trip_id',
-                'start_UTC',
-                'start',
-                'end_UTC',
-                'end',
-                'trip_code',
-                'olat',
-                'olon',
-                'dlat',
-                'dlon',
-                'merge_codes',
-                'direct_distance',
-                'cumulative_distance',
-            ]
+        headers = [
+            'uuid',
+            'trip_id',
+            'start_UTC',
+            'start',
+            'end_UTC',
+            'end',
+            'trip_code',
+            'olat',
+            'olon',
+            'dlat',
+            'dlon',
+            'merge_codes',
+            'direct_distance',
+            'cumulative_distance',
+        ]
+        file_cleaned = utils.misc.clean_up_old_file(csv_fp)
+        if append is False or file_cleaned:
+            with open(csv_fp, 'w', newline=NEWLINE_MODE) as csv_f:
+                writer = csv.DictWriter(csv_f, dialect='excel', fieldnames=headers)
+                writer.writeheader()
+        with open(csv_fp, 'a', newline=NEWLINE_MODE) as csv_f:
             if extra_fields:
                 headers.extend(extra_fields)
             writer = csv.DictWriter(csv_f, dialect='excel', fieldnames=headers)
-            writer.writeheader()
             writer.writerows(summaries)
 
-    def write_complete_days(self, trip_day_summaries):
+    def write_complete_days(self, trip_day_summaries, append=False):
         '''
         Write complete day summaries to .csv with a record per day per user over
         the duration of their participation in a survey.
 
-        :param trip_day_summaries: Iterable of complete day summaries for each user
-                                enumerated by uuid and date.
+        :param trip_day_summaries: Iterable of complete day summaries for each user enumerated by uuid and date.
+        :param append:             Toggles whether summaries should be appended to an existing output file.
 
         :type trip_day_summaries: list of dict
+        :type append:             boolean, optional
         '''
         csv_rows = []
         for uuid, daily_summaries in trip_day_summaries.items():
@@ -149,19 +179,25 @@ class CSVIO(object):
             'inactivity_streak',
         ]
         csv_fp = os.path.join(self.config.OUTPUT_DATA_DIR, f'{self.config.SURVEY_NAME}-complete_days.csv')
-        with open(csv_fp, 'w', newline=NEWLINE_MODE) as csv_f:
+        file_cleaned = utils.misc.clean_up_old_file(csv_fp)
+        if append is False or file_cleaned:
+            with open(csv_fp, 'w', newline=NEWLINE_MODE) as csv_f:
+                writer = csv.DictWriter(csv_f, dialect='excel', fieldnames=headers)
+                writer.writeheader()
+        with open(csv_fp, 'a', newline=NEWLINE_MODE) as csv_f:
             writer = csv.DictWriter(csv_f, dialect='excel', fieldnames=headers)
-            writer.writeheader()
             writer.writerows(csv_rows)
 
-    def write_activity_summaries(self, summaries):
+    def write_activity_summaries(self, summaries, append=False):
         '''
         Write the activity summary data consisting of complete days and trips tallies with a record
         per each user for a survey.
 
         :param summaries: Iterable of user summaries for row records
+        :param append:    Toggles whether summaries should be appended to an existing output file.
 
         :type summaries: list of dict
+        :type append:    boolean, optional
         '''
         headers1 = (
             ['Survey timezone:', self.config.TIMEZONE]
@@ -187,24 +223,27 @@ class CSVIO(object):
             'commute_time_work_s',
         ]
         csv_fp = os.path.join(self.config.OUTPUT_DATA_DIR, f'{self.config.SURVEY_NAME}-activity_summaries.csv')
-        with open(csv_fp, 'w', newline=NEWLINE_MODE) as csv_f:
-            writer = csv.writer(csv_f, dialect='excel')
-            writer.writerow(headers1)
+        file_cleaned = utils.misc.clean_up_old_file(csv_fp)
+        if append is False or file_cleaned:
+            with open(csv_fp, 'w', newline=NEWLINE_MODE) as csv_f:
+                writer = csv.writer(csv_f, dialect='excel')
+                writer.writerow(headers1)
+                writer.writerow(headers2)   
         with open(csv_fp, 'a', newline=NEWLINE_MODE) as csv_f:
             writer = csv.DictWriter(csv_f, dialect='excel', fieldnames=headers2)
-            writer.writeheader()
             writer.writerows(summaries)
 
-    def write_activities_daily(self, daily_summaries, extra_cols=None):
+    def write_activities_daily(self, daily_summaries, extra_cols=None, append=False):
         '''
         Write the user activity summaries by date with a record for each day that a user
         participated in a survey.
 
-        :param daily_summaries: Iterable of user summaries for row records
+        :param daily_summaries: Iterable of user summaries for row records.
+        :param append:          Toggles whether summaries should be appended to an existing output file.
 
         :type daily_summaries: list of dict
+        :type append:          boolean, optional
         '''
-        csv_fp = os.path.join(self.config.OUTPUT_DATA_DIR, f'{self.config.SURVEY_NAME}-daily_activity_summaries.csv')
         headers1 = ['Survey timezone:', self.config.TIMEZONE]
         headers2 = [
             'uuid',
@@ -218,10 +257,14 @@ class CSVIO(object):
         ]
         if extra_cols:
             headers2 += extra_cols
-        with open(csv_fp, 'w', newline=NEWLINE_MODE) as csv_f:
-            writer = csv.writer(csv_f, dialect='excel')
-            writer.writerow(headers1)
+        
+        csv_fp = os.path.join(self.config.OUTPUT_DATA_DIR, f'{self.config.SURVEY_NAME}-daily_activity_summaries.csv')
+        file_cleaned = utils.misc.clean_up_old_file(csv_fp)
+        if append is False or file_cleaned:
+            with open(csv_fp, 'w', newline=NEWLINE_MODE) as csv_f:
+                writer = csv.writer(csv_f, dialect='excel')
+                writer.writerow(headers1)
+                writer.writerow(headers2)
         with open(csv_fp, 'a', newline=NEWLINE_MODE) as csv_f:
             writer = csv.DictWriter(csv_f, dialect='excel', fieldnames=headers2)
-            writer.writeheader()
             writer.writerows(daily_summaries)
