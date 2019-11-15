@@ -42,6 +42,7 @@ trip_summaries = tripkit.process.trip_detection.triplab.v2.summarize.run(user, c
 
 tripkit.database.save_trips(user, user.trips)
 tripkit.io.geojson.write_trips(fn_base=user.uuid, trips=user.trips)
+tripkit.io.csv.write_trips(fn_base=user.uuid, trips=user.trips)
 tripkit.io.csv.write_trip_summaries(fn_base=user.uuid, summaries=trip_summaries)
 
 # 4. map match one of the detected trips and write GIS-compatible output

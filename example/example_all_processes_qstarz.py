@@ -42,9 +42,11 @@ locations = tripkit.process.activities.canue.detect_locations.run(kmeans_groups,
 tripkit.io.geojson.write_semantic_locations(fn_base=user.uuid, locations=locations)
 
 user.trips = tripkit.process.trip_detection.canue.algorithm.run(cfg, prepared_coordinates, locations)
+trip_summaries = tripkit.process.trip_detection.canue.summarize.run(user, cfg.TIMEZONE)
 tripkit.database.save_trips(user, user.trips)
 tripkit.io.geojson.write_trips(fn_base=user.uuid, trips=user.trips)
-# itinerum.io.write_trip_summaries_csv(fn_base=user.uuid, summaries=trip_summaries)
+tripkit.io.csv.write_trips(fn_base=user.uuid, trips=user.trips)
+tripkit.io.csv.write_trip_summaries(fn_base=user.uuid, summaries=trip_summaries)
 
 # 4. map match one of the detected trips and write GIS-compatible output
 trip1_coordinates = user.trips[0].points

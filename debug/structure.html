@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>itinerum-tripkit organization</title>
+        <meta charset='utf-8'>
+        <meta name='description' content='Hieracharchy of itinerum-tripkit.'>
+        <link href='https://fonts.googleapis.com/css?family=Roboto&display=swap' rel='stylesheet'>
+        <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/treant-js/1.0/Treant.css' />
+        <link rel='stylesheet' href='structure.css'>
+        <script src='https://cdnjs.cloudflare.com/ajax/libs/raphael/2.3.0/raphael.min.js'></script>
+        <script src='https://cdnjs.cloudflare.com/ajax/libs/treant-js/1.0/Treant.min.js'></script>
+    </head>
+    
+    <body>
+        <div class='chart' id='itinerum-tripkit-structure'></div>
+
+        <script type='text/javascript'>
+            var config = {
+                chart: {
+                    container: '#itinerum-tripkit-structure',
+                    levelSeparation: 45,
+                    rootOrientation: 'NORTH',
+                    nodeAlign: 'CENTER',
+                    connectors: {
+                        type: 'step',
+                        style: {
+                            'stroke-width': 2
+                        }
+                    },
+                    node: {
+                        HTMLclass: 'item'
+                    }
+                },
+
+                nodeStructure: {
+                    text: { name: 'itinerum-tripkit' },
+                    connectors: {
+                        style: { 'stroke': '#bbb'},
+                    },
+                    HTMLclass: 'root',
+                    children: [
+                        {
+                            text: { name: 'csv-parser' },
+                            connectors: {
+                                style: {
+                                    'stroke': '#3671BF',
+                                    'arrow-end': 'block-wide-long'
+                                }
+                            },
+                            HTMLclass: 'component',
+                            children: [
+                                {
+                                    text: { name: 'itinerum' },
+                                    HTMLclass: 'itinerum'
+                                },
+                                {
+                                    text: { name: 'qstarz' },
+                                    HTMLclass: 'qstarz'
+                                },
+                            ]
+                        },
+                        {
+                            text: { name: 'models' },
+                            connectors: {
+                                style: {
+                                    'stroke': '#A4BF41',
+                                }
+                            },
+                            HTMLclass: 'component',
+                            children: [
+                                {
+                                    pseudo: true,
+                                    connectors: {
+                                        style: {
+                                            'stroke': '#A4BF41',
+                                        }
+                                    },
+                                    children: [
+                                        { text: {name: 'ActivityLocation'} },
+                                        { text: {name: 'DaySummary'} },
+                                        { text: {name: 'Trip'} },
+                                        { text: {name: 'TripPoint'} }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            text: { name: 'process' },
+                            connectors: {
+                                style: {
+                                    'stroke': '#F2B90C',
+                                    'arrow-end': 'block-wide-long'
+                                }
+                            },
+                            HTMLclass: 'component',
+                            children: [
+                                {
+                                    pseudo: true,
+                                    connectors: {
+                                        style: {
+                                            'stroke': '#F2B90C',
+                                        }
+                                    },
+                                    children: [
+                                        {
+                                            pseudo: true,
+                                            connectors: {
+                                                style: {
+                                                    'stroke': '#F2B90C',
+                                                }
+                                            },
+                                            children: [
+                                                {
+                                                    text: {name: 'activities'},
+                                                    connectors: {
+                                                        style: {
+                                                            'stroke': '#F2B90C',
+                                                        }
+                                                    },
+                                                    HTMLclass: 'component',
+                                                    children: [
+                                                        { text: {name: 'canue'} },
+                                                        { text: {name: 'triplab'} },
+                                                    ]
+                                                },
+                                                {
+                                                    text: {name: 'canue'},
+                                                    connectors: {
+                                                        style: {
+                                                            'stroke': '#F2B90C',
+                                                        }
+                                                    },
+                                                    HTMLclass: 'component',
+                                                    children: [
+                                                        { text: {name: 'preprocessing'} },
+                                                        { text: {name: 'gert_stops'} },
+                                                    ]
+                                                },
+                                                {
+                                                    text: {name: 'clustering'},
+                                                    connectors: {
+                                                        style: {
+                                                            'stroke': '#F2B90C',
+                                                        }
+                                                    },
+                                                    HTMLclass: 'component',
+                                                    children: [
+                                                        {
+                                                            pseudo: true,
+                                                            connectors: {
+                                                                style: {
+                                                                    'stroke': '#F2B90C',
+                                                                }
+                                                            },
+                                                            children: [
+                                                                { text: {name: 'dbscan_ref'}},
+                                                                { text: {name: 'hdbscan_ts'}},
+                                                                { text: {name: 'kmeans'}},
+                                                                { text: {name: 'delta_heading_stdev'}},
+                                                            ]
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    text: {name: 'complete_days'},
+                                                    connectors: {
+                                                        style: {
+                                                            'stroke': '#F2B90C',
+                                                        }
+                                                    },
+                                                    HTMLclass: 'component',
+                                                    children: [
+                                                        { text: {name: 'canue'}},
+                                                        { text: {name: 'triplab'}},  
+                                                    ]
+                                                },
+                                                {
+                                                    text: {name: 'map_match'},
+                                                    HTMLclass: 'component'
+                                                },
+                                                {
+                                                    text: {name: 'trip_detection'},
+                                                    connectors: {
+                                                        style: {
+                                                            'stroke': '#F2B90C',
+                                                        }
+                                                    },
+                                                    HTMLclass: 'component',
+                                                    children: [
+                                                        { text: {name: 'canue'}},
+                                                        { text: {name: 'triplab'}},  
+                                                    ]
+                                                },
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            text: { name: 'i/o' },
+                            connectors: {
+                                style: {
+                                    'stroke': '#D90404',
+                                    'arrow-end': 'block-wide-long'
+                                }
+                            },
+                            HTMLclass: 'component',
+                            children: [
+                                { text: {name: 'csv'} },
+                                { text: {name: 'geojson'} },
+                                { text: {name: 'geopackage'} }
+                            ]   
+                        }
+                    ]
+                }
+            };
+
+            new Treant(config);
+        </script>
+    </body>
+</html>
