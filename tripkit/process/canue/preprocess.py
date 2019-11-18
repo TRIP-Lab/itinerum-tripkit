@@ -43,7 +43,7 @@ def rolling_window_sample(values, idx, size=20):
     upper_idx = idx + half_size
     return sum(values[lower_idx:upper_idx]) / (size + 1)
 
-def run(coordinates):
+def run(uuid, coordinates):
     total_coordinates = coordinates.count()
     logger.info(f"Uncleaned input coordinates: {total_coordinates}")
 
@@ -57,6 +57,7 @@ def run(coordinates):
         if update_pct:
             logger.info(f"Processing...{pct}%", )
             last_pct = pct
+        c.uuid = uuid
         gc = Coordinate(c)
 
         # calculate coordinate attributes compared to previous coordinate

@@ -76,6 +76,7 @@ def _generate_null_survey(input_dir, coordinates_csv_fn, id_column='uuid', uuid_
             orig_ids = {r[orig_id_idx] for r in reader}
 
     for uuid in orig_ids:
+        orig_id = None
         if uuid_lookup:
             orig_id = uuid
             uuid = uuid_lookup[orig_id]

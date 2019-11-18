@@ -33,24 +33,16 @@ class QstarzCSVParser(object):
         self.coordinates_csv = self._fetch_csv_fn(self.config.INPUT_DATA_DIR, contains='coordinates.csv')
         self.headers = [
             'INDEX',
-            'TRACK ID',
-            'VALID',
-            'UTC DATE',
-            'UTC TIME',
-            'LOCAL DATE',
-            'LOCAL TIME',
-            'MS',
+            'UTC_DATE',
+            'UTC_TIME',
+            'LOCAL_DATE',
+            'LOCAL_TIME',
             'LATITUDE',
             'N/S',
             'LONGITUDE',
             'E/W',
             'ALTITUDE',
             'SPEED',
-            'HEADING',
-            'G-X',
-            'G-Y',
-            'G-Z',
-            'Loc',  # demo data: to be removed from final version
             'USER',
         ]
         self.uuid_lookup = None
@@ -96,17 +88,17 @@ class QstarzCSVParser(object):
         if int(lat) == 0 and int(lon) == 0:
             return
         # add sign to negative lat/lons depending on hemisphere
-        if row.get('N/S') == 'S':
+        if row.get('N/S') == 'S' and lat > 0:
             lat *= -1
-        if row.get('E/W') == 'W':
+        if row.get('E/W') == 'W' and lon > 0:
             lon *= -1
 
         # format date and time columns into Python datetime (NOTE: QStarz data returns a 2-digit year)
-        year, month, day = row['UTC DATE'].split('/')
+        year, month, day = row['UTC_DATE'].split('/')
         if len(year) == 2:
             year = int('20' + year)
-        month, day = int(month), int(day)
-        hour, minute, second = [int(i) for i in row['UTC TIME'].split(':')]
+        year, month, day = int(year), int(month), int(day)
+        hour, minute, second = [int(i) for i in row['UTC_TIME'].split(':')]
         timestamp_UTC = datetime(year, month, day, hour, minute, second, tzinfo=pytz.utc)
         timestamp_epoch = int(timestamp_UTC.timestamp())
         db_row = {
@@ -155,6 +147,10 @@ class QstarzCSVParser(object):
                 reader = csv.reader(csv_f)
                 user_id_idx = self.headers.index('USER')
                 for r in reader:
+                    # skip first row if header
+                    if 'USER' in r:
+                        continue
+
                     user_id = r[user_id_idx]
                     if not user_id in self.uuid_lookup:
                         self.uuid_lookup[user_id] = str(uuid.uuid4())

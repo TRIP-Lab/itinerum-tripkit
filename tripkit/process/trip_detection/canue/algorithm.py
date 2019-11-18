@@ -90,9 +90,15 @@ def make_trips_diary(valid_segments, missing_segments):
     trip_idx = 0
     missing_idxs = []
     for valid_segment in valid_segments:
-        if missing_test_segment and valid_segment[0].timestamp_UTC < missing_test_segment[0].timestamp_UTC:
+        # occurs when `next(missing_iter, None)` returns None: append remaining valid segments as normal
+        if not missing_test_segment:
             trips.append(valid_segment)
             trip_idx += 1
+        # append existing valid segments when they occur before a missing segment
+        elif missing_test_segment and valid_segment[0].timestamp_UTC < missing_test_segment[0].timestamp_UTC:
+            trips.append(valid_segment)
+            trip_idx += 1
+        # append the last available "missing segment" before a valid segment and continue
         else:
             trips.append(missing_test_segment)
             missing_idxs.append(trip_idx)

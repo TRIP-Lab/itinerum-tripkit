@@ -36,6 +36,7 @@ class Coordinate(object):
     ]
 
     def __init__(self, c):
+        self.uuid = c.uuid
         self.latitude = c.latitude
         self.longitude = c.longitude
         self.timestamp_UTC = ciso8601.parse_datetime_as_naive(
