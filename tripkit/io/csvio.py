@@ -340,7 +340,10 @@ class CSVIO(object):
         for trip_summary in trip_summaries:
             trip_date_local = trip_summary['start'].date()
             trip_summary['trip_type'] = 'complete' if trip_summary['trip_code'] < 100 else 'missing'
-            trip_summary['complete_day'] = date_summaries[trip_date_local].is_complete
+            if trip_date_local in date_summaries:
+                trip_summary['complete_day'] = date_summaries[trip_date_local].is_complete
+            else:
+                trip_summary['complete_day'] = False
             orig = Point(latitude=trip_summary['olat'], longitude=trip_summary['olon'])
             dest = Point(latitude=trip_summary['dlat'], longitude=trip_summary['dlon'])
             trip_summary['olocation'] = _label_point_location(user.activity_locations, orig, self.config.ACTIVITY_LOCATION_PROXIMITY_METERS)
