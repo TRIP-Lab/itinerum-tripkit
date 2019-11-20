@@ -131,24 +131,27 @@ class TripKit(object):
                 "UserSurveyResponse table does not exist in database. Please re-run setup " "and try again."
             )
 
-    def load_users(self, uuid=None, load_trips=True, limit=None, start=None, end=None):
+    def load_users(self, uuid=None, load_trips=True, load_locations=True, limit=None, start=None, end=None):
         '''
         Returns all available users as :py:class:`tripkit.models.User` objects from the database
 
-        :param uuid:       Supply an individual user's UUID to load
-        :param load_trips: Supply False to disable automatic loading of trips to
-                           py:class:`tripkit.models.User` objects on initialization
-        :param limit:      Maximum number of users to load
-        :param start:      Miminum timestamp bounds (inclusive) for loading user coordinate and
-                           prompts data
-        :param end:        Maximum timestamp bounds (inclusive) for loading user coordinate and
-                           prompts data
+        :param uuid:           Supply an individual user's UUID to load
+        :param load_trips:     Supply False to disable automatic loading of trips to
+                               py:class:`tripkit.models.User` objects on initialization
+        :param load_locations: Supple False to disable automatic loading of activity locations to
+                               py:class:`tripkit.models.User` objects on initialization
+        :param limit:          Maximum number of users to load
+        :param start:          Mininum timestamp bounds (inclusive) for loading user coordinate and
+                               prompts data
+        :param end:            Maximum timestamp bounds (inclusive) for loading user coordinate and
+                               prompts data
 
-        :type uuid:        string, optional
-        :type load_trips:  boolean, optional
-        :type limit:       integer, optional
-        :type start:       datetime, optional
-        :type end:         datetime, optional
+        :type uuid:            string, optional
+        :type load_trips:      boolean, optional
+        :type load_locations:  boolean, optional
+        :type limit:           integer, optional
+        :type start:           datetime, optional
+        :type end:             datetime, optional
 
         :rtype: list of :py:class:`tripkit.models.User`
         '''
