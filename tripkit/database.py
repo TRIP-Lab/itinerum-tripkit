@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # Kyle Fitzsimmons, 2018-2019
 from datetime import datetime
+import itertools
 import logging
 from peewee import (
     Model,
@@ -15,12 +16,15 @@ from peewee import (
     TextField,
     UUIDField,
 )
+import utm
 import uuid
 
 from .models.DaySummary import DaySummary
+from .models.ActivityLocation import ActivityLocation
 from .models.Trip import Trip
 from .models.TripPoint import TripPoint
 from .models.User import User
+from .utils import geo
 from .utils.misc import UserNotFoundError, temp_path
 
 logger = logging.getLogger('itinerum-tripkit.database')
@@ -34,8 +38,9 @@ class Database(object):
     Handles itinerum-tripkit interactions with the cached database using peewee.
     '''
 
-    def __init__(self, name):
-        database_fp = temp_path(f'{name}.sqlite')
+    def __init__(self, config):
+        self.config = config
+        database_fp = temp_path(f'{self.config.SURVEY_NAME}.sqlite')
 
         self.db = deferred_db
         self.db.init(database_fp)
@@ -53,6 +58,7 @@ class Database(object):
                 DetectedTripCoordinate,
                 DetectedTripDaySummary,
                 SubwayStationEntrance,
+                UserLocation,
             ]
         )
 
@@ -264,8 +270,7 @@ class Database(object):
         '''
         Load the daily trip summaries for a given user as dict.
 
-        :param user: A database user response record with a populated
-                     `detected_trip_day_summaries` relation.
+        :param user: A database user response record with a populated `detected_trip_day_summaries` relation.
         '''
         day_summaries = []
         for s in user.detected_trip_day_summaries:
@@ -288,6 +293,29 @@ class Database(object):
         Queries cache database for all available subway entrances.
         '''
         return SubwayStationEntrance.select()
+
+    def load_activity_locations(self, user):
+        '''
+        Queries cache database for activity locations known for a user.
+
+        :param user: A database user response record
+        '''
+        locations = []
+        for loc in user.user_locations:
+            easting, northing, zone_num, zone_letter = utm.from_latlon(loc.latitude, loc.longitude)
+            locations.append(
+                ActivityLocation(
+                    label=loc.label,
+                    latitude=loc.latitude,
+                    longitude=loc.longitude,
+                    easting=easting,
+                    northing=northing,
+                    zone_num=zone_num,
+                    zone_letter=zone_letter
+                )
+            )
+        return locations
+
 
     def save_trips(self, user, trips, overwrite=True):
         '''
@@ -422,6 +450,10 @@ class UserSurveyResponse(BaseModel):
     def detected_trip_day_summaries(self):
         return self.detected_trip_day_summaries_backref.order_by(DetectedTripDaySummary.date)
 
+    @property
+    def user_locations(self):
+        return self.user_locations_backref
+
 
 class Coordinate(BaseModel):
     class Meta:
@@ -508,5 +540,16 @@ class SubwayStationEntrance(BaseModel):
         table_name = 'subway_station_entrances'
         indexes = ((('latitude', 'longitude'), True),)
 
+    latitude = FloatField()
+    longitude = FloatField()
+
+
+class UserLocation(BaseModel):
+    class Meta:
+        table_name = 'user_locations'
+        indexes = ((('user', 'label'), True),)
+
+    user = ForeignKeyField(UserSurveyResponse, backref='user_locations_backref')
+    label = TextField()
     latitude = FloatField()
     longitude = FloatField()

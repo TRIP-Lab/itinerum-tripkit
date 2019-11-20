@@ -58,18 +58,18 @@ class GeoJSONIO(object):
         cancelled_prompts_filename = f'{fn_base}_cancelled_prompts.geojson'
         self._write_features_to_f(cancelled_prompts_filename, cancelled_prompts_features)
 
-    def write_semantic_locations(self, fn_base, locations):
+    def write_activity_locations(self, fn_base, locations):
         '''
-        Write semantic locations (from config or detected) to a geojson file.
+        Write activity locations (from config or detected) to a geojson file.
 
         :param fn_base:   The base filename to prepend to each output geojson file.
-        :param locations: A dictionary object of a user's survey responses containing columns with semantic
+        :param locations: A dictionary object of a user's survey responses containing columns with activity
                         location latitude and longitudes.
 
         :type fn_base: str
         :type locations: dict
         '''
-        locations_features = formatters._semantic_locations_features(locations)
+        locations_features = formatters._activity_locations_features(locations)
         locations_fn = f'{fn_base}_locations.geojson'
         self._write_features_to_f(locations_fn, locations_features)
 

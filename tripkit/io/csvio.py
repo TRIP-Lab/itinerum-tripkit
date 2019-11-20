@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # Kyle Fitzsimmons, 2019
+from collections import namedtuple
 import csv
 import os
 
@@ -202,7 +203,7 @@ class CSVIO(object):
         headers1 = (
             ['Survey timezone:', self.config.TIMEZONE]
             + [None] * 7
-            + ['Semantic locations (duration, seconds)', None, None, 'Commute times (duration, seconds)']
+            + ['Activity locations (duration, seconds)', None, None, 'Commute times (duration, seconds)']
         )
         headers2 = [
             'uuid',
@@ -268,3 +269,90 @@ class CSVIO(object):
         with open(csv_fp, 'a', newline=NEWLINE_MODE) as csv_f:
             writer = csv.DictWriter(csv_f, dialect='excel', fieldnames=headers2)
             writer.writerows(daily_summaries)
+
+    def write_condensed_activity_locations(self, user, append=True):
+        '''
+        Write or append the provided user's activity locations to file.
+
+        :param locations: Iterable of user summaries for row records.
+        :param append:    Toggles whether summaries should be appended to an existing output file.
+
+        :type locations: list of dict
+        :type append:    boolean, optional
+        '''
+        headers = [
+            ['Activity Locations'],
+            ['UUID', 'Label', 'Latitude', 'Longitude']
+        ]
+        rows = []
+        for loc in user.activity_locations:
+            rows.append([user.uuid, loc.label, loc.latitude, loc.longitude])
+        
+        csv_fp = os.path.join(self.config.OUTPUT_DATA_DIR, f'{self.config.SURVEY_NAME}-activity_locations_condensed.csv')
+        file_cleaned = utils.misc.clean_up_old_file(csv_fp)
+        if append is False or file_cleaned:
+            with open(csv_fp, 'w', newline=NEWLINE_MODE) as csv_f:
+                writer = csv.writer(csv_f, dialect='excel')
+                writer.writerows(headers)
+        with open(csv_fp, 'a', newline=NEWLINE_MODE) as csv_f:
+            writer = csv.writer(csv_f, dialect='excel')
+            writer.writerows(rows)
+
+    def write_condensed_trip_summaries(self, user, trip_summaries, complete_day_summaries, append=False):
+        '''
+        Write the trip summaries with added columns for labeled trip origins/destinations and
+        whether a trip occured on a complete trip day.
+
+        :param daily_summaries: Iterable of user summaries for row records.
+        :param append:          Toggles whether summaries should be appended to an existing output file.
+
+        :type daily_summaries: list of dict
+        :type append:          boolean, optional
+        '''
+        def _label_point_location(locations, point, proximity_m):
+            for location in locations:
+                if utils.geo.haversine_distance_m(point, location) <= proximity_m:
+                    return location.label
+
+        date_summaries = {cds.date: cds for cds in complete_day_summaries}
+        summary_columns = [
+            'uuid',
+            'trip_id',
+            'start_UTC',
+            'start',
+            'end_UTC',
+            'end',
+            'trip_code',
+            'trip_type',
+            'olat',
+            'olon',
+            'dlat',
+            'dlon',
+            'olocation',
+            'dlocation',
+            'direct_distance',
+            'cumulative_distance',
+            'complete_day'
+        ]
+        headers = [['Trip Summaries'], summary_columns]
+        Point = namedtuple('Point', ['latitude', 'longitude'])
+        rows = []
+        for trip_summary in trip_summaries:
+            trip_date_local = trip_summary['start'].date()
+            trip_summary['trip_type'] = 'complete' if trip_summary['trip_code'] < 100 else 'missing'
+            trip_summary['complete_day'] = date_summaries[trip_date_local].is_complete
+            orig = Point(latitude=trip_summary['olat'], longitude=trip_summary['olon'])
+            dest = Point(latitude=trip_summary['dlat'], longitude=trip_summary['dlon'])
+            trip_summary['olocation'] = _label_point_location(user.activity_locations, orig, self.config.ACTIVITY_LOCATION_PROXIMITY_METERS)
+            trip_summary['dlocation'] = _label_point_location(user.activity_locations, dest, self.config.ACTIVITY_LOCATION_PROXIMITY_METERS)
+            rows.append(trip_summary)
+
+        csv_fp = os.path.join(self.config.OUTPUT_DATA_DIR, f'{self.config.SURVEY_NAME}-trip_summaries_condensed.csv')
+        file_cleaned = utils.misc.clean_up_old_file(csv_fp)
+        if append is False or file_cleaned:
+            with open(csv_fp, 'w', newline=NEWLINE_MODE) as csv_f:
+                writer = csv.writer(csv_f, dialect='excel')
+                writer.writerows(headers)
+        with open(csv_fp, 'a', newline=NEWLINE_MODE) as csv_f:
+            writer = csv.DictWriter(csv_f, dialect='excel', fieldnames=summary_columns)
+            writer.writerows(rows)

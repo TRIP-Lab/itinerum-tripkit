@@ -8,19 +8,21 @@ from datetime import datetime
 import logging
 import os
 
-from ..database import SubwayStationEntrance, UserSurveyResponse
+from ..database import SubwayStationEntrance, UserLocation, UserSurveyResponse
 
 logger = logging.getLogger('itinerum-tripkit.csvparser.common')
 
 
 def _load_subway_stations(subway_stations_csv_fp):
     '''
-    Loads a subway station entraces .csv the database for use by trip
+    Loads a subway station entrances .csv the database for use by trip
     detection algorithms. Each .csv row should represent a station entrance
     with the column names of 'x' (or 'longitude') and 'y' (or 'latitude').
 
     :param subway_stations_csv_fp: The full filepath of subway station entrances
                                     `.csv` for the survey study region.
+
+    :param type subway_stations_csv_fp: str                                    
     '''
     # change selected column keys to latitude and longitude
     def _rename_columns(location_columns, rows):
@@ -54,6 +56,34 @@ def _load_subway_stations(subway_stations_csv_fp):
 
         for row in reader:
             SubwayStationEntrance.create(latitude=float(row['latitude']), longitude=float(row['longitude']))
+
+
+def _load_user_locations(locations_csv_fp, uuid_lookup=None):
+    '''
+    Loads user location labels and centroids from file.
+
+    :param locations_csv_fp: The full filepath of an user locations csv.
+
+    :param type locations_csv_fp: str
+    '''
+    logger.info("Loading user locations .csv to db...")
+    with open(locations_csv_fp, 'r') as csv_f:
+        # detect whether commas or semicolon is used a separator (english/french)
+        dialect = csv.Sniffer().sniff(csv_f.read(), delimiters=';,')
+        csv_f.seek(0)
+
+        reader = csv.DictReader(csv_f, dialect=dialect)
+        reader.fieldnames = [name.lower() for name in reader.fieldnames]
+        for row in reader:
+            user_id = row.get('user').strip()
+            if not user_id:
+                continue
+            if uuid_lookup:
+                user_id = uuid_lookup[user_id]
+            label = row.get('label')
+            lat = float(row['latitude'])
+            lon = float(row['longitude'])
+            UserLocation.create(user=user_id, label=label, latitude=lat, longitude=lon)
 
 
 def _generate_null_survey(input_dir, coordinates_csv_fn, id_column='uuid', uuid_lookup=None, headers=None):

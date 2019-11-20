@@ -22,6 +22,7 @@ class User(object):
         self.survey_response = {k: getattr(db_user, k) for k in db_user._meta.fields.keys()}
         self.detected_trip_coordinates = db_user.detected_trip_coordinates
         self.detected_trip_day_summaries = db_user.detected_trip_day_summaries
+        self.user_locations = db_user.user_locations
         self.trips = []
 
     def __repr__(self):

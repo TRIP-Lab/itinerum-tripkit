@@ -4,7 +4,11 @@
 # Splits segments when entry/exit from detected stop locations is longer than a minimum
 # trip duration. This is due to QStarz data collection happening continually without
 # interruption at geofences.
+import logging
+
 from tripkit.utils import geo
+
+logger = logging.getLogger('itinerum-tripkit.process.trip_detection.canue.location_split')
 
 
 def _nearest_location(c, locations, buffer_m=100):
@@ -15,8 +19,21 @@ def _nearest_location(c, locations, buffer_m=100):
 
 def _common_centroid(stop_points, locations):
     split_stop_label = {sp.stop_label for sp in stop_points}
-    assert len(split_stop_label) == 1
-    split_stop_label = list(split_stop_label)[0]
+    if len(split_stop_label) != 1:
+        labels = {}
+        for sp in stop_points:
+            labels.setdefault(sp.stop_label, 0)
+            labels[sp.stop_label] += 1
+        popular = (None, -1)
+        for label, count in labels.items():
+            if count > popular[1]:
+                popular = (label, count)
+        logger.warn(
+            f"stop has multiple labels: {split_stop_label}, choosing most popular: {popular}"
+        )
+        split_stop_label = popular[0]
+    else:
+        split_stop_label = list(split_stop_label)[0]
     for location in locations:
         if location.label == split_stop_label:
             return location

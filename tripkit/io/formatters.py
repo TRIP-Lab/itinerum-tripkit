@@ -44,7 +44,7 @@ def _input_gpkg_schema(db_model, ignore_keys=None):
     return schema
 
 
-def _semantic_locations_features(locations):
+def _activity_locations_features(locations):
     features = []
     for location in locations:
         properties = {'label': location.label}

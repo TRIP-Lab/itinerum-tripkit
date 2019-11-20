@@ -44,7 +44,7 @@ class TripKit(object):
     def __init__(self, config):
         self.config = config
 
-        self._database = Database(name=self.config.SURVEY_NAME)
+        self._database = Database(self.config)
         self._csv = self._init_csv_parser()
 
         # attach I/O functions and extensions as objects
@@ -105,7 +105,8 @@ class TripKit(object):
 
         if not UserSurveyResponse.table_exists():
             self.database.create()
-            self.csv.load_subway_stations(self.config.SUBWAY_STATIONS_FP)
+            if getattr(self.config, 'SUBWAY_STATIONS_FP', None):
+                self.csv.load_subway_stations(self.config.SUBWAY_STATIONS_FP)
 
             if self.config.INPUT_DATA_TYPE == 'itinerum':
                 if generate_null_survey is False:
@@ -118,6 +119,7 @@ class TripKit(object):
             elif self.config.INPUT_DATA_TYPE == 'qstarz':
                 self.csv.generate_null_survey(self.config.INPUT_DATA_DIR)
                 self.csv.load_export_coordinates(self.config.INPUT_DATA_DIR)
+                self.csv.load_user_locations(self.config.INPUT_DATA_DIR)
 
     def check_setup(self):
         '''
@@ -199,6 +201,7 @@ class TripKit(object):
         uuid = self.database.get_uuid(orig_id)
         if uuid:
             user = self.database.load_user(uuid, start=start, end=end)
+            user.activity_locations = self.database.load_activity_locations(user)
             if load_trips:
                 user.trips = self.database.load_trips(user, start=start, end=end)
             return user

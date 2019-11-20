@@ -9,7 +9,7 @@ from playhouse.migrate import migrate, SqliteMigrator
 import pytz
 import uuid
 
-from .common import _generate_null_survey, _load_subway_stations
+from .common import _generate_null_survey, _load_subway_stations, _load_user_locations
 from ..database import Coordinate
 from ..utils.misc import temp_path
 
@@ -31,6 +31,7 @@ class QstarzCSVParser(object):
         self.db = database
         self._migrator = SqliteMigrator(database.db)
         self.coordinates_csv = self._fetch_csv_fn(self.config.INPUT_DATA_DIR, contains='coordinates.csv')
+        self.locations_csv = 'locations.csv'
         self.headers = [
             'INDEX',
             'UTC_DATE',
@@ -170,10 +171,9 @@ class QstarzCSVParser(object):
 
     def load_export_coordinates(self, input_dir):
         '''
-        Loads Qstarz coordinates data to the cache database.
+        Loads QStarz coordinates data to the cache database.
 
-        :param input_dir: The directory containing the `self.coordinates_csv`
-                          data file.
+        :param input_dir: The directory containing the `self.coordinates_csv` data file.
         '''
         logger.info("Loading coordinates .csv to db...")
         migrate(self._migrator.drop_index(Coordinate, 'coordinate_user_id'))
@@ -181,3 +181,16 @@ class QstarzCSVParser(object):
         coordinates_rows = self._row_generator(coordinates_fp, self._coordinates_row_filter)
         self.db.bulk_insert(Coordinate, coordinates_rows)
         migrate(self._migrator.add_index('coordinates', ('user_id',), False))
+
+
+    def load_user_locations(self, input_dir):
+        '''
+        Loads QStarz user locations data to the cache database.
+
+        :param input_dir: The directory containing the `self.locations_csv` data file.        
+        '''
+        if not self.uuid_lookup:
+            raise Exception('QStarz cannot load user locations before null survey has been initialized.')
+        locations_fp = os.path.join(input_dir, self.locations_csv)
+        if os.path.exists(locations_fp):
+            _load_user_locations(locations_fp, uuid_lookup=self.uuid_lookup)
