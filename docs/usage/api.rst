@@ -8,7 +8,7 @@ API
 
 CSV Parser
 ----------
-..  autoclass:: tripkit.csvparser.CSVParser
+..  autoclass:: tripkit.csvparser
     :members:
 
 I/O
