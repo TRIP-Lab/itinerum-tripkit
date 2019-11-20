@@ -23,6 +23,7 @@ class User(object):
         self.detected_trip_coordinates = db_user.detected_trip_coordinates
         self.detected_trip_day_summaries = db_user.detected_trip_day_summaries
         self.user_locations = db_user.user_locations
+        self.activity_locations = []
         self.trips = []
 
     def __repr__(self):

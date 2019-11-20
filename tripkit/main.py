@@ -175,6 +175,8 @@ class TripKit(object):
                 continue
             if load_trips:
                 user.trips = self.database.load_trips(user, start=start, end=end)
+            if load_trips:
+                user.activity_locations = self.database.load_activity_locations(user)
             if return_one:
                 return user
             users.append(user)

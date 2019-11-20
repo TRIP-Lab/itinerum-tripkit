@@ -25,13 +25,13 @@ TRIP_DETECTION_ACCURACY_CUTOFF_METERS = 50
 # timezone of study area for calculating complete trip days
 TIMEZONE = 'America/Montreal'
 
-# semantic location columns in survey responses ('name': [lat_column, lon_column])
+# location radius for activity dwell tallies
 SEMANTIC_LOCATIONS = {
     'home': ['location_home_lat', 'location_home_lon'],
     'work': ['location_work_lat', 'location_work_lon'],
     'study': ['location_study_lat', 'location_study_lon']
 }
-SEMANTIC_LOCATION_PROXIMITY_METERS = 50
+ACTIVITY_LOCATION_PROXIMITY_METERS = 50
 
 # OSRM map matcher API URLs
 MAP_MATCHING_BIKING_API_URL = 'https://osrmserver.com/osrm/match/v1/biking/'

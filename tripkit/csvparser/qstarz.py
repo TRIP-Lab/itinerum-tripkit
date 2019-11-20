@@ -30,7 +30,7 @@ class QstarzCSVParser(object):
         self.config = config
         self.db = database
         self._migrator = SqliteMigrator(database.db)
-        self.coordinates_csv = self._fetch_csv_fn(self.config.INPUT_DATA_DIR, contains='coordinates.csv')
+        self.coordinates_csv = 'coordinates.csv'
         self.locations_csv = 'locations.csv'
         self.headers = [
             'INDEX',
@@ -52,24 +52,6 @@ class QstarzCSVParser(object):
         self.load_subway_stations = _load_subway_stations
         # intialize survey timezone offset
         self.tz = pytz.timezone(self.config.TIMEZONE)
-
-    @staticmethod
-    def _fetch_csv_fn(input_dir, contains=None, not_contains=None):
-        '''
-        Helper function to return the .csv file in the given input data directory which uniquely matches the given
-        **contains** parameter.
-        '''
-        if contains and not_contains:
-            raise Exception("csv_fn should only contain either a `contains` or `not_contains` search string, not both")
-
-        for fn in os.listdir(input_dir):
-            if contains and contains in fn:
-                return fn
-            elif not_contains:
-                if '._' in fn:
-                    continue
-                if not_contains not in fn:
-                    return fn
 
     @staticmethod
     def _value_or_none(row, key):
