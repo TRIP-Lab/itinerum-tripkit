@@ -27,10 +27,10 @@ daily_activity_summaries = []
 for idx, user in enumerate(users, start=1):
     # determine the locations to associate with coordinates as activities
     locations = utils.itinerum.create_activity_locations(user)
-    tripkit.io.geojson.write_semantic_locations(fn_base=user.uuid, locations=locations)
+    tripkit.io.geojson.write_activity_locations(fn_base=user.uuid, locations=locations)
 
     complete_day_summaries = tripkit.process.complete_days.triplab.counter.run(user.trips, cfg.TIMEZONE)
-    activity = tripkit.process.activities.triplab.detect.run(user, locations, cfg.SEMANTIC_LOCATION_PROXIMITY_METERS)
+    activity = tripkit.process.activities.triplab.detect.run(user, locations, cfg.ACTIVITY_LOCATION_PROXIMITY_METERS)
     summaries = tripkit.process.activities.triplab.summarize.run_full(activity, cfg.TIMEZONE)
     if summaries:
         daily_activity_summaries.extend(summaries)

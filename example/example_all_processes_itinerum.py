@@ -60,7 +60,7 @@ tripkit.io.csv.write_complete_days({user.uuid: complete_day_summaries})
 # This is stopgap approach to create a standardized semantic locations input, this one reads
 # locations from an Itinerum survey
 locations = utils.itinerum.create_activity_locations(user)
-activity = tripkit.process.activities.triplab.detect.run(user, locations, cfg.SEMANTIC_LOCATION_PROXIMITY_METERS)
+activity = tripkit.process.activities.triplab.detect.run(user, locations, cfg.ACTIVITY_LOCATION_PROXIMITY_METERS)
 activity_summaries_full = tripkit.process.activities.triplab.summarize.run_full(activity, cfg.TIMEZONE)
 duration_cols = [
     'commute_time_work_s',
