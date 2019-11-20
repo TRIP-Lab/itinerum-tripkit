@@ -15,7 +15,7 @@ tripkit library while the :ref:`APIPage` section will detail how to interact
 with the library's core methods directly.
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
    :caption: Contents:
 
    usage/installation
