@@ -15,17 +15,17 @@ Input .csv data be loaded to the **itinerum-tripkit** cache database as follows:
 
 .. code-block:: python
 
-    from tripkit import Itinerum
+    from tripkit import TripKit
     import tripkit_config
 
-    itinerum = Itinerum(config=tripkit_config)
-    itinerum.setup()
+    tripkit = TripKit(config=tripkit_config)
+    tripkit.setup()
 
 After data has been loaded to the database, survey users can be loaded as a list of :py:class:`tripkit.models.User` objects:
 
 .. code-block:: python
 
-    users = itinerum.load_users()
+    users = tripkit.load_users()
     for user in users:
         print(len(user.coordinates))
 
@@ -41,15 +41,15 @@ For writing new processing libraries, this is often an essential first step.
 
 .. code-block:: python
 
-    user = itinerum.load_users(uuid='00000000-0000-0000-0000-000000000000')
+    user = tripkit.load_users(uuid='00000000-0000-0000-0000-000000000000')
     params = {
-        'load_subway_entrances': itinerum.database.load_subway_entrances(),
+        'load_subway_entrances': tripkit.database.load_subway_entrances(),
         'break_interval_seconds': tripkit_config.TRIP_DETECTION_BREAK_INTERVAL_SECONDS,
         'subway_buffer_meters': tripkit_config.TRIP_DETECTION_SUBWAY_BUFFER_METERS,
         'cold_start_distance': tripkit_config.TRIP_DETECTION_COLD_START_DISTANCE_METERS,
         'accuracy_cutoff_meters': tripkit_config.TRIP_DETECTION_ACCURACY_CUTOFF_METERS
     }
-    trips = itinerum.process.trip_detection.triplab.algorithm.run(user.coordinates,
+    trips = tripkit.process.trip_detection.triplab.algorithm.run(user.coordinates,
                                                                   parameters=params)
 
 
@@ -62,10 +62,10 @@ it is recommended to review the `process source code`_.
 
 .. code-block:: python
 
-    user = itinerum.load_users(uuid='00000000-0000-0000-0000-000000000000')
-    trip_day_summaries = itinerum.process.complete_days.triplab.counter.run(user.trips,
+    user = tripkit.load_users(uuid='00000000-0000-0000-0000-000000000000')
+    trip_day_summaries = tripkit.process.complete_days.triplab.counter.run(user.trips,
                                                                             tripkit_config.TIMEZONE)
-    itinerum.database.save_trip_day_summaries(user, trip_day_summaries, tripkit_config.TIMEZONE)
+    tripkit.database.save_trip_day_summaries(user, trip_day_summaries, tripkit_config.TIMEZONE)
 
 
 Run Semantic Location Activity Detection on a User
@@ -77,15 +77,15 @@ created on-the-fly as demonstrated, but this should soon be available as an incl
 .. code-block:: python
 
     Coordinate = namedtuple('Coordinate', ['latitude', 'longitude'])
-    user = itinerum.load_users(uuid='00000000-0000-0000-0000-000000000000')
+    user = tripkit.load_users(uuid='00000000-0000-0000-0000-000000000000')
     locations = {
         'home': Coordinate(latitude=45.5, longitude=-73.5)
     }
-    itinerum.io.write_semantic_locations_geojson(tripkit_config, fn_base=user.uuid, locations=locations)
-    summary = itinerum.process.activities.triplab.detect.run(
-        user, locations, proximity_m=tripkit_config.SEMANTIC_LOCATION_PROXIMITY_METERS, timezone=tripkit_config.TIMEZONE)
+    tripkit.io.write_activity_locations_geojson(tripkit_config, fn_base=user.uuid, locations=locations)
+    summary = tripkit.process.activities.triplab.detect.run(
+        user, locations, proximity_m=tripkit_config.ACTIVITY_LOCATION_PROXIMITY_METERS, timezone=tripkit_config.TIMEZONE)
     dwell_time_summaries = [summary]  # usually, multiple users would be summarized for output
-    itinerum.io.write_user_summaries_csv(tripkit_config, dwell_time_summaries)
+    tripkit.io.write_user_summaries_csv(tripkit_config, dwell_time_summaries)
 
 
 Run OSRM Map Matching on a Trip
@@ -96,11 +96,11 @@ and especially long trips may have to be supplied in chunks.
 
 .. code-block:: python
 
-    user = itinerum.load_users(uuid='00807c5b-7542-4868-8462-14b79a9fcc9f',
+    user = tripkit.load_users(uuid='00807c5b-7542-4868-8462-14b79a9fcc9f',
                                start=datetime(2017, 11, 29),
                                end=datetime(2017, 11, 30))
-    map_matcher = itinerum.process.map_match.osrm(tripkit_config)
+    map_matcher = tripkit.process.map_match.osrm(tripkit_config)
     mapmatched_results = map_matcher.match(coordinates=user.coordinates, matcher='DRIVING')
-    itinerum.io.write_mapmatched_geojson(cfg=tripkit_config, fn_base=user.uuid, results=mapmatched_results)
+    tripkit.io.write_mapmatched_geojson(cfg=tripkit_config, fn_base=user.uuid, results=mapmatched_results)
 
 .. _process source code: https://github.com/TRIP-Lab/itinerum-tripkit/blob/master/tripkit/process/complete_days/triplab/counter.py

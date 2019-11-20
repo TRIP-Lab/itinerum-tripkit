@@ -2,7 +2,7 @@
 
 API
 ===
-..  autoclass:: tripkit.Itinerum
+..  autoclass:: tripkit.TripKit
     :members:
 
 

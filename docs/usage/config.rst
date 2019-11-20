@@ -19,7 +19,7 @@ The following parameters are accepted by **itinerum-tripkit**:
 ============================================= ===============================================
 ``DATABASE_FN``                               The filename to be used for the cache
                                               SQLite database.
-``INPUT_DATA_DIR``                            Directory of the unpacked Itinerum
+``INPUT_DATA_DIR``                            Directory of the unpacked TripKit
                                               export .csv files. Usually a subdirectory
                                               of the ``./input`` directory.
 ``INPUT_DATA_TYPE``                           Data source: ``itinerum`` or ``qstarz``
