@@ -30,6 +30,6 @@ def group_by_stdev(coordinates, cutoff=1):
     return stdev_groups
 
 
-def run(coordinates):
-    avg_delta_heading_stdev_groups = group_by_stdev(coordinates)
+def run(coordinates, stdev_cutoff=1):
+    avg_delta_heading_stdev_groups = group_by_stdev(coordinates, cutoff=stdev_cutoff)
     return avg_delta_heading_stdev_groups

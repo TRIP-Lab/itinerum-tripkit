@@ -31,7 +31,7 @@ from tripkit.utils import calc, geo
 logger = logging.getLogger('itinerum-tripkit.process.canue.preprocess')
 
 
-def rolling_window_sample(values, idx, size=20):
+def rolling_window_avg(values, idx, size=20):
     half_size = int(size / 2)
     # do not calculate when not enough preceding values in window
     if (idx - 1) < half_size:
@@ -90,10 +90,12 @@ def run(uuid, coordinates):
     logger.info(f"Processing...100%")
 
     # update rolling averages
-    distance_values = [c.distance_m for c in processed]
-    delta_heading_values = [c.delta_heading for c in processed]
+    distance_values, delta_heading_values = [], []
+    for c in processed:
+        distance_values.append(c.distance_m)
+        delta_heading_values.append(c.delta_heading)
     for idx, gc in enumerate(processed):
-        gc.avg_distance_m = rolling_window_sample(distance_values, idx)
-        gc.avg_delta_heading = rolling_window_sample(delta_heading_values, idx)
+        gc.avg_distance_m = rolling_window_avg(distance_values, idx)
+        gc.avg_delta_heading = rolling_window_avg(delta_heading_values, idx)
     logger.info(f"Cleaned input coordinates: {len(processed)}")
     return processed
