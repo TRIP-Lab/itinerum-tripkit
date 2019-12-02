@@ -1,8 +1,0 @@
-ciso8601==2.1.1
-geopy==1.20.0
-hdbscan==0.8.22
-peewee==3.10.0
-polyline==1.4.0
-pytz==2019.2
-requests==2.22.0
-utm==0.5.0

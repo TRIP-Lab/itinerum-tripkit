@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # Kyle Fitzsimmons, 2016
-import ciso8601
 import math
 import time
 import utm

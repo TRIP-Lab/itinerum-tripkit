@@ -10,7 +10,6 @@ setuptools.setup(
     author_email='kafitz22@gmail.com',
     description='A toolkit for inferencing trips and trip metadata from Itinerum GPS data',
     install_requires=[
-        'ciso8601>=2.1.1',
         'fiona>=1.8.6',
         'geopy>=1.20.0',
         'networkx>=2.4',
