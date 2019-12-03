@@ -1,8 +1,8 @@
 Installation
 ============
 
-The **itinerum-tripkit** can be installed as a library using pip or the included `setup.py` file, or can be included in
-as an included dependency in your own project by cloning: http://github.com/TRIP-Lab/itinerum-tripkit and copying the ``tripkit`` directory.
+The **itinerum-tripkit** can be installed as a library using pip can be included in your own project by cloning: http://github.com/TRIP-Lab/itinerum-tripkit and
+copying the ``tripkit`` directory as a submodule.
 
 
 Virtual Environments
@@ -20,29 +20,26 @@ Linux & MacOS
 Windows
 +++++++
 
-**PowerShell:**
-With PowerShell, ``Set-ExecutionPolicy Unrestricted -Force`` may be required to allow the ``Activate.ps1`` 
-script to run. If you update the permissions, the PowerShell prompt must also be restarted.
-
 .. code-block:: powershell
 
     PS C:\Code\itinerum-tripkit> python -m venv tripkit-venv
     PS C:\Code\itinerum-tripkit> .\tripkit-venv\Scripts\Activate.ps1
 
+**PowerShell Note:**
+With PowerShell, ``Set-ExecutionPolicy Unrestricted -Force`` may be required to allow the ``Activate.ps1`` 
+script to run. If you update the permissions, the PowerShell prompt must also be restarted.
 
 Dependencies
-------------
-Windows
 +++++++
+
 GDAL
 ~~~~
 First the GDAL library must be installed for geospatial operations. If it hasn't already been globally installed on your system with OSGeo4W or some other means,
 the easiest way is using the packages described below under `Compiled Python Packages`_. Windows does not provide a build environment by default so the Visual C++
 Redistributable for Visual Studio 2015 (note: the full version Visual Studio 2015 is not required.)
 
-
-Alternative
-===========
+GDAL (Alternative)
+~~~~~~~~~~~~~~~~~~
 If the above is not successful, another method is using the gisinternals.com pre-compiled binaries. For your system version (likely *MSVC 2017 / x64*), click "Downloads". From
 the downloads page, the core GDAL library is all that is needed (*gdal-204-1911-64-core.msi*).
 
@@ -72,15 +69,15 @@ Compiled packages to install:
 
 
 Optional Components
--------------------
+~~~~~~~~~~~~~~~~~~~
 Scikit-learn
-++++++++++++
+^^^^^^^^^^^^
 
 Scikit-learn can optionally be installed for optimized clustering such as swapping the providing K-Means implementation:
 * Scikit-learn: https://www.lfd.uci.edu/~gohlke/pythonlibs/#scikit-learn
 
 OSRM
-++++
+^^^^
 
 The **itinerum-tripkit** provides interfaces for submitting map matching queries to an OSRM API and writing results to file.
 
