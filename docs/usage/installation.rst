@@ -74,7 +74,9 @@ Scikit-learn
 ~~~~~~~~~~~~
 
 Scikit-learn can optionally be installed for optimized clustering such as swapping the providing K-Means implementation:
+
 * Scikit-learn: https://www.lfd.uci.edu/~gohlke/pythonlibs/#scikit-learn
+
 
 OSRM
 ~~~~
@@ -84,7 +86,7 @@ The **itinerum-tripkit** provides interfaces for submitting map matching queries
 The instructions that follow use the `Multi-Level Djikstra processing pipelines` recommended by Project OSRM.
 
 Installing the OSRM API with Docker containers
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 1. Download an OSM extract for your region (ex. Québec)
 
