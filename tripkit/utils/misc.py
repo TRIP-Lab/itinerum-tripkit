@@ -2,11 +2,13 @@
 # Kyle Fitzsimmons, 2018-2019
 from datetime import date, datetime
 import functools
+import importlib
 import logging
 import os
 import platform
 import uuid
 import time
+import types
 
 
 logger = logging.getLogger('itinerum-tripkit')
@@ -66,3 +68,35 @@ def clean_up_old_file(filepath):
             return True
         return False
     return True
+
+
+# Tensorflow code to lazy `contrib` modules only when first called
+class LazyLoader(types.ModuleType):
+    '''
+    Lazily import a module to avoid pulling in large dependencies.
+    '''
+
+    def __init__(self, local_name, parent_module_globals, name):
+        self._local_name = local_name
+        self._parent_module_globals = parent_module_globals
+
+        super(LazyLoader, self).__init__(name)
+
+    def _load(self):
+        # import the target module and insert it into the parent's namespace
+        module = importlib.import_module(self.__name__)
+        self._parent_module_globals[self._local_name] = module
+
+        # update this object's dict so if someone keeps a reference to LazyLoader, lookups are efficient
+        # (__getattr__ is only called on lookups that fail)
+        self.__dict__.update(module.__dict__)
+
+        return module
+
+    def __getattr__(self, item):
+        module = self._load()
+        return getattr(module, item)
+    
+    def __dir__(self):
+        module = self._load()
+        return dir(module)
