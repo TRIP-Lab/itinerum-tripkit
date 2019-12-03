@@ -30,16 +30,16 @@ With PowerShell, ``Set-ExecutionPolicy Unrestricted -Force`` may be required to 
 script to run. If you update the permissions, the PowerShell prompt must also be restarted.
 
 Dependencies
-+++++++
+------------
 
 GDAL
-~~~~
+++++
 First the GDAL library must be installed for geospatial operations. If it hasn't already been globally installed on your system with OSGeo4W or some other means,
 the easiest way is using the packages described below under `Compiled Python Packages`_. Windows does not provide a build environment by default so the Visual C++
 Redistributable for Visual Studio 2015 (note: the full version Visual Studio 2015 is not required.)
 
 GDAL (Alternative)
-~~~~~~~~~~~~~~~~~~
+++++++++++++++++++
 If the above is not successful, another method is using the gisinternals.com pre-compiled binaries. For your system version (likely *MSVC 2017 / x64*), click "Downloads". From
 the downloads page, the core GDAL library is all that is needed (*gdal-204-1911-64-core.msi*).
 
@@ -54,7 +54,7 @@ First the GDAL library must be installed for geospatial operations and outputs.
 
 
 Compiled Python Packages
-~~~~~~~~~~~~~~~~~~~~~~~~
+++++++++++++++++++++++++
 On Windows, packages requiring C\C++ compilation will fail on systems without a build configuration. Instead, compiled wheel versions can be
 downloaded from various mirrors and installed with pip directly.
 
@@ -69,15 +69,15 @@ Compiled packages to install:
 
 
 Optional Components
-~~~~~~~~~~~~~~~~~~~
++++++++++++++++++++
 Scikit-learn
-^^^^^^^^^^^^
+~~~~~~~~~~~~
 
 Scikit-learn can optionally be installed for optimized clustering such as swapping the providing K-Means implementation:
 * Scikit-learn: https://www.lfd.uci.edu/~gohlke/pythonlibs/#scikit-learn
 
 OSRM
-^^^^
+~~~~
 
 The **itinerum-tripkit** provides interfaces for submitting map matching queries to an OSRM API and writing results to file.
 
