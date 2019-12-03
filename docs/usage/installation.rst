@@ -32,23 +32,19 @@ script to run. If you update the permissions, the PowerShell prompt must also be
 
 Dependencies
 ------------
-Linux & MacOS
-+++++++++++++
-
-Project dependencies can be installed with pip:
-
-.. code-block:: powershell
-
-    (tripkit-venv) $ pip install -r requirements.txt
-
-
 Windows
 +++++++
 GDAL
 ~~~~
-First the GDAL library must be installed for geospatial operations. If it hasn't already been installed on your system with OSGeo4W or some other means,
-the easiest way is from the gisinternals.com pre-compiled binaries. For your system version (likely *MSVC 2017 / x64*), click "Downloads". From the downloads
-page, the core GDAL library is all that is needed (*gdal-204-1911-64-core.msi*).
+First the GDAL library must be installed for geospatial operations. If it hasn't already been globally installed on your system with OSGeo4W or some other means,
+the easiest way is using the packages described below under `Compiled Python Packages`_. Windows does not provide a build environment by default so the Visual C++
+Redistributable for Visual Studio 2015 (note: the full version Visual Studio 2015 is not required.)
+
+
+Alternative
+===========
+If the above is not successful, another method is using the gisinternals.com pre-compiled binaries. For your system version (likely *MSVC 2017 / x64*), click "Downloads". From
+the downloads page, the core GDAL library is all that is needed (*gdal-204-1911-64-core.msi*).
 
 Install this file and set two Windows environment variables:
 
@@ -57,10 +53,13 @@ Install this file and set two Windows environment variables:
 
 After setting these variables, close and re-open the command prompt (re-activate the virtual environment if using) and the Python dependencies can be installed.
 
+First the GDAL library must be installed for geospatial operations and outputs. 
+
+
 Compiled Python Packages
 ~~~~~~~~~~~~~~~~~~~~~~~~
-On Windows, some packages may fail to install without their pre-existing build dependencies. Compiled wheel versions can be
-downloaded from various mirrors, copied to the local directory and installed with pip directly.
+On Windows, packages requiring C\C++ compilation will fail on systems without a build configuration. Instead, compiled wheel versions can be
+downloaded from various mirrors and installed with pip directly.
 
 .. code-block:: powershell
 
@@ -70,11 +69,16 @@ Compiled packages to install:
 
 * GDAL: https://www.lfd.uci.edu/~gohlke/pythonlibs/#gdal
 * Fiona: https://www.lfd.uci.edu/~gohlke/pythonlibs/#fiona
-* Scikit-learn: https://www.lfd.uci.edu/~gohlke/pythonlibs/#scikit-learn
 
 
 Optional Components
 -------------------
+Scikit-learn
+++++++++++++
+
+Scikit-learn can optionally be installed for optimized clustering such as swapping the providing K-Means implementation:
+* Scikit-learn: https://www.lfd.uci.edu/~gohlke/pythonlibs/#scikit-learn
+
 OSRM
 ++++
 
