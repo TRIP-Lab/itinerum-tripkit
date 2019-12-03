@@ -39,7 +39,7 @@ the easiest way is using the packages described below under `Compiled Python Pac
 Redistributable for Visual Studio 2015 (note: the full version Visual Studio 2015 is not required.)
 
 GDAL (Alternative)
-++++++++++++++++++
+~~~~~~~~~~~~~~~~~~
 If the above is not successful, another method is using the gisinternals.com pre-compiled binaries. For your system version (likely *MSVC 2017 / x64*), click "Downloads". From
 the downloads page, the core GDAL library is all that is needed (*gdal-204-1911-64-core.msi*).
 
