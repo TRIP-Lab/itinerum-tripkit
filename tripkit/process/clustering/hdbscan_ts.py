@@ -4,9 +4,12 @@ import math
 import logging
 import numpy as np
 import os
-import scipy
 import utm
 import warnings
+
+from tripkit.utils.misc import LazyLoader
+scipy = LazyLoader('scipy', globals(), 'scipy')
+hdbscan = LazyLoader('hdbscan', globals(), 'hdbscan')
 
 logger = logging.getLogger('itinerum-tripkit.process.clustering.hdbscan_ts')
 
@@ -114,9 +117,6 @@ def clusters_center_of_gravity(clusters):
 
 
 def run(min_stop_time_s, coordinates):
-    # lazy load hdbscan (therefore scikit-learn) to improve library performance
-    import hdbscan
-
     logger.info("Running hdbscan clustering on user points for additional stop locations...")
 
     # create meter x, y coordinates for euclidean distance calculations

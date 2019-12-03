@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 # Kyle Fitzsimmons, 2019
 import numpy as np
-from sklearn.cluster import KMeans
 
 from .models import ClusterInfo
+from tripkit.utils.misc import LazyLoader
 
+# lazy load `cluster` module containing KMeans from scikit-learn on later function call
+cluster = LazyLoader('cluster', globals(), 'sklearn.cluster')
 
 MAX_AVG_DISTANCE = 50
 MIN_STOP_TIME = 120
@@ -65,7 +67,7 @@ def relabel_by_stop_time(cluster_groups, stop_groups, min_time):
 
 def run(coordinates):
     cluster_values = format_kmeans_values(coordinates)
-    kmeans = KMeans(n_clusters=2).fit(cluster_values)
+    kmeans = cluster.KMeans(n_clusters=2).fit(cluster_values)
 
     label_coordinate_clusters(coordinates, kmeans)
     cluster_groups, stop_groups = group_sequentially(coordinates)
