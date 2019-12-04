@@ -36,8 +36,8 @@ prepared_coordinates = tripkit.process.canue.preprocess.run(user.uuid, user.coor
 
 # 3. detect trips on data and write a GIS-compatible output
 # augment CANUE Coordinate objects with labels
-kmeans_groups = tripkit.process.clustering.kmeans.run(prepared_coordinates)
-delta_heading_stdev_groups = tripkit.process.clustering.delta_heading_stdev.run(prepared_coordinates)
+kmeans_groups = tripkit.process.clustering.kmeanspp.run(prepared_coordinates)
+delta_heading_stdev_groups = tripkit.process.clustering.delta_heading_stdev.run(prepared_coordinates, stdev_cutoff=0.2)
 locations = tripkit.process.activities.canue.detect_locations.run(kmeans_groups, delta_heading_stdev_groups)
 tripkit.io.geojson.write_activity_locations(fn_base=user.uuid, locations=locations)
 
@@ -48,7 +48,7 @@ tripkit.io.geojson.write_trips(fn_base=user.uuid, trips=user.trips)
 tripkit.io.csv.write_trips(fn_base=user.uuid, trips=user.trips)
 tripkit.io.csv.write_trip_summaries(fn_base=user.uuid, summaries=trip_summaries)
 
-# # 4. map match one of the detected trips and write GIS-compatible output
+# 4. map match one of the detected trips and write GIS-compatible output
 trip1_coordinates = user.trips[0].points
 map_matcher = tripkit.process.map_match.osrm(cfg)
 mapmatched_results = map_matcher.match(trip1_coordinates, matcher='WALKING')
