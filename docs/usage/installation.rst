@@ -31,30 +31,15 @@ script to run. If you update the permissions, the PowerShell prompt must also be
 
 Dependencies
 ------------
+Windows
++++++++
+Windows does not provide a build environment by default with libraries relied upon by the GDAL package. Instead, the 
+`Visual C++ Redistributable for Visual Studio 2015`_ (13.4MB) can be installed to provide the necessary system libraries.
 
-GDAL
-++++
-First the GDAL library must be installed for geospatial operations. If it hasn't already been globally installed on your system with OSGeo4W or some other means,
-the easiest way is using the packages described below under `Compiled Python Packages`_. Windows does not provide a build environment by default so the Visual C++
-Redistributable for Visual Studio 2015 (note: the full version Visual Studio 2015 is not required.)
-
-GDAL (Alternative)
-~~~~~~~~~~~~~~~~~~
-If the above is not successful, another method is using the gisinternals.com pre-compiled binaries. For your system version (likely *MSVC 2017 / x64*), click "Downloads". From
-the downloads page, the core GDAL library is all that is needed (*gdal-204-1911-64-core.msi*).
-
-Install this file and set two Windows environment variables:
-
-- Append to PATH: ``C:\Program Files\GDAL``
-- Create GDAL_DATA: ``C:\Program Files\GDAL\gdal-data``
-
-After setting these variables, close and re-open the command prompt (re-activate the virtual environment if using) and the Python dependencies can be installed.
-
-First the GDAL library must be installed for geospatial operations and outputs. 
-
+If an existing GDAL installation is available to Python, it may be possible to skip this step.
 
 Compiled Python Packages
-++++++++++++++++++++++++
+~~~~~~~~~~~~~~~~~~~~~~~~
 On Windows, packages requiring C\C++ compilation will fail on systems without a build configuration. Instead, compiled wheel versions can be
 downloaded from various mirrors and installed with pip directly.
 
@@ -68,10 +53,26 @@ Compiled packages to install:
 * Fiona: https://www.lfd.uci.edu/~gohlke/pythonlibs/#fiona
 
 
+GDAL (Alternative)
+^^^^^^^^^^^^^^^^^^
+If the above is not successful, another method is using the gisinternals.com pre-compiled binaries. For your system version (likely *MSVC 2017 / x64*), click "Downloads". From
+the downloads page, the core GDAL library is all that is needed (*gdal-204-1911-64-core.msi*).
+
+Install this file and set two Windows environment variables:
+
+- Append to PATH: ``C:\Program Files\GDAL``
+- Create GDAL_DATA: ``C:\Program Files\GDAL\gdal-data``
+
+After setting these variables, close and re-open the command prompt (re-activate the virtual environment if using) and the Python dependencies can be installed.
+
+First the GDAL library must be installed for geospatial operations and outputs. 
+
+
+
 Optional Components
-+++++++++++++++++++
+~~~~~~~~~~~~~~~~~~~
 Scikit-learn
-~~~~~~~~~~~~
+^^^^^^^^^^^^
 
 Scikit-learn can optionally be installed for optimized clustering such as swapping the providing K-Means implementation:
 
@@ -79,14 +80,14 @@ Scikit-learn can optionally be installed for optimized clustering such as swappi
 
 
 OSRM
-~~~~
+^^^^
 
 The **itinerum-tripkit** provides interfaces for submitting map matching queries to an OSRM API and writing results to file.
 
 The instructions that follow use the `Multi-Level Djikstra processing pipelines` recommended by Project OSRM.
 
 Installing the OSRM API with Docker containers
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``````````````````````````````````````````````
 
 1. Download an OSM extract for your region (ex. Québec)
 
@@ -134,3 +135,4 @@ Installing the OSRM API with Docker containers
 .. _venv: https://docs.python.org/3/library/venv.html
 .. _Bulk Inserts: http://docs.peewee-orm.com/en/latest/peewee/querying.html#bulk-inserts
 .. _Multi-Level Djikstra processing pipelines:https://github.com/Project-OSRM/osrm-backend/wiki/Running-OSRM
+.. _Visual C++ Redistributable for Visual Studio 2015:https://www.microsoft.com/en-ca/download/details.aspx?id=48145
