@@ -74,7 +74,7 @@ Optional Components
 Scikit-learn
 ^^^^^^^^^^^^
 
-Scikit-learn can optionally be installed for optimized clustering such as swapping the providing K-Means implementation:
+Scikit-learn can optionally be installed for optimized clustering such as by swapping out the included K-Means implementation:
 
 * Scikit-learn: https://www.lfd.uci.edu/~gohlke/pythonlibs/#scikit-learn
 
