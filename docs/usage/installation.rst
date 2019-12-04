@@ -34,14 +34,14 @@ Dependencies
 Windows
 +++++++
 Windows does not provide a build environment by default with libraries relied upon by the GDAL package. Instead, the 
-`Visual C++ Redistributable for Visual Studio 2015`_ (13.4MB) can be installed to provide the necessary system libraries.
+`Visual C++ Redistributable for Visual Studio 2015` (13.4MB) can be installed to provide the necessary system libraries.
 
 If an existing GDAL installation is available to Python, it may be possible to skip this step.
 
 Compiled Python Packages
 ~~~~~~~~~~~~~~~~~~~~~~~~
-On Windows, packages requiring C\C++ compilation will fail on systems without a build configuration. Instead, compiled wheel versions can be
-downloaded from various mirrors and installed with pip directly.
+On Windows without a C/C++ build environment, some packages requiring will fail to install using `pip`. Instead, compiled wheel versions can be
+downloaded from various mirrors and installed with pip directly from file.
 
 .. code-block:: powershell
 
