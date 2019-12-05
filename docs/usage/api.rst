@@ -11,7 +11,7 @@ CSV Parser
 ..  automodule:: tripkit.csvparser.ItinerumCSVParser
     :members:
 
-..  automodule:: tripkit.csvparser.QStarzCSVParser
+..  automodule:: tripkit.csvparser.QstarzCSVParser
     :members:
 
 I/O
