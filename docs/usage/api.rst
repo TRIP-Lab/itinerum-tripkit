@@ -19,16 +19,13 @@ I/O
 ..  autoclass:: tripkit.io.IO
 	:members:
 
-..  autoclass:: tripkit.io.GeoJSONIO
+..  automodule:: tripkit.io.CSVIO
     :members:
 
 ..  automodule:: tripkit.io.GeoJSONIO
     :members:
 
-..  autoclass:: tripkit.io.geojson
-    :members:
-
-..  automodule:: tripkit.io.geojson
+..  automodule:: tripkit.io.GeopackageIO
     :members:
 
 Database
