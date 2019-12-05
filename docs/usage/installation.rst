@@ -34,7 +34,7 @@ Dependencies
 Windows
 +++++++
 Windows does not provide a build environment by default with libraries relied upon by the GDAL package. Instead, the 
-`Visual C++ Redistributable for Visual Studio 2015`_ (13.4MB) can be installed to provide the necessary system libraries.
+`Visual C++ Redistributable for Visual Studio 2015_` (13.4MB) can be installed to provide the necessary system libraries.
 
 If an existing GDAL installation is available to Python, it may be possible to skip this step.
 
@@ -84,7 +84,7 @@ OSRM
 
 The **itinerum-tripkit** provides interfaces for submitting map matching queries to an OSRM API and writing results to file.
 
-The instructions that follow use the `Multi-Level Djikstra processing pipelines`_ recommended by Project OSRM.
+The instructions that follow use the `Multi-Level Djikstra processing pipelines_` recommended by Project OSRM.
 
 Installing the OSRM API with Docker containers
 ``````````````````````````````````````````````
