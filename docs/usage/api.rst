@@ -19,6 +19,10 @@ I/O
 ..  autoclass:: tripkit.io.IO
 	:members:
 
+..  autoclass:: tripkit.io.CSVIO
+    :members:
+
+
 Database
 --------
 ..  automodule:: tripkit.database
