@@ -93,8 +93,8 @@ class TripKit(object):
         '''
         Create the cache database tables if the ``UserSurveyResponse`` table does not exist.
 
-        :param force:                Supply True to force creation of a new cache database
-        :param generate_null_survey: Supply True to generate an empty survey responses table
+        :param force:                Supply `True` to force creation of a new cache database
+        :param generate_null_survey: Supply `True` to generate an empty survey responses table
                                      for coordinates-only data
 
         :type force:                 boolean, optional

@@ -16,7 +16,7 @@ CSV Parser
 
 I/O
 ---
-..  automodule:: tripkit.io.IO
+..  autoclass:: tripkit.io.IO
 	:members:
 
 Database
