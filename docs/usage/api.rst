@@ -22,6 +22,11 @@ I/O
 ..  autoclass:: tripkit.io.CSVIO
     :members:
 
+..  autoclass:: tripkit.io.GeoJSONIO
+    :members:
+
+..  autoclass:: tripkit.io.GeopackageIO
+    :members:
 
 Database
 --------
