@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # Kyle Fitzsimmons, 2019
-import ciso8601
 from datetime import datetime
 
 
@@ -39,9 +38,7 @@ class Coordinate(object):
         self.uuid = c.uuid
         self.latitude = c.latitude
         self.longitude = c.longitude
-        self.timestamp_UTC = ciso8601.parse_datetime_as_naive(
-            c.timestamp_UTC
-        )  # optimization for datetime.fromisoformat()
+        self.timestamp_UTC = datetime.fromisoformat(c.timestamp_UTC).replace(tzinfo=None)
         # attributes to be later calculated based upon previous point
         self.duration_s = 0
         self.distance_m = 0.0
