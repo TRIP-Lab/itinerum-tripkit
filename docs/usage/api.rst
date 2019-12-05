@@ -25,7 +25,7 @@ I/O
 ..  autoclass:: tripkit.io.GeoJSONIO
     :members:
 
-..  autoclass:: tripkit.io.GeopackageIO
+..  automodule:: tripkit.io.GeopackageIO
     :members:
 
 Database

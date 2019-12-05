@@ -125,6 +125,7 @@ Installing the OSRM API with Docker containers
 3. Run the Docker OSRM API containers on ports ``5000-5002`` to reverse proxy for public access
 
 .. code-block:: bash
+
    $ docker run -d --restart always -p 5000:5000 -v $(pwd)/car:/data osrm/osrm-backend osrm-routed --algorithm MLD --max-matching-size=5000 /data/quebec-latest.osrm
    
    $ docker run -d --restart always -p 5001:5000 -v $(pwd)/bicycle:/data osrm/osrm-backend osrm-routed --algorithm MLD --max-matching-size=5000 /data/quebec-latest.osrm
