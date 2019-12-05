@@ -8,6 +8,8 @@ from .geopackageio import GeopackageIO
 class IO(object):
     '''
     The entry class for the various I/O readers and writers.
+
+    :param cfg: The global configuration object.
     '''
 
     def __init__(self, cfg):
