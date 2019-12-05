@@ -16,7 +16,7 @@ with the library's core methods directly.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Contents
 
    usage/installation
    usage/config
