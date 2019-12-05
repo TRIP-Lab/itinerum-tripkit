@@ -2,16 +2,15 @@
 
 Quick Start
 ===========
-The most common workflow is downloading data from the Itinerum web platform and running the data through tripkit ``processes`` to clean
-and infer usable trip information from GPS data. The **itinerum-tripkit** library provides simple interfaces to load download *.csv* data into a
-local SQLite database and then providing Python ``class`` objects (such as :py:class:`tripkit.models.User` and :py:class:`tripkit.models.Trip`)
-to represent this data for processing.
+The **itinerum-tripkit** library provides simple interfaces to load *.csv* data into a local SQLite database
+and providing Python ``class`` objects (such as :py:class:`tripkit.models.User` and :py:class:`tripkit.models.Trip`)
+to represent this data for processing and inferring metadata.
 
 Load Data
 ---------
-For any of the inlcuded library processes, a configuration object will be expected (see :ref:`ConfigAnchor`).
+To initilize the libary, a configuration object is expected (see :ref:`ConfigAnchor`).
 
-Input .csv data be loaded to the **itinerum-tripkit** cache database as follows:
+First, input .csv data be loaded to the **itinerum-tripkit** cache database:
 
 .. code-block:: python
 
@@ -21,7 +20,7 @@ Input .csv data be loaded to the **itinerum-tripkit** cache database as follows:
     tripkit = TripKit(config=tripkit_config)
     tripkit.setup()
 
-After data has been loaded to the database, survey users can be loaded as a list of :py:class:`tripkit.models.User` objects:
+After data has been loaded to the database, survey participants or *users* can be loaded as a list of :py:class:`tripkit.models.User` objects:
 
 .. code-block:: python
 
@@ -31,7 +30,7 @@ After data has been loaded to the database, survey users can be loaded as a list
 
 
 *Note: On first run, .csv data will be imported if the table* :py:class:`user_survey_responses` *does not exist in the cache database.
-It is also safe to delete the accompanying .sqlite file to reset the library's cache.*
+To delete the cache, the temporary files can be deleted between runs.*
 
 
 Run Trip Detection on a User
