@@ -5,7 +5,7 @@ Library Objects
 
 User
 ----
-The :py:class:`User` object provides the representation of a user in a survey with their
+The :py:class:`tripkit.models.User` object provides the representation of a user in a survey with their
 associated coordinates, prompt, cancelled prompts and trips (if available in cache).
 
 ..  autoclass:: tripkit.models.User
