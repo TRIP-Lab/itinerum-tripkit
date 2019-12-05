@@ -34,7 +34,7 @@ Dependencies
 Windows
 +++++++
 Windows does not provide a build environment by default with libraries relied upon by the GDAL package. Instead, the 
-`Visual C++ Redistributable for Visual Studio 2015_` (13.4MB) can be installed to provide the necessary system libraries.
+`Visual C++ Redistributable for Visual Studio 2015`_ (13.4MB) can be installed to provide the necessary system libraries.
 
 If an existing GDAL installation is available to Python, it may be possible to skip this step.
 
@@ -84,7 +84,7 @@ OSRM
 
 The **itinerum-tripkit** provides interfaces for submitting map matching queries to an OSRM API and writing results to file.
 
-The instructions that follow use the `Multi-Level Djikstra processing pipelines_` recommended by Project OSRM.
+The instructions that follow use the `Multi-Level Djikstra processing pipelines`_ recommended by Project OSRM.
 
 Installing the OSRM API with Docker containers
 ``````````````````````````````````````````````
@@ -133,6 +133,5 @@ Installing the OSRM API with Docker containers
 
 
 .. _venv: https://docs.python.org/3/library/venv.html
-.. _Bulk Inserts: http://docs.peewee-orm.com/en/latest/peewee/querying.html#bulk-inserts
-.. _Multi-Level Djikstra processing pipelines:https://github.com/Project-OSRM/osrm-backend/wiki/Running-OSRM
-.. _Visual C++ Redistributable for Visual Studio 2015:https://www.microsoft.com/en-ca/download/details.aspx?id=48145
+.. _Multi-Level Djikstra processing pipelines: https://github.com/Project-OSRM/osrm-backend/wiki/Running-OSRM
+.. _Visual C++ Redistributable for Visual Studio 2015: https://www.microsoft.com/en-ca/download/details.aspx?id=48145
