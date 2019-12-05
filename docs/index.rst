@@ -23,7 +23,7 @@ with the library's core methods directly.
    usage/quickstart
    usage/api
    usage/objects
-   outputs/complete_days
+   outputs/outputs
    usage/faq
    contributing/style_guide
 

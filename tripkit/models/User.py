@@ -4,14 +4,11 @@
 
 class User(object):
     '''
-    :param db_user:     The ``peewee`` survey response for a given user.
-    :ivar list trips:   A user's detected trips. This is only loaded
-                        automatically on the ``User`` initialized
-                        by :py:meth:`tripkit.database.Database.load_user`,
-                        this must be called again if trips are detected and
-                        saved to the cache.
-
-    :vartype trips:     list
+    :param db_user:                The ``peewee`` survey response for a given user.
+    :ivar list activity_locations: A user's saved or detected activity locations. This is loaded automatically
+                                   when a ``User`` is initialized by :py:meth:`tripkit.database.Database.load_user`.
+    :ivar list trips:              A user's detected trips. This is loaded automatically when a ``User`` 
+                                   is initialized by :py:meth:`tripkit.database.Database.load_user`.
     '''
 
     def __init__(self, db_user):
