@@ -8,7 +8,10 @@ API
 
 CSV Parser
 ----------
-..  automodule:: tripkit.csvparser
+..  automodule:: tripkit.csvparser.ItinerumCSVParser
+    :members:
+
+..  automodule:: tripkit.csvparser.QStarzCSVParser
     :members:
 
 I/O
