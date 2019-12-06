@@ -21,7 +21,7 @@ tripkit.setup(force=False)
 
 # 2. write GIS-compatible outputs of input data
 user = tripkit.load_user_by_orig_id(orig_id=1)
-tripkit.io.geojson.write_inputs(
+tripkit.io.shp.write_inputs(
     fn_base=user.uuid,
     coordinates=user.coordinates,
     prompts=user.prompt_responses,
@@ -39,12 +39,12 @@ prepared_coordinates = tripkit.process.canue.preprocess.run(user.uuid, user.coor
 kmeans_groups = tripkit.process.clustering.kmeanspp.run(prepared_coordinates)
 delta_heading_stdev_groups = tripkit.process.clustering.delta_heading_stdev.run(prepared_coordinates, stdev_cutoff=0.2)
 locations = tripkit.process.activities.canue.detect_locations.run(kmeans_groups, delta_heading_stdev_groups)
-tripkit.io.geojson.write_activity_locations(fn_base=user.uuid, locations=locations)
+tripkit.io.shp.write_activity_locations(fn_base=user.uuid, locations=locations)
 
 user.trips = tripkit.process.trip_detection.canue.algorithm.run(cfg, prepared_coordinates, locations)
 trip_summaries = tripkit.process.trip_detection.canue.summarize.run(user, cfg.TIMEZONE)
 tripkit.database.save_trips(user, user.trips)
-tripkit.io.geojson.write_trips(fn_base=user.uuid, trips=user.trips)
+tripkit.io.shp.write_trips(fn_base=user.uuid, trips=user.trips)
 tripkit.io.csv.write_trips(fn_base=user.uuid, trips=user.trips)
 tripkit.io.csv.write_trip_summaries(fn_base=user.uuid, summaries=trip_summaries)
 
@@ -52,7 +52,7 @@ tripkit.io.csv.write_trip_summaries(fn_base=user.uuid, summaries=trip_summaries)
 trip1_coordinates = user.trips[0].points
 map_matcher = tripkit.process.map_match.osrm(cfg)
 mapmatched_results = map_matcher.match(trip1_coordinates, matcher='WALKING')
-tripkit.io.geojson.write_mapmatch(fn_base=user.uuid, results=mapmatched_results)
+tripkit.io.shp.write_mapmatch(fn_base=user.uuid, results=mapmatched_results)
 
 # 5. detect complete days and write csv
 complete_day_summaries = tripkit.process.complete_days.canue.counter.run(user.trips, cfg.TIMEZONE)

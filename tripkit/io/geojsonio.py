@@ -29,12 +29,9 @@ class GeoJSONIO(object):
         cache to individual geojson files.
 
         :param fn_base:           The base filename to prepend to each output geojson file.
-        :param coordinates:       Iterable of database coordinates to write to geojson
-                                file. Usually the result of a database query.
-        :param prompts:           Iterable of database prompts to write to geojson
-                                file. Usually the result of a database query.
-        :param cancelled_prompts: Iterable of database cancelled prompts to write to
-                                geojson file. Usually the result of a database query.
+        :param coordinates:       Iterable of database coordinates to write to geojson file.
+        :param prompts:           Iterable of database prompts to write to geojson file.
+        :param cancelled_prompts: Iterable of database cancelled prompts to write to geojson file.
 
         :type fn_base: str
         :type coordinates: list of :py:class:`tripkit.database.Coordinate`

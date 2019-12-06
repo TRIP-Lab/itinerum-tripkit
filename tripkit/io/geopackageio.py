@@ -15,9 +15,9 @@ class GeopackageIO(object):
         geopackage_fp = os.path.join(self.config.OUTPUT_DATA_DIR, filename)
         with fiona.open(
             geopackage_fp, 'w', driver='GPKG', schema=schema, crs=fiona.crs.from_epsg(4326)
-        ) as geopackage_f:
+        ) as gpkg_f:
             for feature in features:
-                geopackage_f.write(feature)
+                gpkg_f.write(feature)
 
     def write_inputs(self, fn_base, coordinates, prompts, cancelled_prompts):
         '''
@@ -25,12 +25,9 @@ class GeopackageIO(object):
         cache to individual geopackage files.
 
         :param fn_base:           The base filename to prepend to each output geopackage file.
-        :param coordinates:       Iterable of database coordinates to write to geopackage
-                                file. Usually the result of a database query.
-        :param prompts:           Iterable of database prompts to write to geopackage
-                                file. Usually the result of a database query.
-        :param cancelled_prompts: Iterable of database cancelled prompts to write to
-                                geopackage file. Usually the result of a database query.
+        :param coordinates:       Iterable of database coordinates to write to geopackage file.
+        :param prompts:           Iterable of database prompts to write to geopackage file.
+        :param cancelled_prompts: Iterable of database cancelled prompts to write to geopackage file.
 
         :type fn_base: str
         :type coordinates: list of :py:class:`tripkit.database.Coordinate`
@@ -79,7 +76,7 @@ class GeopackageIO(object):
         }
         with fiona.open(
             geopackage_fp, 'w', driver='GPKG', schema=schema, crs=fiona.crs.from_epsg(4326)
-        ) as geopackage_f:
+        ) as gpkg_f:
             for trip in trips:
                 properties = {
                     'start_UTC': trip.start_UTC,
@@ -88,4 +85,4 @@ class GeopackageIO(object):
                     'distance': trip.distance,
                 }
                 feature = formatters._points_to_geojson_linestring(trip.geojson_coordinates, properties)
-                geopackage_f.write(feature)
+                gpkg_f.write(feature)

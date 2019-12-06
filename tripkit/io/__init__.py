@@ -3,16 +3,12 @@
 from .csvio import CSVIO
 from .geojsonio import GeoJSONIO
 from .geopackageio import GeopackageIO
+from .shapefileio import ShapefileIO
 
 
 class IO(object):
-    '''
-    The entry class for the various I/O readers and writers.
-
-    :param cfg: The global configuration object.
-    '''
-
     def __init__(self, cfg):
         self.csv = CSVIO(cfg)
         self.geojson = GeoJSONIO(cfg)
         self.geopackage = GeopackageIO(cfg)
+        self.shp = ShapefileIO(cfg)

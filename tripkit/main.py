@@ -64,14 +64,14 @@ class TripKit(object):
     @property
     def csv(self):
         '''
-        Provides access to the :py:class:`tripkit.csvparser` objects.
+        Provides access to the CSV parser objects.
         '''
         return self._csv
 
     @property
     def database(self):
         '''
-        Provides access to the cache :py:class:`tripkit.database.Database` object.
+        Provides access to the cache database object.
         '''
         return self._database
 
