@@ -61,7 +61,7 @@ class GeoJSONIO(object):
 
         :param fn_base:   The base filename to prepend to each output geojson file.
         :param locations: A dictionary object of a user's survey responses containing columns with activity
-                        location latitude and longitudes.
+                          location latitude and longitudes.
 
         :type fn_base: str
         :type locations: dict

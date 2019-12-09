@@ -11,4 +11,4 @@ class IO(object):
         self.csv = CSVIO(cfg)
         self.geojson = GeoJSONIO(cfg)
         self.geopackage = GeopackageIO(cfg)
-        self.shp = ShapefileIO(cfg)
+        self.shapefile = ShapefileIO(cfg)

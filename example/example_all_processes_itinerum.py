@@ -22,7 +22,7 @@ tripkit.setup(force=False)
 
 # 2. write GIS-compatible outputs of input data
 user = tripkit.load_users(uuid='bcb6958f-7b86-43ce-b8f8-8794e4cb18b6')
-tripkit.io.shp.write_inputs(
+tripkit.io.shapefile.write_inputs(
     fn_base=user.uuid,
     coordinates=user.coordinates,
     prompts=user.prompt_responses,
@@ -41,7 +41,7 @@ user.trips = tripkit.process.trip_detection.triplab.v2.algorithm.run(user.coordi
 trip_summaries = tripkit.process.trip_detection.triplab.v2.summarize.run(user, cfg.TIMEZONE)
 
 tripkit.database.save_trips(user, user.trips)
-tripkit.io.shp.write_trips(fn_base=user.uuid, trips=user.trips)
+tripkit.io.shapefile.write_trips(fn_base=user.uuid, trips=user.trips)
 tripkit.io.csv.write_trips(fn_base=user.uuid, trips=user.trips)
 tripkit.io.csv.write_trip_summaries(fn_base=user.uuid, summaries=trip_summaries)
 
@@ -49,7 +49,7 @@ tripkit.io.csv.write_trip_summaries(fn_base=user.uuid, summaries=trip_summaries)
 trip1_coordinates = user.trips[0].points
 map_matcher = tripkit.process.map_match.osrm(cfg)
 mapmatched_results = map_matcher.match(trip1_coordinates, matcher='DRIVING')
-tripkit.io.shp.write_mapmatch(fn_base=user.uuid, results=mapmatched_results)
+tripkit.io.shapefile.write_mapmatch(fn_base=user.uuid, results=mapmatched_results)
 
 # 5. detect complete days and write csv
 complete_day_summaries = tripkit.process.complete_days.triplab.counter.run(user.trips, cfg.TIMEZONE)
