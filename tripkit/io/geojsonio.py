@@ -66,8 +66,8 @@ class GeoJSONIO(object):
         :type fn_base: str
         :type locations: dict
         '''
-        locations_features = formatters._activity_locations_features(locations)
         locations_fn = f'{fn_base}_locations.geojson'
+        locations_features = formatters._activity_locations_features(locations)
         self._write_features_to_f(locations_fn, locations_features)
 
     def write_trips(self, fn_base, trips):

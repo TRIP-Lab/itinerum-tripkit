@@ -65,9 +65,15 @@ class GeopackageIO(object):
         :type fn_base: str
         :type locations: dict
         '''
-        locations_features = formatters._activity_locations_features(locations)
         locations_fn = f'{fn_base}_locations.gpkg'
-        self._write_features_to_f(locations_fn, locations_features)
+        locations_schema = {
+            'geometry': 'Point',
+            'properties': [
+                ('label', 'str')
+            ]
+        }
+        locations_features = formatters._activity_locations_features(locations)
+        self._write_features_to_f(locations_fn, locations_schema, locations_features)
 
     def write_trips(self, fn_base, trips):
         '''
