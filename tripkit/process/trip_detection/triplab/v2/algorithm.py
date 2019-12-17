@@ -99,28 +99,35 @@ def break_points_by_collection_pause(points, max_break_period=360):
     '''
     Break into trip segments when time recorded between points is greater than the specified break period.
     '''
-    segments = []
-    last_p = None
-    for p in points:
-        # determine break period & distance and increment segment groups
-        if not last_p:
-            break_period, break_distance, group = 0, 0.0, 0
-        else:
-            break_period = (p.timestamp_UTC - last_p.timestamp_UTC).total_seconds()
-            break_distance = distance_m(last_p, p)
-            if break_period > max_break_period:
-                group += 1
-        last_p = p
-        p.period_before_seconds = break_period
-        p.distance_before_meters = break_distance
+    def _break_points(points, max_break_period):
+        segments = []
+        last_p = None
+        for p in points:
+            # determine break period & distance and increment segment groups
+            if not last_p:
+                break_period, break_distance, group = 0, 0.0, 0
+            else:
+                break_period = (p.timestamp_UTC - last_p.timestamp_UTC).total_seconds()
+                break_distance = distance_m(last_p, p)
+                if break_period > max_break_period:
+                    group += 1
+            last_p = p
+            p.period_before_seconds = break_period
+            p.distance_before_meters = break_distance
 
-        # generate segments from determined groups
-        if segments and segments[-1].group == group:
-            segments[-1].points.append(p)
-        else:
-            new_segment = TripSegment(group=group, period_before_seconds=break_period, points=[p])
-            segments.append(new_segment)
-    return segments
+            # generate segments from determined groups
+            if segments and segments[-1].group == group:
+                segments[-1].points.append(p)
+            else:
+                new_segment = TripSegment(group=group, period_before_seconds=break_period, points=[p])
+                segments.append(new_segment)
+        return segments
+    
+    # gracefully handle pre-processers filtering all points
+    try:
+        return _break_points(points, max_break_period)
+    except RuntimeError:
+        return []
 
 
 def initialize_trips(segments):
