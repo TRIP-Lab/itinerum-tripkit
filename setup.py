@@ -1,11 +1,12 @@
 import setuptools
+from .version import __version__
 
 with open('README.md', 'r') as fh:
     long_description = fh.read()
 
 setuptools.setup(
     name='itinerum-tripkit',
-    version='0.0.16',
+    version=__version__,
     author='Kyle Fitzsimmons',
     author_email='kafitz22@gmail.com',
     description='A toolkit for inferencing trips and trip metadata from Itinerum GPS data',
