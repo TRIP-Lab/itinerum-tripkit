@@ -207,7 +207,7 @@ def find_velocity_connections(trips):
     return connected_trips
 
 
-def filter_single_points(trips):
+def filter_single_points(trips, user_locations=None):
     '''
     Remove any isolated GPS points that are not within 20 minutes or 150 meters of the previous end point
     or next trip start point. Otherwise, attach them to the soonest trip end.
@@ -245,13 +245,31 @@ def filter_single_points(trips):
             )
             if is_prev_trip_candidate and not is_next_trip_candidate:
                 append_to_prev_trip = True
-            # connect point to previous or next
+
+            # test whether single point is ping from a user location
+            # e.g., battery dies, wakes up when charging, has an exceptionally long cold-start
+            is_known_location_ping = False
+            if user_locations:
+                at_home = False
+                if user_locations.home:
+                    at_home = distance_m(user_locations.home, point) <= 150
+                at_work = False
+                if user_locations.work:
+                    at_work = distance_m(user_locations.work, point) <= 150
+                at_study = False
+                if user_locations.study:
+                    at_study = distance_m(user_locations.study, point) <= 150
+                is_known_location_ping = any([at_home, at_study, at_work])
+
+            # connect point to previous or next trip, or keep individual as ping
             if append_to_prev_trip:
                 point.timestamp_UTC = prev_trip.last_segment.end.timestamp_UTC
                 filtered_trips[-1].segments.append(segment)
             elif is_next_trip_candidate:
                 point.timestamp_UTC = next_trip.first_segment.start.timestamp_UTC
                 next_trip.segments.insert(0, segment)
+            elif is_known_location_ping:
+                filtered_trips.append(trip)
             else:
                 pass  # assume point is noise and do nothing
         else:
@@ -488,7 +506,7 @@ def wrap_for_tripkit(detected_trips):
 
 
 # main
-def run(coordinates, parameters):
+def run(coordinates, parameters, user_locations=None):
     if not coordinates or len(coordinates) < 2:
         return []
 
@@ -511,7 +529,7 @@ def run(coordinates, parameters):
         initial_trips, subway_entrances, buffer_m=parameters['subway_buffer_meters']
     )
     velocity_linked_trips = find_velocity_connections(subway_linked_trips)
-    full_length_trips = filter_single_points(velocity_linked_trips)
+    full_length_trips = filter_single_points(velocity_linked_trips, user_locations=user_locations)
 
     # find incidents where data about trips is missing
     missing_trips = infer_missing_trips(
@@ -519,7 +537,7 @@ def run(coordinates, parameters):
         subway_entrances,
         min_trip_m=250,
         subway_buffer_m=parameters['subway_buffer_meters'],
-        cold_start_m=parameters['cold_start_distance'],
+        cold_start_m=parameters['cold_start_distance']
     )
 
     trips = merge_trips(full_length_trips, missing_trips)
