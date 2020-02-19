@@ -269,7 +269,7 @@ def filter_single_points(trips, user_locations=None):
                 point.timestamp_UTC = next_trip.first_segment.start.timestamp_UTC
                 next_trip.segments.insert(0, segment)
             elif is_known_location_ping:
-                filtered_trips.append(trip)
+                filtered_trips.append(trip)  # keep ping point for splitting into two missing trips
             else:
                 pass  # assume point is noise and do nothing
         else:
@@ -284,7 +284,7 @@ def infer_missing_trips(trips, subway_entrances, min_trip_m=250, subway_buffer_m
     '''
     missing_trips = []
     last_trip = None
-    for trip in trips:
+    for idx, trip in enumerate(trips):
         if not last_trip:
             last_trip = trip
             continue
@@ -297,6 +297,8 @@ def infer_missing_trips(trips, subway_entrances, min_trip_m=250, subway_buffer_m
         if not distance_prev_trip:
             continue
 
+        known_location_ping = len(trip.segments) == 1 and len(trip.segments[0].points) == 1
+
         # 1. label any non-zero distance less than min trip lenghth as missing but too short
         if distance_prev_trip and distance_prev_trip < min_trip_m:
             m = MissingTrip(
@@ -307,6 +309,24 @@ def infer_missing_trips(trips, subway_entrances, min_trip_m=250, subway_buffer_m
                 duration=interval_prev_trip,
             )
             missing_trips.append(m)
+        elif known_location_ping:
+            next_start_point = trips[idx+1].first_segment.start
+            m1 = MissingTrip(
+                category='ping_known_location',
+                last_trip_end=last_end_point,
+                next_trip_start=start_point,
+                distance=distance_prev_trip,
+                duration=interval_prev_trip
+            )
+            m2 = MissingTrip(
+                category='ping_known_location',
+                last_trip_end=start_point,
+                next_trip_start=next_start_point,
+                distance=0,
+                duration=0
+            )
+            missing_trips.append(m1)
+            missing_trips.append(m2)
         else:
             # 2. check for missing trips that can be explained by a subway trip with loss of signal
             end_entrance = points_intersect(subway_entrances, last_end_point, subway_buffer_m)
@@ -404,6 +424,8 @@ def annotate_trips(trips):
                 trip.code = TRIP_CODES['missing trip - less than min. trip length']
             elif trip.category == 'subway':
                 trip.code = TRIP_CODES['missing trip - subway']
+            elif trip.category == 'ping_known_location':
+                trip.code = TRIP_CODES['missing trip - known location ping']
             elif trip.category == 'general':
                 trip.code = TRIP_CODES['missing trip']
         elif isinstance(trip, Trip):
