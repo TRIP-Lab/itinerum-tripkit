@@ -66,6 +66,19 @@ class SubwayEntrance:
         return f"<tripkit.process.trip_detection.triplab.v2.models.SubwayEntrance>"
 
 
+class SubwayRoute:
+    __slots__ = ['route_id', 'coordinates', 'coordinates_utm', 'linestring_utm']
+
+    def __init__(self, *args, **kwargs):
+        self.route_id = kwargs['route_id']
+        self.coordinates = kwargs['coordinates']
+        self.coordinates_utm = kwargs['coordinates_utm']
+        self.linestring_utm = kwargs['linestring_utm']
+
+    def __repr__(self):
+        return f"<tripkit.process.trip_detection.triplab.v2.models.SubwayRoute>"
+
+
 class TripSegment:
     __slots__ = ['group', 'points', 'period_before_seconds', 'link_to', 'link_type', 'is_cold_start']
 

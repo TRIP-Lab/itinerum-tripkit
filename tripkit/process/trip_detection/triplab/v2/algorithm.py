@@ -4,10 +4,11 @@ import copy
 import itertools
 import logging
 import math
+from shapely.geometry import Point, LineString
 import utm
 
 from tripkit.models import Trip as LibraryTrip, TripPoint as LibraryTripPoint
-from .models import GPSPoint, SubwayEntrance, MissingTrip, TripSegment, Trip
+from .models import GPSPoint, SubwayEntrance, SubwayRoute, MissingTrip, TripSegment, Trip
 from .trip_codes import TRIP_CODES
 
 
@@ -24,6 +25,24 @@ def generate_subway_entrances(coordinates):
         easting, northing, _, _ = utm.from_latlon(c.latitude, c.longitude)
         entrances.append(SubwayEntrance(latitude=c.latitude, longitude=c.longitude, northing=northing, easting=easting))
     return entrances
+
+
+def generate_subway_routes(route_coordinates):
+    ''' 
+    Find UTM coordinates for subway routes from lat/lon and yield LineString shape objects.
+    '''
+    routes = []
+    for r in route_coordinates:
+        coordinates_utm = []
+        for c in r.coordinates:
+            easting, northing, _, _ = utm.from_latlon(c.latitude, c.longitude)
+            coordinates_utm.append((easting, northing))
+        routes.append(
+            SubwayRoute(route_id=r.route_id,
+                        coordinates=r.coordinates,
+                        coordinates_utm=coordinates_utm,
+                        linestring_utm=LineString(coordinates_utm)))
+    return routes
 
 
 def generate_gps_points(coordinates):
@@ -141,7 +160,7 @@ def initialize_trips(segments):
 
 
 # stitch segments into longer trips if pre-determined conditions are met
-def find_subway_connections(trips, subway_entrances, buffer_m=200):
+def find_subway_connections(trips, subway_entrances, subway_routes, buffer_m=200):
     '''
     Look for segments that can be connected by an explained subway trip update the related trip objects.
     '''
@@ -159,6 +178,20 @@ def find_subway_connections(trips, subway_entrances, buffer_m=200):
         start_point = trip.first_segment.start
         end_entrance = points_intersect(subway_entrances, end_point, buffer_m)
         start_entrance = points_intersect(subway_entrances, start_point, buffer_m)
+
+        if end_entrance and start_entrance:
+            error = 0
+            candidates = {}
+            for r in subway_routes:
+                candidates[r.route_id] = 0
+                for s in trip.segments:
+                    for p in s.points:
+                        candidates[r.route_id] += Point(p.easting, p.northing).distance(r.linestring_utm)
+            print(candidates)
+            # print(trip.segments)
+            # for p in trip.points:
+            #     print(p)
+            # print('hello')
 
         if end_entrance and start_entrance:
             interval = start_point.timestamp_UTC - end_point.timestamp_UTC
@@ -476,7 +509,7 @@ def points_intersect(points, test_point, buffer_m=200):
             return point
 
 
-def wrap_for_tripkit(detected_trips):
+def wrap_for_tripkit(detected_trips, include_segments=False):
     '''
     Return result as the same type of object (list of TripPoints) as returned by `tripkit.database`.
     '''
@@ -499,6 +532,8 @@ def wrap_for_tripkit(detected_trips):
                         timestamp_UTC=point.timestamp_UTC,
                     )
                     trip.points.append(p)
+            if include_segments:
+                trip.segments = detected_trip.segments
             tripkit_trips.append(trip)
         elif isinstance(detected_trip, MissingTrip):
             trip = LibraryTrip(num=trip_num, trip_code=detected_trip.code)
@@ -523,17 +558,20 @@ def wrap_for_tripkit(detected_trips):
                 timestamp_UTC=detected_trip.end.timestamp_UTC,
             )
             trip.points = [p1, p2]
+            if include_segments:
+                trip.segments = []
             tripkit_trips.append(trip)
     return tripkit_trips
 
 
 # main
-def run(coordinates, parameters, user_locations=None):
+def run(coordinates, parameters, user_locations=None, include_segments=False):
     if not coordinates or len(coordinates) < 2:
         return []
 
     # process points as structs and cast position from lat/lng to UTM
     subway_entrances = generate_subway_entrances(parameters['subway_entrances'])
+    subway_routes = generate_subway_routes(parameters['subway_routes'])
     gps_points = generate_gps_points(coordinates)
 
     # clean noisy and duplicate points
@@ -548,7 +586,7 @@ def run(coordinates, parameters, user_locations=None):
 
     # apply rules to reconstitute full trips from segments when possible ('stitching')
     subway_linked_trips = find_subway_connections(
-        initial_trips, subway_entrances, buffer_m=parameters['subway_buffer_meters']
+        initial_trips, subway_entrances, subway_routes, buffer_m=parameters['subway_buffer_meters']
     )
     velocity_linked_trips = find_velocity_connections(subway_linked_trips)
     full_length_trips = filter_single_points(velocity_linked_trips, user_locations=user_locations)
@@ -563,7 +601,7 @@ def run(coordinates, parameters, user_locations=None):
     )
 
     trips = merge_trips(full_length_trips, missing_trips)
-    tripkit_trips = wrap_for_tripkit(annotate_trips(trips))
+    tripkit_trips = wrap_for_tripkit(annotate_trips(trips), include_segments)
 
     logger.info("-------------------------------")
     logger.info("Num. segments: %d", len(segments))
