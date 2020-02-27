@@ -179,19 +179,20 @@ def find_subway_connections(trips, subway_entrances, subway_routes, buffer_m=200
         end_entrance = points_intersect(subway_entrances, end_point, buffer_m)
         start_entrance = points_intersect(subway_entrances, start_point, buffer_m)
 
-        if end_entrance and start_entrance:
-            error = 0
-            candidates = {}
-            for r in subway_routes:
-                candidates[r.route_id] = 0
-                for s in trip.segments:
-                    for p in s.points:
-                        candidates[r.route_id] += Point(p.easting, p.northing).distance(r.linestring_utm)
-            print(candidates)
-            # print(trip.segments)
-            # for p in trip.points:
-            #     print(p)
-            # print('hello')
+        # Test whether subway trip is a similar match to subway network
+        # if end_entrance and start_entrance:
+        #     error = 0
+        #     candidates = {}
+        #     for r in subway_routes:
+        #         candidates[r.route_id] = 0
+        #         for s in trip.segments:
+        #             for p in s.points:
+        #                 candidates[r.route_id] += Point(p.easting, p.northing).distance(r.linestring_utm)
+        #     print(candidates)
+        #     print(trip.segments)
+        #     for p in trip.points:
+        #         print(p)
+        #     print('hello')
 
         if end_entrance and start_entrance:
             interval = start_point.timestamp_UTC - end_point.timestamp_UTC
@@ -330,7 +331,9 @@ def infer_missing_trips(trips, subway_entrances, min_trip_m=250, subway_buffer_m
         if not distance_prev_trip:
             continue
 
-        known_location_ping = len(trip.segments) == 1 and len(trip.segments[0].points) == 1
+        known_location_ping = all([len(trip.segments) == 1,
+                                   len(trip.first_segment.points) == 1,
+                                   len(trips) > idx + 1])
 
         # 1. label any non-zero distance less than min trip lenghth as missing but too short
         if distance_prev_trip and distance_prev_trip < min_trip_m:
@@ -343,6 +346,8 @@ def infer_missing_trips(trips, subway_entrances, min_trip_m=250, subway_buffer_m
             )
             missing_trips.append(m)
         elif known_location_ping:
+            
+
             next_start_point = trips[idx+1].first_segment.start
             m1 = MissingTrip(
                 category='ping_known_location',
