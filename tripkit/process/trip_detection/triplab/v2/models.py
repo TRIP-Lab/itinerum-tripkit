@@ -212,5 +212,6 @@ class MissingTrip:
 
     def __repr__(self):
         return (
-            f"<tripkit.process.trip_detection.triplab.v2.models.MissingTrip category={self.category} code={self.code}>"
+            f"<tripkit.process.trip_detection.triplab.v2.models.MissingTrip category={self.category}"
+            f"code={self.code} start={self.last_trip_end.timestamp_UTC} end={self.next_trip_start.timestamp_UTC}>"
         )

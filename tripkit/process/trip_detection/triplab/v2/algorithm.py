@@ -16,21 +16,30 @@ logger = logging.getLogger('itinerum-tripkit.process.trip_detection.triplab.v2')
 
 
 # cast input data as objects
-def generate_subway_entrances(coordinates):
+def generate_subway_entrances(coordinates, feature_cache=None):
     '''
     Find UTM coordinates for subway stations entrances from lat/lon and yield objects.
     '''
+    if feature_cache:
+        entrances = feature_cache.get(['subway_entrances', 'algo.v2'])
+        if entrances:
+            return entrances
     entrances = []
     for c in coordinates:
         easting, northing, _, _ = utm.from_latlon(c.latitude, c.longitude)
         entrances.append(SubwayEntrance(latitude=c.latitude, longitude=c.longitude, northing=northing, easting=easting))
+    feature_cache.set(['subway_entrances', 'algo.v2'], entrances)
     return entrances
 
 
-def generate_subway_routes(route_coordinates):
+def generate_subway_routes(route_coordinates, feature_cache=None):
     ''' 
     Find UTM coordinates for subway routes from lat/lon and yield LineString shape objects.
     '''
+    if feature_cache:
+        routes = feature_cache.get(['subway_routes', 'algo.v2'])
+        if routes:
+            return routes
     routes = []
     for r in route_coordinates:
         coordinates_utm = []
@@ -42,6 +51,7 @@ def generate_subway_routes(route_coordinates):
                         coordinates=r.coordinates,
                         coordinates_utm=coordinates_utm,
                         linestring_utm=LineString(coordinates_utm)))
+    feature_cache.set(['subway_routes', 'algo.v2'], routes)
     return routes
 
 
@@ -291,9 +301,9 @@ def filter_single_points(trips, user_locations=None):
                 if user_locations.work:
                     at_work = distance_m(user_locations.work, point) <= 150
                 at_study = False
-                if user_locations.study:
+                if user_locations.study:                
                     at_study = distance_m(user_locations.study, point) <= 150
-                is_known_location_ping = any([at_home, at_study, at_work])
+                is_known_location_ping = any([at_home, at_work, at_study])
 
             # connect point to previous or next trip, or keep individual as ping
             if append_to_prev_trip:
@@ -570,13 +580,14 @@ def wrap_for_tripkit(detected_trips, include_segments=False):
 
 
 # main
-def run(coordinates, parameters, user_locations=None, include_segments=False):
+# @profile
+def run(coordinates, parameters, user_locations=None, include_segments=False, feature_cache=None):
     if not coordinates or len(coordinates) < 2:
         return []
 
     # process points as structs and cast position from lat/lng to UTM
-    subway_entrances = generate_subway_entrances(parameters['subway_entrances'])
-    subway_routes = generate_subway_routes(parameters['subway_routes'])
+    subway_entrances = generate_subway_entrances(parameters['subway_entrances'], feature_cache)
+    subway_routes = generate_subway_routes(parameters['subway_routes'], feature_cache)
     gps_points = generate_gps_points(coordinates)
 
     # clean noisy and duplicate points
