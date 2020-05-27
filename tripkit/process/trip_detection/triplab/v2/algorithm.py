@@ -356,8 +356,6 @@ def infer_missing_trips(trips, subway_entrances, min_trip_m=250, subway_buffer_m
             )
             missing_trips.append(m)
         elif known_location_ping:
-            
-
             next_start_point = trips[idx+1].first_segment.start
             m1 = MissingTrip(
                 category='ping_known_location',
@@ -394,6 +392,10 @@ def infer_missing_trips(trips, subway_entrances, min_trip_m=250, subway_buffer_m
             elif distance_prev_trip <= cold_start_m:
                 # TODO: test that this copy's attributes are not changed simultaneously (shared with original)
                 cold_start_point = copy.copy(last_end_point)
+                cold_start_point.timestamp_UTC = start_point.timestamp_UTC
+                cold_start_point.period_before_seconds = start_point.period_before_seconds
+                cold_start_point.speed = 0.
+
                 trip.first_segment.is_cold_start = True
                 trip.first_segment.prepend(cold_start_point)
             # 4. all other gaps in the data marked as a general missing trip
