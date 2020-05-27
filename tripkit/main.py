@@ -137,9 +137,9 @@ class TripKit(object):
 
         :param uuid:           Supply an individual user's UUID to load
         :param load_trips:     Supply False to disable automatic loading of trips to
-                               py:class:`tripkit.models.User` objects on initialization
+                               :py:class:`tripkit.models.User` objects on initialization
         :param load_locations: Supple False to disable automatic loading of activity locations to
-                               py:class:`tripkit.models.User` objects on initialization
+                               :py:class:`tripkit.models.User` objects on initialization
         :param limit:          Maximum number of users to load
         :param start:          Mininum timestamp bounds (inclusive) for loading user coordinate and
                                prompts data
@@ -175,7 +175,7 @@ class TripKit(object):
                 continue
             if load_trips:
                 user.trips = self.database.load_trips(user, start=start, end=end)
-            if load_trips:
+            if load_locations:
                 user.activity_locations = self.database.load_activity_locations(user)
             if return_one:
                 return user

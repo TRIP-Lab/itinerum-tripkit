@@ -4,10 +4,11 @@ import copy
 import itertools
 import logging
 import math
+from shapely.geometry import Point, LineString
 import utm
 
 from tripkit.models import Trip as LibraryTrip, TripPoint as LibraryTripPoint
-from .models import GPSPoint, SubwayEntrance, MissingTrip, TripSegment, Trip
+from .models import GPSPoint, SubwayEntrance, SubwayRoute, MissingTrip, TripSegment, Trip
 from .trip_codes import TRIP_CODES
 
 
@@ -15,15 +16,43 @@ logger = logging.getLogger('itinerum-tripkit.process.trip_detection.triplab.v2')
 
 
 # cast input data as objects
-def generate_subway_entrances(coordinates):
+def generate_subway_entrances(coordinates, feature_cache=None):
     '''
     Find UTM coordinates for subway stations entrances from lat/lon and yield objects.
     '''
+    if feature_cache:
+        entrances = feature_cache.get(['subway_entrances', 'algo.v2'])
+        if entrances:
+            return entrances
     entrances = []
     for c in coordinates:
         easting, northing, _, _ = utm.from_latlon(c.latitude, c.longitude)
         entrances.append(SubwayEntrance(latitude=c.latitude, longitude=c.longitude, northing=northing, easting=easting))
+    feature_cache.set(['subway_entrances', 'algo.v2'], entrances)
     return entrances
+
+
+def generate_subway_routes(route_coordinates, feature_cache=None):
+    ''' 
+    Find UTM coordinates for subway routes from lat/lon and yield LineString shape objects.
+    '''
+    if feature_cache:
+        routes = feature_cache.get(['subway_routes', 'algo.v2'])
+        if routes:
+            return routes
+    routes = []
+    for r in route_coordinates:
+        coordinates_utm = []
+        for c in r.coordinates:
+            easting, northing, _, _ = utm.from_latlon(c.latitude, c.longitude)
+            coordinates_utm.append((easting, northing))
+        routes.append(
+            SubwayRoute(route_id=r.route_id,
+                        coordinates=r.coordinates,
+                        coordinates_utm=coordinates_utm,
+                        linestring_utm=LineString(coordinates_utm)))
+    feature_cache.set(['subway_routes', 'algo.v2'], routes)
+    return routes
 
 
 def generate_gps_points(coordinates):
@@ -141,7 +170,7 @@ def initialize_trips(segments):
 
 
 # stitch segments into longer trips if pre-determined conditions are met
-def find_subway_connections(trips, subway_entrances, buffer_m=200):
+def find_subway_connections(trips, subway_entrances, subway_routes, buffer_m=200):
     '''
     Look for segments that can be connected by an explained subway trip update the related trip objects.
     '''
@@ -159,6 +188,21 @@ def find_subway_connections(trips, subway_entrances, buffer_m=200):
         start_point = trip.first_segment.start
         end_entrance = points_intersect(subway_entrances, end_point, buffer_m)
         start_entrance = points_intersect(subway_entrances, start_point, buffer_m)
+
+        # Test whether subway trip is a similar match to subway network
+        # if end_entrance and start_entrance:
+        #     error = 0
+        #     candidates = {}
+        #     for r in subway_routes:
+        #         candidates[r.route_id] = 0
+        #         for s in trip.segments:
+        #             for p in s.points:
+        #                 candidates[r.route_id] += Point(p.easting, p.northing).distance(r.linestring_utm)
+        #     print(candidates)
+        #     print(trip.segments)
+        #     for p in trip.points:
+        #         print(p)
+        #     print('hello')
 
         if end_entrance and start_entrance:
             interval = start_point.timestamp_UTC - end_point.timestamp_UTC
@@ -207,7 +251,7 @@ def find_velocity_connections(trips):
     return connected_trips
 
 
-def filter_single_points(trips):
+def filter_single_points(trips, user_locations=None):
     '''
     Remove any isolated GPS points that are not within 20 minutes or 150 meters of the previous end point
     or next trip start point. Otherwise, attach them to the soonest trip end.
@@ -245,13 +289,31 @@ def filter_single_points(trips):
             )
             if is_prev_trip_candidate and not is_next_trip_candidate:
                 append_to_prev_trip = True
-            # connect point to previous or next
+
+            # test whether single point is ping from a user location
+            # e.g., battery dies, wakes up when charging, has an exceptionally long cold-start
+            is_known_location_ping = False
+            if user_locations:
+                at_home = False
+                if user_locations.home:
+                    at_home = distance_m(user_locations.home, point) <= 150
+                at_work = False
+                if user_locations.work:
+                    at_work = distance_m(user_locations.work, point) <= 150
+                at_study = False
+                if user_locations.study:                
+                    at_study = distance_m(user_locations.study, point) <= 150
+                is_known_location_ping = any([at_home, at_work, at_study])
+
+            # connect point to previous or next trip, or keep individual as ping
             if append_to_prev_trip:
                 point.timestamp_UTC = prev_trip.last_segment.end.timestamp_UTC
                 filtered_trips[-1].segments.append(segment)
             elif is_next_trip_candidate:
                 point.timestamp_UTC = next_trip.first_segment.start.timestamp_UTC
                 next_trip.segments.insert(0, segment)
+            elif is_known_location_ping:
+                filtered_trips.append(trip)  # keep ping point for splitting into two missing trips
             else:
                 pass  # assume point is noise and do nothing
         else:
@@ -266,7 +328,7 @@ def infer_missing_trips(trips, subway_entrances, min_trip_m=250, subway_buffer_m
     '''
     missing_trips = []
     last_trip = None
-    for trip in trips:
+    for idx, trip in enumerate(trips):
         if not last_trip:
             last_trip = trip
             continue
@@ -279,6 +341,10 @@ def infer_missing_trips(trips, subway_entrances, min_trip_m=250, subway_buffer_m
         if not distance_prev_trip:
             continue
 
+        known_location_ping = all([len(trip.segments) == 1,
+                                   len(trip.first_segment.points) == 1,
+                                   len(trips) > idx + 1])
+
         # 1. label any non-zero distance less than min trip lenghth as missing but too short
         if distance_prev_trip and distance_prev_trip < min_trip_m:
             m = MissingTrip(
@@ -289,6 +355,24 @@ def infer_missing_trips(trips, subway_entrances, min_trip_m=250, subway_buffer_m
                 duration=interval_prev_trip,
             )
             missing_trips.append(m)
+        elif known_location_ping:
+            next_start_point = trips[idx+1].first_segment.start
+            m1 = MissingTrip(
+                category='ping_known_location',
+                last_trip_end=last_end_point,
+                next_trip_start=start_point,
+                distance=distance_prev_trip,
+                duration=interval_prev_trip
+            )
+            m2 = MissingTrip(
+                category='ping_known_location',
+                last_trip_end=start_point,
+                next_trip_start=next_start_point,
+                distance=0,
+                duration=0
+            )
+            missing_trips.append(m1)
+            missing_trips.append(m2)
         else:
             # 2. check for missing trips that can be explained by a subway trip with loss of signal
             end_entrance = points_intersect(subway_entrances, last_end_point, subway_buffer_m)
@@ -308,6 +392,10 @@ def infer_missing_trips(trips, subway_entrances, min_trip_m=250, subway_buffer_m
             elif distance_prev_trip <= cold_start_m:
                 # TODO: test that this copy's attributes are not changed simultaneously (shared with original)
                 cold_start_point = copy.copy(last_end_point)
+                cold_start_point.timestamp_UTC = start_point.timestamp_UTC
+                cold_start_point.period_before_seconds = start_point.period_before_seconds
+                cold_start_point.speed = 0.
+
                 trip.first_segment.is_cold_start = True
                 trip.first_segment.prepend(cold_start_point)
             # 4. all other gaps in the data marked as a general missing trip
@@ -386,6 +474,8 @@ def annotate_trips(trips):
                 trip.code = TRIP_CODES['missing trip - less than min. trip length']
             elif trip.category == 'subway':
                 trip.code = TRIP_CODES['missing trip - subway']
+            elif trip.category == 'ping_known_location':
+                trip.code = TRIP_CODES['missing trip - known location ping']
             elif trip.category == 'general':
                 trip.code = TRIP_CODES['missing trip']
         elif isinstance(trip, Trip):
@@ -436,7 +526,7 @@ def points_intersect(points, test_point, buffer_m=200):
             return point
 
 
-def wrap_for_tripkit(detected_trips):
+def wrap_for_tripkit(detected_trips, include_segments=False):
     '''
     Return result as the same type of object (list of TripPoints) as returned by `tripkit.database`.
     '''
@@ -459,6 +549,8 @@ def wrap_for_tripkit(detected_trips):
                         timestamp_UTC=point.timestamp_UTC,
                     )
                     trip.points.append(p)
+            if include_segments:
+                trip.segments = detected_trip.segments
             tripkit_trips.append(trip)
         elif isinstance(detected_trip, MissingTrip):
             trip = LibraryTrip(num=trip_num, trip_code=detected_trip.code)
@@ -483,17 +575,21 @@ def wrap_for_tripkit(detected_trips):
                 timestamp_UTC=detected_trip.end.timestamp_UTC,
             )
             trip.points = [p1, p2]
+            if include_segments:
+                trip.segments = []
             tripkit_trips.append(trip)
     return tripkit_trips
 
 
 # main
-def run(coordinates, parameters):
+# @profile
+def run(coordinates, parameters, user_locations=None, include_segments=False, feature_cache=None):
     if not coordinates or len(coordinates) < 2:
         return []
 
     # process points as structs and cast position from lat/lng to UTM
-    subway_entrances = generate_subway_entrances(parameters['subway_entrances'])
+    subway_entrances = generate_subway_entrances(parameters['subway_entrances'], feature_cache)
+    subway_routes = generate_subway_routes(parameters['subway_routes'], feature_cache)
     gps_points = generate_gps_points(coordinates)
 
     # clean noisy and duplicate points
@@ -508,10 +604,10 @@ def run(coordinates, parameters):
 
     # apply rules to reconstitute full trips from segments when possible ('stitching')
     subway_linked_trips = find_subway_connections(
-        initial_trips, subway_entrances, buffer_m=parameters['subway_buffer_meters']
+        initial_trips, subway_entrances, subway_routes, buffer_m=parameters['subway_buffer_meters']
     )
     velocity_linked_trips = find_velocity_connections(subway_linked_trips)
-    full_length_trips = filter_single_points(velocity_linked_trips)
+    full_length_trips = filter_single_points(velocity_linked_trips, user_locations=user_locations)
 
     # find incidents where data about trips is missing
     missing_trips = infer_missing_trips(
@@ -519,11 +615,11 @@ def run(coordinates, parameters):
         subway_entrances,
         min_trip_m=250,
         subway_buffer_m=parameters['subway_buffer_meters'],
-        cold_start_m=parameters['cold_start_distance'],
+        cold_start_m=parameters['cold_start_distance']
     )
 
     trips = merge_trips(full_length_trips, missing_trips)
-    tripkit_trips = wrap_for_tripkit(annotate_trips(trips))
+    tripkit_trips = wrap_for_tripkit(annotate_trips(trips), include_segments)
 
     logger.info("-------------------------------")
     logger.info("Num. segments: %d", len(segments))
