@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 # Kyle Fitzsimmons, 2019
 #
-# Using the scikit-learn K-Means requires a large (6GB) download of the
-# Visual Studio w/ C++ compiler, so the purpose of this implementation is
-# to avoid requiring scikit-learn to use the itinerum-tripkit library.
+# The purpose of this implementation is to avoid requiring scikit-learn
+# to use the itinerum-tripkit library.
 import numpy as np
 
 from .algorithm import KMeansPlusPlus, KMeans
@@ -17,7 +16,9 @@ MIN_STOP_TIME = 120
 def format_kmeans_values(coordinates):
     values = []
     for c in coordinates:
+        # convert Nones to 0
         dist = c.avg_distance_m if c.avg_distance_m else 0
+        # set a maximum value for avg distance between points
         dist = dist if dist < MAX_AVG_DISTANCE else MAX_AVG_DISTANCE
         values.append(np.array([dist]))
     return values
@@ -67,8 +68,8 @@ def relabel_by_stop_time(cluster_groups, stop_groups, min_time):
 def run(coordinates):
     cluster_values = format_kmeans_values(coordinates)
     kpp = KMeansPlusPlus(cluster_values, n_clusters=2)
-
     km = KMeans(cluster_values, seed_centroids=kpp.centroids).fit()
+
     label_coordinate_clusters(coordinates, km)
     cluster_groups, stop_groups = group_sequentially(coordinates)
     cluster_groups, stop_groups = relabel_by_stop_time(cluster_groups, stop_groups, min_time=MIN_STOP_TIME)

@@ -14,7 +14,6 @@ Linux & MacOS
 .. code-block:: bash
 
     $ python3 -m venv tripkit-venv
-    $ chmod +x tripkit-ven/bin/activate
     $ source ./tripkit-ven/bin/activate
 
 Windows
@@ -27,7 +26,7 @@ Windows
 
 **PowerShell Note:**
 With PowerShell, ``Set-ExecutionPolicy Unrestricted -Force`` may be required to allow the ``Activate.ps1`` 
-script to run. If you update the permissions, the PowerShell prompt must also be restarted.
+script to run. The PowerShell prompt must then be restarted for these permissions to take effect.
 
 Dependencies
 ------------
