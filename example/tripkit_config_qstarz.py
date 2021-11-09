@@ -24,8 +24,8 @@ TIMEZONE = 'America/Halifax'
 
 # specify known dwell locations in addition to automatic detection (x,y or lon,lat)
 KNOWN_LOCATIONS = {
-    'home': (-63.5943546, 44.6520016),
-    'work': (-63.593770, 44.636364),
+    'home': (-73.5943546, 45.6520016),
+    'work': (-73.593770, 45.636364),
 }
 
 # location radius for activity dwell tallies
