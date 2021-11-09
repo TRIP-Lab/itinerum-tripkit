@@ -19,14 +19,14 @@ class Centroid(object):
             self._latlon = utm.to_latlon(self.easting, self.northing, self.zone_num, self.zone_letter)
 
     @property
-    def lat(self):
+    def latitude(self):
         self._update_latlon()
         return self._latlon[0]
 
     @property
-    def lon(self):
+    def longitude(self):
         self._update_latlon()
-        return self._latlon[1]
+        return self._latlon[1]        
 
 
 def duration_s(coordinate1, coordinate2):

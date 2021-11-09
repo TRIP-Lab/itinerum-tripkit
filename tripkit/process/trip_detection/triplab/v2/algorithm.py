@@ -21,14 +21,17 @@ def generate_subway_entrances(coordinates, feature_cache=None):
     Find UTM coordinates for subway stations entrances from lat/lon and yield objects.
     '''
     if feature_cache:
-        entrances = feature_cache.get(['subway_entrances', 'algo.v2'])
+        entrances = feature_cache.get('subway_entrances')
         if entrances:
             return entrances
+    
     entrances = []
     for c in coordinates:
         easting, northing, _, _ = utm.from_latlon(c.latitude, c.longitude)
         entrances.append(SubwayEntrance(latitude=c.latitude, longitude=c.longitude, northing=northing, easting=easting))
-    feature_cache.set(['subway_entrances', 'algo.v2'], entrances)
+
+    if feature_cache:
+        feature_cache['subway_entrances'] = entrances
     return entrances
 
 
@@ -37,7 +40,7 @@ def generate_subway_routes(route_coordinates, feature_cache=None):
     Find UTM coordinates for subway routes from lat/lon and yield LineString shape objects.
     '''
     if feature_cache:
-        routes = feature_cache.get(['subway_routes', 'algo.v2'])
+        routes = feature_cache.get('subway_routes')
         if routes:
             return routes
     routes = []
@@ -51,7 +54,8 @@ def generate_subway_routes(route_coordinates, feature_cache=None):
                         coordinates=r.coordinates,
                         coordinates_utm=coordinates_utm,
                         linestring_utm=LineString(coordinates_utm)))
-    feature_cache.set(['subway_routes', 'algo.v2'], routes)
+    if feature_cache:
+        feature_cache.set('subway_routes', routes)
     return routes
 
 

@@ -15,7 +15,7 @@ class ActivityLocation(object):
     :param zone_letter: Corresponding UTM zone letter (if present).
 
     :type label:       str
-    :type latitude:     float
+    :type latitude:    float
     :type longitude:   float
     :type easting:     float, optional
     :type northing:    float, optional

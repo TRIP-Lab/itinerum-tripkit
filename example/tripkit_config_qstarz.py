@@ -22,6 +22,12 @@ TRIP_DETECTION_ACCURACY_CUTOFF_METERS = 50
 # timezone of study area for calculating complete trip days
 TIMEZONE = 'America/Halifax'
 
+# specify known dwell locations in addition to automatic detection (x,y or lon,lat)
+KNOWN_LOCATIONS = {
+    'home': (-63.5943546, 44.6520016),
+    'work': (-63.593770, 44.636364),
+}
+
 # location radius for activity dwell tallies
 ACTIVITY_LOCATION_PROXIMITY_METERS = 50
 
