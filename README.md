@@ -1,12 +1,10 @@
 # itinerum-tripkit
 
-[![Python Version](https://img.shields.io/badge/Python-3.6%7C3.7-blue.svg?style=flat-square)]()
-
 Documentation for library usage: https://itinerum-tripkit.readthedocs.io/
 
 This library serves as a framework to process data from the Itinerum platform and hardware GPS loggers (e.g., QStarz). It can be used both through as a library in Jupyter to explore datasets interactively or imported as a module in standalone scripts and applications.
 
-This repository also serves as the development bed for the Itinerum platform algorithms within the TRIP Lab repositories. 
+This repository also serves as the development bed for the Itinerum platform algorithms within the TRIP Lab repositories.
 
 Looking to get started without coding? Try the [itinerum-tripkit-cli](https://github.com/TRIP-Lab/itinerum-tripkit-cli)!
 
@@ -20,14 +18,13 @@ Looking to get started without coding? Try the [itinerum-tripkit-cli](https://gi
 
 For more complete installation information, see the official [itinerum-tripkit documentation](https://itinerum-tripkit.readthedocs.io/en/stable/usage/installation.html).
 
-
 ### Loading Subway Stations
 
-Subway station data for trip detection can be loaded similarly for all processing modules. Place a *.csv* file of station entrances with the columns of `x` (or `longitude`) and `y` (or `latitude`). Locations are expected as geographic coordinates only. Edit the `SUBWAY_STATIONS_FP` config parameter to reflect the subway stations *.csv* filepath.
+Subway station data for trip detection can be loaded similarly for all processing modules. Place a _.csv_ file of station entrances with the columns of `x` (or `longitude`) and `y` (or `latitude`). Locations are expected as geographic coordinates only. Edit the `SUBWAY_STATIONS_FP` config parameter to reflect the subway stations _.csv_ filepath.
 
 #### Example
 
-*View attributes on a User*
+_View attributes on a User_
 
 ```python
 import tripkit_config
@@ -44,7 +41,7 @@ print(test_user.coordinates)
 print(test_user.prompt_responses)
 ```
 
-*Run trip detection on a User*
+_Run trip detection on a User_
 
 ```python
 import tripkit_config
@@ -68,10 +65,10 @@ trips = itinerum.process.trip_detection.triplab.v2.algorithm.run(user.coordinate
 
 #### Trip Detection
 
-| Arguments         |                                                              |
-| ----------------- | ------------------------------------------------------------ |
-| `parameters`      | A dictionary to supply arbitrary kwargs to an algorithm      |
-| `subway_stations` | A list of subway station entrance database objects containing `latitude` and `longitude` attributes |
+| Arguments         |                                                                                                                                                                                                    |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `parameters`      | A dictionary to supply arbitrary kwargs to an algorithm                                                                                                                                            |
+| `subway_stations` | A list of subway station entrance database objects containing `latitude` and `longitude` attributes                                                                                                |
 | `coordinates`     | A timestamp-ordered list of coordinates as dicts for a specific user. Multiple users should be run in sequence and have their output coordinates concatenated into a single list after if desired. |
 
 #### Trip Outputs
@@ -88,6 +85,6 @@ Trips will be output with the following trip codes to indicate the type of trip:
 | 201       | Single point                        |
 | 202       | Distance too short - less than 250m |
 
-
 ## Outputs
+
 The aim of this library is to provide easy visualization of Itinerum data to assist in writing trip processing algorthms. Therefore at a minimum, the library provides exporting processed coordinates and traces as .geojson files (TBA: GeoPackage format). With a PostgreSQL backend for caching, PostGIS can be enabled (unimplemented) and a `geom` column generated for directly connection QGIS to the output data. The library should also easily provide methods for easily plotting GPS within Jupyter notebooks.

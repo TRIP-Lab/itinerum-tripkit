@@ -25,23 +25,6 @@ def split_by_time_gap(coordinates, period_s=300):
     return segments
 
 
-# def gert_rules(segments):
-#     # GERT author's note:
-#     #   Some background on threshold values:
-#     #   based on 3 feet per second (fps) minimum pedestrian walking speed (LaPlante & Kaeser 2007)
-#     #   or 0.91 m/s and a minimum walk duration of 60 s (Bialostozky 2009)
-#     #   see also MUTCD 2009 Section 4E.06 Pedestrian Intervals and Signal Phases
-#     last_segment = None
-#     for segment in segments:
-#         if not last_segment:
-#             last_segment = segment
-#             continue
-#         last_point = last_segment[-1]
-#         next_point = segment[0]
-#         time_gap_s = next_point.timestamp_epoch - last_point.timestamp_epoch
-#         last_segment = segment
-
-
 def filter_too_short_segments(segments, min_distance_m=250):
     for segment in segments:
         if not segment:

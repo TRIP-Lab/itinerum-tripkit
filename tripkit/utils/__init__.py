@@ -3,3 +3,4 @@ from . import datetime
 from . import geo
 from . import itinerum
 from . import misc
+from . import qstarz
