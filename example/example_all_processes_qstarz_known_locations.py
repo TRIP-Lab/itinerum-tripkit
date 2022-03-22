@@ -67,3 +67,11 @@ tripkit.io.csv.write_complete_days({user.uuid: complete_day_summaries})
 activity = tripkit.process.activities.canue.tally_times.run(user, locations, cfg.ACTIVITY_LOCATION_PROXIMITY_METERS)
 activity_summaries = tripkit.process.activities.canue.summarize.run_full(activity, cfg.TIMEZONE)
 tripkit.io.csv.write_activities_daily(activity_summaries['records'], extra_cols=activity_summaries['duration_keys'])
+
+# 7. create trips truncated to activity locations
+truncated_trips = tripkit.process.trip_detection.canue.truncate.run(
+    user, locations, cfg.ACTIVITY_LOCATION_PROXIMITY_METERS
+)
+tripkit.io.geopackage.write_trips(
+    fn_base=f"{user.uuid}-truncated", trips=truncated_trips
+)

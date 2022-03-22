@@ -74,7 +74,9 @@ def run(uuid, coordinates):
         # skip points with speed of 0
         if not gc.speed_ms:
             continue
-        if gc.distance_m < 0.1:
+        if gc.speed_ms > 50:
+            continue
+        if gc.distance_m < 1:
             continue
         ## filter points that are not within valid points threshold:
         ## - 50 meters per second (180 km/h; Schuessler and Axhausen, 2009)

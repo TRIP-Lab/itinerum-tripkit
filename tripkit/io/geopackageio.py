@@ -93,6 +93,7 @@ class GeopackageIO(object):
                 ('end_UTC', 'datetime'),
                 ('trip_code', 'int'),
                 ('distance', 'float'),
+                ('avg_point_distance', 'float'),
             ],
         }
         with fiona.open(
@@ -104,6 +105,7 @@ class GeopackageIO(object):
                     'end_UTC': trip.end_UTC,
                     'trip_code': trip.trip_code,
                     'distance': trip.distance,
+                    'avg_point_distance': trip.distance / len(trip.points) if trip.points else 0,
                 }
                 feature = formatters._points_to_geojson_linestring(trip.geojson_coordinates, properties)
                 gpkg_f.write(feature)
