@@ -12,7 +12,7 @@ geopy==2.1.0
 idna==2.10
 munch==2.5.0
 networkx==2.5.1
-numpy==1.20.2
+numpy==1.21.0
 packaging==20.9
 peewee==3.14.4
 pep517==0.10.0
